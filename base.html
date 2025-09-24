@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>{% block title %}CalcuPlate{% endblock %}</title>
+ <style>
+   .logo {
+     height: 75px; /* Adjust size */
+     width: auto; /* Keeps aspect ratio */
+     margin-right: 1px; /* Adds spacing from links */
+   }
+   body { font-family: 'Calibri', sans-serif; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); margin: 0; }
+  
+   nav {
+     height: 75px;
+     background-color: #088502;
+     display: flex;
+     align-items: center;
+     gap: 20px;
+     padding: 0 20px; /* horizontal padding only */
+   }
+   nav a {
+     color: rgb(255, 255, 255);
+     text-decoration: none;
+     font-weight: bold;
+   }
+   nav a:hover {
+     text-decoration: underline;
+   }
+   .content { padding: 20px; }
+ </style>
+</head>
+<body>
+ <nav>
+   <a href="/">
+       <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+   </a>   
+   <a href="/">Home</a>
+  </nav>
+ <div class="content">
+   {% block content %}{% endblock %}
+ </div>
+</body>
+</html>
