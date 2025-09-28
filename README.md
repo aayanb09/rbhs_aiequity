@@ -1,1 +1,2 @@
 to run click the triangle next to code and open a workspace. run "pip install flask" to get all the required pacakages and stuff. then just type python put a space and drag the main.py file on the left into the terminal. don't change any code from the codespace, just change it directly in the repo and commit it from there. that way u can just type "git pull origin main" in the terminal and it will automatically update and you don't have to keep making a new codespace
+hello aayan behura
