@@ -4,6 +4,46 @@
 
 {% block content %}
 
-<p>Aryan, Aneesh, and Shirish</p>
+<div style="background-color: #2e6fd6; color: white; padding: 18px 0; text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; width: 100vw; position: relative; left: 50%; right: 50%; transform: translateX(-50%); margin: 0; border-radius: 0 0 18px 18px;">Symptom Survey</div>
 
-{% endblock %}
+<form method="post" action="/submit_symptoms" style="max-width: 500px; margin: 32px auto 0 auto; background: #f7f7f7; padding: 24px 32px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); color: #222;">
+	<h2 style="text-align:center; color:#2e6fd6; font-size:1.3rem; font-weight:700; margin-bottom:18px;">Please fill out your symptoms</h2>
+
+	<label style="font-size:1.1rem; font-weight:700; margin-bottom:10px; display:block; text-align:center;">How are you feeling?</label>
+	<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+		<button type="button" title="Great" style="background:none; border:none; font-size:2.2rem; cursor:pointer;">😄</button>
+		<button type="button" title="Good" style="background:none; border:none; font-size:2.2rem; cursor:pointer;">🙂</button>
+		<button type="button" title="Okay" style="background:none; border:none; font-size:2.2rem; cursor:pointer;">😐</button>
+		<button type="button" title="Bad" style="background:none; border:none; font-size:2.2rem; cursor:pointer;">😕</button>
+		<button type="button" title="Terrible" style="background:none; border:none; font-size:2.2rem; cursor:pointer;">😢</button>
+	</div>
+		<label for="fever" style="font-size:1.1rem; font-weight:700; display:block; text-align:center;">Do you have a fever?</label><br>
+		<div style="display:flex; justify-content:center; gap:32px; margin-bottom:18px;">
+			<button type="button" title="Yes" style="background:none; border:none; font-size:2rem; cursor:pointer;">✔️</button>
+			<button type="button" title="No" style="background:none; border:none; font-size:2rem; cursor:pointer;">❌</button>
+		</div>
+
+		<label for="cough" style="font-size:1.1rem; font-weight:700; display:block; text-align:center;">Do you have a cough?</label><br>
+		<div style="display:flex; justify-content:center; gap:32px; margin-bottom:18px;">
+			<button type="button" title="Yes" style="background:none; border:none; font-size:2rem; cursor:pointer;">✔️</button>
+			<button type="button" title="No" style="background:none; border:none; font-size:2rem; cursor:pointer;">❌</button>
+		</div>
+
+		<label for="fatigue" style="font-size:1.1rem; font-weight:700; display:block; text-align:center;">Are you experiencing fatigue?</label><br>
+		<div style="display:flex; justify-content:center; gap:32px; margin-bottom:18px;">
+			<button type="button" title="Yes" style="background:none; border:none; font-size:2rem; cursor:pointer;">✔️</button>
+			<button type="button" title="No" style="background:none; border:none; font-size:2rem; cursor:pointer;">❌</button>
+		</div>
+
+	<label for="other" style="font-size:1.1rem; font-weight:700; display:block; text-align:center;">Other symptoms:</label><br>
+	<textarea id="other" name="other" rows="3" style="width:100%;"></textarea><br><br>
+
+			<button type="button" style="background-color:#2e6fd6; color:white; font-weight:700; border:none; border-radius:6px; padding:10px 24px; cursor:pointer; width:100%; font-size:1rem;">Submit</button>
+
+
+
+<div style="position: fixed; bottom: 0; right: 0; z-index: 1000; display: flex; flex-direction: column; gap: 16px;">
+			<button type="button" onclick="alert('More coming soon!')" style="background-color: #2e6fd6; color: #fff; border: none; border-radius: 18px 0 0 18px; width: 252px; height: 128px; font-size: 1.2rem; font-weight: bold; box-shadow: 0 2px 12px rgba(0,0,0,0.10); cursor: pointer; padding: 0 12px; white-space: normal; word-break: break-word;">Export/Download PDF</button>
+			<button type="button" onclick="alert('More coming soon!')" style="background-color: #2e6fd6; color: #fff; border: none; border-radius: 18px 0 0 18px; width: 252px; height: 128px; font-size: 1.2rem; font-weight: bold; box-shadow: 0 2px 12px rgba(0,0,0,0.10); cursor: pointer; padding: 0 12px; white-space: normal; word-break: break-word;">View Previous Symptoms</button>
+</div>
+<p>Aneesh, Aryan, Shirish</p>
