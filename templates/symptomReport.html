@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Symptom Survey{% endblock %}
@@ -22,23 +23,26 @@
 		<button type="button" class="modern-emoji-btn" title="Terrible">😢</button>
 	</div>
 
-	<label for="fever" class="modern-label">Do you have a fever?</label>
-	<div class="modern-yn-row" id="fever-row">
+	{% set symptoms = [
+		{'id': 'fever', 'label': 'Do you have a fever?'},
+		{'id': 'cough', 'label': 'Do you have a cough?'},
+		{'id': 'fatigue', 'label': 'Are you experiencing fatigue?'}
+	] %}
+	{% for s in symptoms %}
+	<label for="{{s.id}}" class="modern-label">{{s.label}}</label>
+	<div class="modern-yn-row" id="{{s.id}}-row">
 		<button type="button" class="modern-yn-btn" title="Yes">✔️</button>
 		<button type="button" class="modern-yn-btn" title="No">❌</button>
 	</div>
-
-	<label for="cough" class="modern-label">Do you have a cough?</label>
-	<div class="modern-yn-row" id="cough-row">
-		<button type="button" class="modern-yn-btn" title="Yes">✔️</button>
-		<button type="button" class="modern-yn-btn" title="No">❌</button>
+	<div id="{{s.id}}-severity" style="display:none; text-align:center; margin-bottom:12px;">
+		<label for="{{s.id}}_severity" style="color:#2980b9; font-weight:600;">Severity:</label>
+		<select name="{{s.id}}_severity" id="{{s.id}}_severity" style="border-radius:6px; border:1px solid #2980b9; padding:4px;">
+			<option value="Mild">Mild</option>
+			<option value="Moderate">Moderate</option>
+			<option value="Severe">Severe</option>
+		</select>
 	</div>
-
-	<label for="fatigue" class="modern-label">Are you experiencing fatigue?</label>
-	<div class="modern-yn-row" id="fatigue-row">
-		<button type="button" class="modern-yn-btn" title="Yes">✔️</button>
-		<button type="button" class="modern-yn-btn" title="No">❌</button>
-	</div>
+	{% endfor %}
 
 	<label for="other" class="modern-label">Other symptoms:</label>
 	<div style="display:flex; justify-content:center; align-items:center; width:100%;">
@@ -65,12 +69,14 @@ document.querySelectorAll('.modern-emoji-row .modern-emoji-btn').forEach(btn => 
 		btn.classList.add('selected');
 	});
 });
-['fever','cough','fatigue'].forEach(symptom => {
-	document.querySelectorAll(`#${symptom}-row .modern-yn-btn`).forEach(btn => {
-		btn.addEventListener('click', function() {
-			document.querySelectorAll(`#${symptom}-row .modern-yn-btn`).forEach(b => b.classList.remove('selected'));
+document.querySelectorAll('.modern-yn-row').forEach(row => {
+	row.querySelectorAll('.modern-yn-btn').forEach(btn => {
+		btn.onclick = () => {
+			row.querySelectorAll('.modern-yn-btn').forEach(b => b.classList.remove('selected'));
 			btn.classList.add('selected');
-		});
+			let sev = document.getElementById(row.id.replace('-row','-severity'));
+			if (sev) sev.style.display = btn.title==='Yes' ? 'block' : 'none';
+		};
 	});
 });
 
