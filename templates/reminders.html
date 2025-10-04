@@ -1,9 +1,219 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}Calendar{% endblock %}</title>
+  <style>
+    /* === Global Styles === */
+    body {
+      font-family: 'Calibri', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      margin: 0;
+    }
 
-{% block title %}Home {% endblock %}
+    /* === Navigation Bar === */
+    .logo {
+      height: 75px;
+      width: auto;
+      margin-right: 1px;
+    }
 
-{% block content %}
+    nav {
+      height: 75px;
+      background-color: #088502;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 20px;
+    }
 
-<p>Milana, Rohan, and Anders</p>
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
 
-{% endblock %}
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* === Page Content === */
+    .content {
+      padding: 20px;
+    }
+
+    /* === Calendar Styles === */
+    header {
+      background: #1e5ab6;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    .add-btn {
+      background: #ff9800;
+      color: white;
+      border: none;
+      font-size: 1.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .add-btn:hover {
+      background: #e68900;
+    }
+
+    .month-tabs {
+      display: flex;
+      justify-content: center;
+      background: #e3eaf5;
+      padding: 0.5rem 0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .month-tabs button {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      color: #1e5ab6;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .month-tabs button.active,
+    .month-tabs button:hover {
+      background: #1e5ab6;
+      color: white;
+    }
+
+    .calendar {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .calendar th,
+    .calendar td {
+      border: 1px solid #ccc;
+      width: 14.28%;
+      height: 100px;
+      vertical-align: top;
+      padding: 0.5rem;
+      position: relative;
+    }
+
+    .calendar th {
+      background: #f0f4fa;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #1e5ab6;
+    }
+
+    .date {
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+
+    .event {
+      background: #ffb74d;
+      color: #222;
+      padding: 0.2rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      margin: 0.2rem 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .event:hover {
+      background: #ffa726;
+    }
+
+    .icon {
+      font-size: 2rem;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ✅ Navigation Bar -->
+  <nav>
+    <a href="/">
+      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
+    </a>
+    <a href="/">Home</a>
+    <a href="/reminders">Reminders</a>
+    <a href="/upload">Upload</a>
+    <a href="/symptomTracker">Symptom Tracker</a>
+  </nav>
+
+  <!-- ✅ Page Content -->
+  <div class="content">
+    {% block content %}
+
+    <!-- ✅ Names section -->
+    <p><strong>Milana, Rohan, and Anders</strong></p>
+
+    <header>
+      <h1>Website Name</h1>
+      <button class="add-btn">+</button>
+    </header>
+
+    <div class="month-tabs">
+      <button>September</button>
+      <button class="active">October</button>
+      <button>November</button>
+    </div>
+
+    <table class="calendar">
+      <tr>
+        <th>S</th>
+        <th>M</th>
+        <th>T</th>
+        <th>W</th>
+        <th>T</th>
+        <th>F</th>
+        <th>S</th>
+      </tr>
+      <tr>
+        <td></td>
+        <td><div class="date">1</div></td>
+        <td><div class="date">2</div></td>
+        <td><div class="date">3</div><div class="event">Quickly</div></td>
+        <td><div class="date">4</div></td>
+        <td><div class="date">5</div></td>
+        <td><div class="date">6</div><div class="icon">🧓</div></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><div class="event">Meeting</div></td>
+        <td><div class="event">Report</div></td>
+        <td><div class="event">Symptom Report</div></td>
+        <td><div class="event">Checkup</div></td>
+        <td></td>
+        <td><div class="icon">🧓</div></td>
+      </tr>
+    </table>
+
+    {% endblock %}
+  </div>
+</body>
+</html>
