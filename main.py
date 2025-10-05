@@ -2,11 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 
 app = Flask(__name__)
-app.secret_key = "password"  
+app.secret_key = "password" 
+
+test_value = os.environ.get("TEST_KEY")
 
 @app.route("/")
 def home():
-    test_value = os.environ.get("TEST_KEY")
     return render_template("landing.html", test_value=test_value)
 
 @app.route("/reminders")
