@@ -1,93 +1,88 @@
 
 {% extends "base.html" %}
-
-{% block title %}Symptom Survey{% endblock %}
-
+{% block title %}Home{% endblock %}
 {% block content %}
-</style>
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');body{background:#f7fafd;min-height:100vh;font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:1.08rem;font-weight:400;overflow-x:hidden;letter-spacing:.01em}.modern-header{background:#2980b9;color:#fff;padding:32px 0 18px 0;text-align:center;font-size:2.2rem;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:700;letter-spacing:1px;width:100vw;position:relative;left:50%;right:50%;transform:translateX(-50%);margin:0;border-radius:0 0 18px 18px;box-shadow:0 2px 8px rgba(41,128,185,.07);border-bottom:1px solid #e3e3e3;text-shadow:0 1px 4px #2980b944}.modern-form{max-width:480px;margin:32px auto 0 auto;background:#fff;padding:24px 24px 18px 24px;border-radius:10px;box-shadow:0 2px 8px 0 rgba(41,128,185,.07);color:#222;font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:1.08rem;font-weight:400;border:1px solid #e3e3e3;position:relative;overflow:hidden}.modern-form h2{text-align:center;color:#2980b9;font-size:1.15rem;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:700;margin-bottom:14px;letter-spacing:.5px;text-shadow:0 1px 4px #2980b944;position:relative;z-index:1}.modern-label{font-size:1rem;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:600;margin-bottom:8px;display:block;text-align:center;color:#2980b9;text-shadow:0 1px 4px #2980b944;position:relative;z-index:1}.modern-emoji-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:6px;position:relative;z-index:1}.modern-emoji-btn{background:#f7fafd;border:1.5px solid #2980b9;font-size:2rem;font-family:'Inter','Segoe UI',Arial,sans-serif;cursor:pointer;border-radius:8px;transition:box-shadow .2s,background .2s,border .2s,color .2s;box-shadow:0 1px 4px rgba(41,128,185,.07);padding:6px 12px;color:#2980b9;outline:none}.modern-emoji-btn:hover,.modern-emoji-btn.selected{background:#2980b9;color:#fff;box-shadow:0 2px 8px rgba(41,128,185,.18);border-color:#6dd5ed}.modern-yn-row{display:flex;justify-content:center;gap:18px;margin-bottom:12px;position:relative;z-index:1}.modern-yn-btn{background:#f7fafd;border:1.5px solid #2980b9;font-size:1.7rem;font-family:'Inter','Segoe UI',Arial,sans-serif;cursor:pointer;border-radius:8px;transition:box-shadow .2s,background .2s,border .2s,color .2s;box-shadow:0 1px 4px rgba(41,128,185,.07);padding:6px 18px;color:#2980b9;outline:none}.modern-yn-btn:hover,.modern-yn-btn.selected{background:#2980b9;color:#fff;box-shadow:0 2px 8px rgba(41,128,185,.18);border-color:#6dd5ed}.modern-textarea{width:100%;border-radius:6px;border:1px solid #2980b9;padding:8px;font-size:.98rem;font-family:'Inter','Segoe UI',Arial,sans-serif;margin-bottom:12px;background:#f7fafd;box-shadow:0 1px 4px rgba(41,128,185,.07);resize:vertical;color:#222;outline:none;position:relative;z-index:1;transition:border-color .2s,box-shadow .2s}.modern-textarea:focus{border-color:#6dd5ed;box-shadow:0 0 0 2px #6dd5ed88}.modern-submit-btn{background:#2980b9;color:white;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:600;border:none;border-radius:6px;padding:10px 0;cursor:pointer;width:100%;font-size:1rem;margin-top:6px;box-shadow:0 1px 6px rgba(41,128,185,.10);transition:background .2s,box-shadow .2s;letter-spacing:.5px;outline:none;position:relative;z-index:1}.modern-submit-btn:hover{background:#6dd5ed;box-shadow:0 2px 8px rgba(41,128,185,.18)}.modern-fixed-btns{position:fixed;bottom:0;right:0;z-index:1000;display:flex;flex-direction:column;gap:12px}.modern-fixed-btn{background:#2980b9;color:#fff;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:600;border:none;border-radius:12px 0 0 12px;width:200px;height:80px;font-size:.98rem;box-shadow:0 1px 6px rgba(41,128,185,.10);cursor:pointer;padding:0 8px;white-space:normal;word-break:break-word;transition:background .2s,box-shadow .2s;letter-spacing:.5px;outline:none}.modern-fixed-btn:hover{background:#6dd5ed;box-shadow:0 2px 8px rgba(41,128,185,.18)}.modern-footer{text-align:center;color:#2980b9;font-size:.98rem;margin-top:24px;letter-spacing:.8px;text-shadow:0 1px 4px #2980b944;font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:600}</style>
-</style>
-</style>
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Symptom Survey</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>body{background:#f7fafd;min-height:100vh;font-family:Inter,'Segoe UI',Arial,sans-serif;font-size:1.08rem;font-weight:400;overflow-x:hidden;letter-spacing:.01em;margin:0;padding:0}.modern-header{background:#2980b9;color:#fff;padding:32px 0 18px;text-align:center;font-size:2.2rem;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:700;letter-spacing:1px;width:100%;border-radius:0 0 18px 18px;box-shadow:0 2px 8px rgba(41,128,185,.07);border-bottom:1px solid #e3e3e3;text-shadow:0 1px 4px #2980b944}.modern-form{max-width:480px;margin:32px auto 0;background:#fff;padding:24px 24px 18px;border-radius:10px;box-shadow:0 2px 8px 0 rgba(41,128,185,.07);color:#222;font-family:Inter,'Segoe UI',Arial,sans-serif;font-size:1.08rem;font-weight:400;border:1px solid #e3e3e3;position:relative;overflow:hidden}.modern-form h2{text-align:center;color:#2980b9;font-size:1.15rem;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:700;margin-bottom:14px;letter-spacing:.5px;text-shadow:0 1px 4px #2980b944;position:relative;z-index:1}.modern-label{font-size:1rem;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:600;margin-bottom:8px;display:block;text-align:center;color:#2980b9;text-shadow:0 1px 4px #2980b944;position:relative;z-index:1}.modern-emoji-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:6px;position:relative;z-index:1}.modern-emoji-btn{background:#f7fafd;border:1.5px solid #2980b9;font-size:2rem;font-family:Inter,'Segoe UI',Arial,sans-serif;cursor:pointer;border-radius:8px;transition:box-shadow .2s,background .2s,border .2s,color .2s;box-shadow:0 1px 4px rgba(41,128,185,.07);padding:6px 12px;color:#2980b9;outline:0}.modern-emoji-btn:hover,.modern-emoji-btn.selected{background:#2980b9;color:#fff;box-shadow:0 2px 8px rgba(41,128,185,.18);border-color:#6dd5ed}.modern-yn-row{display:flex;justify-content:center;gap:18px;margin-bottom:12px;position:relative;z-index:1}.modern-yn-btn{background:#f7fafd;border:1.5px solid #2980b9;font-size:1.7rem;font-family:Inter,'Segoe UI',Arial,sans-serif;cursor:pointer;border-radius:8px;transition:box-shadow .2s,background .2s,border .2s,color .2s;box-shadow:0 1px 4px rgba(41,128,185,.07);padding:6px 18px;color:#2980b9;outline:0}.modern-yn-btn:hover,.modern-yn-btn.selected{background:#2980b9;color:#fff;box-shadow:0 2px 8px rgba(41,128,185,.18);border-color:#6dd5ed}.modern-textarea{width:100%;border-radius:6px;border:1px solid #2980b9;padding:8px;font-size:.98rem;font-family:Inter,'Segoe UI',Arial,sans-serif;margin-bottom:12px;background:#f7fafd;box-shadow:0 1px 4px rgba(41,128,185,.07);resize:vertical;color:#222;outline:0;position:relative;z-index:1;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}.modern-textarea:focus{border-color:#6dd5ed;box-shadow:0 0 0 2px #6dd5ed88}.modern-submit-btn{background:#2980b9;color:#fff;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:600;border:none;border-radius:6px;padding:10px 0;cursor:pointer;width:100%;font-size:1rem;margin-top:6px;box-shadow:0 1px 6px rgba(41,128,185,.1);transition:background .2s,box-shadow .2s;letter-spacing:.5px;outline:0;position:relative;z-index:1}.modern-submit-btn:hover{background:#6dd5ed;box-shadow:0 2px 8px rgba(41,128,185,.18)}.modern-fixed-btns{position:fixed;bottom:0;right:0;z-index:1000;display:flex;flex-direction:column;gap:12px}.modern-fixed-btn{background:#2980b9;color:#fff;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:600;border:none;border-radius:12px 0 0 12px;width:200px;height:80px;font-size:.98rem;box-shadow:0 1px 6px rgba(41,128,185,.1);cursor:pointer;padding:0 8px;white-space:normal;word-break:break-word;transition:background .2s,box-shadow .2s;letter-spacing:.5px;outline:0}.modern-fixed-btn:hover{background:#6dd5ed;box-shadow:0 2px 8px rgba(41,128,185,.18)}.modern-footer{text-align:center;color:#2980b9;font-size:.98rem;margin-top:24px;margin-bottom:24px;letter-spacing:.8px;text-shadow:0 1px 4px #2980b944;font-family:Inter,'Segoe UI',Arial,sans-serif;font-weight:600}#symptomsModal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(41,128,185,.97);z-index:2000}#symptomsModal>div{width:100vw;height:100vh;background:#fff;overflow-y:auto}#symptomsModal h2{background:#2980b9;color:#fff;border-radius:0 0 32px 32px;padding:18px 0 32px;text-align:center;font-size:2.2rem;position:relative;margin:0}#symptomsModal button{position:absolute;top:18px;right:32px;background:#fff;color:#2980b9;border:none;border-radius:6px;padding:8px 16px;font-size:1rem;cursor:pointer}#symptomsModal .body{color:#222;font-size:1.08rem;padding:48px 24px 32px;max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:32px}section{background:#f7fafd;border-radius:12px;padding:24px;box-shadow:0 1px 6px rgba(41,128,185,.07)}section h3{color:#2980b9;margin-top:0}section ul{margin:0 0 0 1em;padding:0}.severity-container{display:none;text-align:center;margin-bottom:12px}.severity-container label{color:#2980b9;font-weight:600}.severity-container select{border-radius:6px;border:1px solid #2980b9;padding:4px}.no-history{text-align:center;color:#666;font-style:italic;padding:32px}.success-message{background:#4caf50;color:#fff;padding:12px;border-radius:6px;text-align:center;margin-top:12px;display:none;animation:fadeIn .3s}@keyframes fadeIn{from{opacity:0}to{opacity:1}}</style>
+</head>
+<body>
 <div class="modern-header">Symptom Survey</div>
-
-<form method="post" action="/submit_symptoms" class="modern-form">
-	<h2>Please fill out your symptoms</h2>
-
-	<label class="modern-label">How are you feeling?</label>
-	<div class="modern-emoji-row" id="feeling-row">
-		<button type="button" class="modern-emoji-btn" title="Great">😄</button>
-		<button type="button" class="modern-emoji-btn" title="Good">🙂</button>
-		<button type="button" class="modern-emoji-btn" title="Okay">😐</button>
-		<button type="button" class="modern-emoji-btn" title="Bad">😕</button>
-		<button type="button" class="modern-emoji-btn" title="Terrible">😢</button>
-	</div>
-
-	{% set symptoms = [
-		{'id': 'fever', 'label': 'Do you have a fever?'},
-		{'id': 'cough', 'label': 'Do you have a cough?'},
-		{'id': 'fatigue', 'label': 'Are you experiencing fatigue?'}
-	] %}
-	{% for s in symptoms %}
-	<label for="{{s.id}}" class="modern-label">{{s.label}}</label>
-	<div class="modern-yn-row" id="{{s.id}}-row">
-		<button type="button" class="modern-yn-btn" title="Yes">✔️</button>
-		<button type="button" class="modern-yn-btn" title="No">❌</button>
-	</div>
-	<div id="{{s.id}}-severity" style="display:none; text-align:center; margin-bottom:12px;">
-		<label for="{{s.id}}_severity" style="color:#2980b9; font-weight:600;">Severity:</label>
-		<select name="{{s.id}}_severity" id="{{s.id}}_severity" style="border-radius:6px; border:1px solid #2980b9; padding:4px;">
-			<option value="Mild">Mild</option>
-			<option value="Moderate">Moderate</option>
-			<option value="Severe">Severe</option>
-		</select>
-	</div>
-	{% endfor %}
-
-	<label for="other" class="modern-label">Other symptoms:</label>
-	<div style="display:flex; justify-content:center; align-items:center; width:100%;">
-		<textarea id="other" name="other" rows="3" class="modern-textarea" style="max-width:96%; min-width:96%; display:block;"></textarea>
-	</div>
-
-	<button type="submit" class="modern-submit-btn" onclick="event.preventDefault();">Submit</button>
-</form>
-
-<div class="modern-fixed-btns">
-	 <button type="button" class="modern-fixed-btn" onclick="alert('More coming soon!')">Export/Download PDF</button>
-	 <button type="button" class="modern-fixed-btn" onclick="openSymptomsModal()">View Symptom History</button>
+<form id="symptomForm" class="modern-form">
+<h2>Please fill out your symptoms</h2>
+<label class="modern-label">How are you feeling?</label>
+<div class="modern-emoji-row" id="feeling-row">
+<button type="button" class="modern-emoji-btn" data-value="Great" title="Great">😄</button>
+<button type="button" class="modern-emoji-btn" data-value="Good" title="Good">🙂</button>
+<button type="button" class="modern-emoji-btn" data-value="Okay" title="Okay">😐</button>
+<button type="button" class="modern-emoji-btn" data-value="Bad" title="Bad">😕</button>
+<button type="button" class="modern-emoji-btn" data-value="Terrible" title="Terrible">😢</button>
 </div>
-
-<style>#symptomsModal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(41,128,185,.97);z-index:2000;}#symptomsModal>div{width:100vw;height:100vh;background:#fff;}#symptomsModal h2{background:#2980b9;color:#fff;border-radius:0 0 32px 32px;padding:18px 0 32px 0;text-align:center;font-size:2.2rem;position:relative;}#symptomsModal button{position:absolute;top:18px;right:32px;background:#fff;color:#2980b9;border:none;border-radius:6px;padding:8px 16px;font-size:1rem;cursor:pointer;}#symptomsModal .body{color:#222;font-size:1.08rem;padding:48px 24px 32px 24px;max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:32px;}section{background:#f7fafd;border-radius:12px;padding:24px;box-shadow:0 1px 6px rgba(41,128,185,.07);}section h3{color:#2980b9;margin-top:0;}section ul{margin:0 0 0 1em;padding:0;}</style>
-<div id="symptomsModal"><div><h2>Symptom History<button onclick="closeSymptomsModal()">Close</button></h2><div class="body"><section><h3 id="todaySymptomsHeader">Symptoms on </h3><ul><li>Fever: Mild</li><li>Cough: Moderate</li><li>Fatigue: Severe</li><li>Other: Sore throat (Mild)</li></ul></section><section><h3 id="previousSymptomsHeader">Symptoms on </h3><ul><li>Fever: None</li><li>Cough: Mild</li><li>Fatigue: Moderate</li><li>Other: Headache (Mild)</li></ul></section></div></div></div>
+<label for="fever" class="modern-label">Do you have a fever?</label>
+<div class="modern-yn-row" id="fever-row">
+<button type="button" class="modern-yn-btn" data-value="Yes" title="Yes">✔️</button>
+<button type="button" class="modern-yn-btn" data-value="No" title="No">❌</button>
+</div>
+<div id="fever-severity" class="severity-container">
+<label for="fever_severity">Severity:</label>
+<select name="fever_severity" id="fever_severity">
+<option value="Mild">Mild</option>
+<option value="Moderate">Moderate</option>
+<option value="Severe">Severe</option>
+</select>
+</div>
+<label for="cough" class="modern-label">Do you have a cough?</label>
+<div class="modern-yn-row" id="cough-row">
+<button type="button" class="modern-yn-btn" data-value="Yes" title="Yes">✔️</button>
+<button type="button" class="modern-yn-btn" data-value="No" title="No">❌</button>
+</div>
+<div id="cough-severity" class="severity-container">
+<label for="cough_severity">Severity:</label>
+<select name="cough_severity" id="cough_severity">
+<option value="Mild">Mild</option>
+<option value="Moderate">Moderate</option>
+<option value="Severe">Severe</option>
+</select>
+</div>
+<label for="fatigue" class="modern-label">Are you experiencing fatigue?</label>
+<div class="modern-yn-row" id="fatigue-row">
+<button type="button" class="modern-yn-btn" data-value="Yes" title="Yes">✔️</button>
+<button type="button" class="modern-yn-btn" data-value="No" title="No">❌</button>
+</div>
+<div id="fatigue-severity" class="severity-container">
+<label for="fatigue_severity">Severity:</label>
+<select name="fatigue_severity" id="fatigue_severity">
+<option value="Mild">Mild</option>
+<option value="Moderate">Moderate</option>
+<option value="Severe">Severe</option>
+</select>
+</div>
+<label for="other" class="modern-label">Other symptoms:</label>
+<div style="display:flex;justify-content:center;align-items:center;width:100%">
+<textarea id="other" name="other" rows="3" class="modern-textarea" style="max-width:96%;min-width:96%;display:block"></textarea>
+</div>
+<button type="submit" class="modern-submit-btn">Submit</button>
+<div id="successMessage" class="success-message">Symptoms saved successfully!</div>
+</form>
+<div class="modern-fixed-btns">
+<button type="button" class="modern-fixed-btn" onclick="exportToPDF()">Export/Download PDF</button>
+<button type="button" class="modern-fixed-btn" onclick="openSymptomsModal()">View Symptom History</button>
+</div>
+<div id="symptomsModal">
+<div>
+<h2>Symptom History<button onclick="closeSymptomsModal()">Close</button></h2>
+<div class="body" id="historyBody">
+<div class="no-history">No symptom history available. Submit your first entry!</div>
+</div>
+</div>
+</div>
 <div class="modern-footer">Aryan, Aneesh, Shirish</div>
-
-<script>
-
-document.querySelectorAll('.modern-emoji-row .modern-emoji-btn').forEach(btn => {
-	btn.addEventListener('click', function() {
-		document.querySelectorAll('.modern-emoji-row .modern-emoji-btn').forEach(b => b.classList.remove('selected'));
-		btn.classList.add('selected');
-	});
-});
-document.querySelectorAll('.modern-yn-row').forEach(row => {
-	row.querySelectorAll('.modern-yn-btn').forEach(btn => {
-		btn.onclick = () => {
-			row.querySelectorAll('.modern-yn-btn').forEach(b => b.classList.remove('selected'));
-			btn.classList.add('selected');
-			let sev = document.getElementById(row.id.replace('-row','-severity'));
-			if (sev) sev.style.display = btn.title==='Yes' ? 'block' : 'none';
-		};
-	});
-});
-
-function openSymptomsModal() {
-  document.getElementById('symptomsModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-function closeSymptomsModal() {
-  document.getElementById('symptomsModal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-</script>
-<script>(()=>{let d=new Date,o={year:'numeric',month:'long',day:'numeric'};document.getElementById('todaySymptomsHeader').textContent='Symptoms on '+d.toLocaleDateString(undefined,o);d.setDate(d.getDate()-1);document.getElementById('previousSymptomsHeader').textContent='Symptoms on '+d.toLocaleDateString(undefined,o);})();</script>
+<script>document.querySelectorAll('.modern-emoji-row .modern-emoji-btn').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('.modern-emoji-row .modern-emoji-btn').forEach(b=>b.classList.remove('selected'));b.classList.add('selected')}));document.querySelectorAll('.modern-yn-row').forEach(r=>r.querySelectorAll('.modern-yn-btn').forEach(b=>{b.onclick=()=>{r.querySelectorAll('.modern-yn-btn').forEach(b=>b.classList.remove('selected'));b.classList.add('selected');let s=document.getElementById(r.id.replace('-row','-severity'));if(s)s.style.display=b.title==='Yes'?'block':'none'}}));function getTodayDate(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`}function formatDate(d){const date=new Date(d+'T00:00:00');return date.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}function saveSymptoms(d){const t=getTodayDate();let s=JSON.parse(localStorage.getItem('symptomHistory')||'{}');s[t]=d;localStorage.setItem('symptomHistory',JSON.stringify(s))}function loadSymptoms(){return JSON.parse(localStorage.getItem('symptomHistory')||'{}')}document.getElementById('symptomForm').addEventListener('submit',function(e){e.preventDefault();const sf=document.querySelector('.modern-emoji-row .modern-emoji-btn.selected');const f=sf?sf.getAttribute('data-value'):null;const s={feeling:f,fever:null,feverSeverity:null,cough:null,coughSeverity:null,fatigue:null,fatigueSeverity:null,other:document.getElementById('other').value.trim()};const fv=document.querySelector('#fever-row .modern-yn-btn.selected');if(fv){s.fever=fv.getAttribute('data-value');if(s.fever==='Yes')s.feverSeverity=document.getElementById('fever_severity').value}const co=document.querySelector('#cough-row .modern-yn-btn.selected');if(co){s.cough=co.getAttribute('data-value');if(s.cough==='Yes')s.coughSeverity=document.getElementById('cough_severity').value}const fa=document.querySelector('#fatigue-row .modern-yn-btn.selected');if(fa){s.fatigue=fa.getAttribute('data-value');if(s.fatigue==='Yes')s.fatigueSeverity=document.getElementById('fatigue_severity').value}saveSymptoms(s);const sm=document.getElementById('successMessage');sm.style.display='block';setTimeout(()=>sm.style.display='none',3000)});function openSymptomsModal(){const s=loadSymptoms();const h=document.getElementById('historyBody');if(Object.keys(s).length===0){h.innerHTML='<div class="no-history">No symptom history available. Submit your first entry!</div>'}else{const sd=Object.keys(s).sort((a,b)=>b.localeCompare(a));let ht='';sd.forEach(d=>{const dt=s[d];ht+=`<section><h3>Symptoms on ${formatDate(d)}</h3><ul>`;if(dt.feeling)ht+=`<li><strong>Overall Feeling:</strong> ${dt.feeling}</li>`;if(dt.fever){if(dt.fever==='Yes')ht+=`<li><strong>Fever:</strong> ${dt.feverSeverity}</li>`;else ht+=`<li><strong>Fever:</strong> None</li>`}if(dt.cough){if(dt.cough==='Yes')ht+=`<li><strong>Cough:</strong> ${dt.coughSeverity}</li>`;else ht+=`<li><strong>Cough:</strong> None</li>`}if(dt.fatigue){if(dt.fatigue==='Yes')ht+=`<li><strong>Fatigue:</strong> ${dt.fatigueSeverity}</li>`;else ht+=`<li><strong>Fatigue:</strong> None</li>`}if(dt.other)ht+=`<li><strong>Other:</strong> ${dt.other}</li>`;ht+=`</ul></section>`});h.innerHTML=ht}document.getElementById('symptomsModal').style.display='block';document.body.style.overflow='hidden'}function closeSymptomsModal(){document.getElementById('symptomsModal').style.display='none';document.body.style.overflow=''}function exportToPDF(){const s=loadSymptoms();if(Object.keys(s).length===0){alert('No symptom history to export. Please submit at least one entry first!');return}const{jsPDF}=window.jspdf;const doc=new jsPDF();doc.setFontSize(22);doc.setTextColor(41,128,185);doc.text('Symptom History Report',105,20,{align:'center'});doc.setFontSize(10);doc.setTextColor(100,100,100);doc.text('Generated on '+new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}),105,28,{align:'center'});const sd=Object.keys(s).sort((a,b)=>b.localeCompare(a));let y=45;const ph=doc.internal.pageSize.height;const mb=20;sd.forEach((d,i)=>{const dt=s[d];if(y>ph-mb-40){doc.addPage();y=20}doc.setFontSize(14);doc.setTextColor(41,128,185);doc.text(formatDate(d),20,y);y+=8;doc.setDrawColor(41,128,185);doc.setLineWidth(.5);doc.line(20,y,190,y);y+=8;doc.setFontSize(11);doc.setTextColor(0,0,0);if(dt.feeling){doc.text(`Overall Feeling: ${dt.feeling}`,25,y);y+=7}if(dt.fever){if(dt.fever==='Yes')doc.text(`Fever: ${dt.feverSeverity}`,25,y);else doc.text('Fever: None',25,y);y+=7}if(dt.cough){if(dt.cough==='Yes')doc.text(`Cough: ${dt.coughSeverity}`,25,y);else doc.text('Cough: None',25,y);y+=7}if(dt.fatigue){if(dt.fatigue==='Yes')doc.text(`Fatigue: ${dt.fatigueSeverity}`,25,y);else doc.text('Fatigue: None',25,y);y+=7}if(dt.other){const ol=doc.splitTextToSize(`Other: ${dt.other}`,165);doc.text(ol,25,y);y+=ol.length*7}y+=10});const pc=doc.internal.getNumberOfPages();for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Aryan, Aneesh, Shirish',105,ph-10,{align:'center'});doc.text(`Page ${i} of ${pc}`,190,ph-10,{align:'right'})}doc.save(`Symptom_History_${getTodayDate()}.pdf`)}</script>
+</body>
+</html>
 {% endblock %}
