@@ -3,7 +3,6 @@
 <head>
   <title>{% block title %}Calendar{% endblock %}</title>
   <style>
-    /* === Global Styles === */
     body {
       font-family: 'Calibri', sans-serif;
       background-color: #ffffff;
@@ -11,7 +10,7 @@
       margin: 0;
     }
 
-    /* === Navigation Bar === */
+    /* === Navbar === */
     .logo {
       height: 75px;
       width: auto;
@@ -20,7 +19,7 @@
 
     nav {
       height: 75px;
-      background-color: #004aad; /* Cobalt Blue */
+      background-color: #004aad;
       display: flex;
       align-items: center;
       gap: 20px;
@@ -35,12 +34,10 @@
 
     nav a:hover {
       text-decoration: underline;
-      color: #1f80ff; /* Sapphire Blue hover */
+      color: #1f80ff;
     }
 
-    .content {
-      padding: 20px;
-    }
+    .content { padding: 20px; }
 
     /* === Header === */
     header {
@@ -74,9 +71,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    .add-btn:hover {
-      background: #b96300;
-    }
+    .add-btn:hover { background: #b96300; }
 
     /* === Month Tabs === */
     .month-tabs {
@@ -145,27 +140,61 @@
       color: white;
       padding: 0.3rem 0.5rem;
       border-radius: 5px;
-      font-size: 0.85rem;
-      margin: 0.2rem 0;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: inline-block;
-    }
-
-    .event:hover {
-      background: #b96300;
-    }
-
-    .icon {
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
       display: block;
       text-align: center;
-      margin-top: 5px;
     }
 
-    .icon img {
-      width: 40px;
-      height: 40px;
+    /* === Popup Form === */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
     }
+
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      width: 300px;
+      text-align: center;
+    }
+
+    .popup-content input,
+    .popup-content textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #d6d4d3;
+      border-radius: 5px;
+    }
+
+    .popup-content button {
+      background: #004aad;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .popup-content button:hover {
+      background: #1f80ff;
+    }
+
+    .close-btn {
+      background: #d67802;
+      margin-top: 10px;
+    }
+
   </style>
 </head>
 
@@ -184,7 +213,7 @@
     {% block content %}
     <header>
       <h1>Glyco Genie Calendar</h1>
-      <button class="add-btn">+</button>
+      <button class="add-btn" id="addReminderBtn">+</button>
     </header>
 
     <div class="month-tabs" id="monthTabs"></div>
@@ -197,6 +226,20 @@
       </thead>
       <tbody id="calendarBody"></tbody>
     </table>
+
+    <!-- Popup form -->
+    <div class="popup" id="popupForm">
+      <div class="popup-content">
+        <h3>Create Reminder</h3>
+        <input type="text" id="reminderTitle" placeholder="Title">
+        <input type="date" id="reminderDate">
+        <input type="time" id="reminderTime">
+        <textarea id="reminderNote" placeholder="Notes (optional)"></textarea>
+        <button id="saveReminder">Save</button>
+        <button class="close-btn" id="closePopup">Close</button>
+      </div>
+    </div>
+
     {% endblock %}
   </div>
 
@@ -206,30 +249,35 @@
       "July", "August", "September", "October", "November", "December"
     ];
 
-    const now = new Date();
-    let currentMonth = now.getMonth();
-    let currentYear = now.getFullYear();
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
 
     const monthTabs = document.getElementById("monthTabs");
     const calendarBody = document.getElementById("calendarBody");
 
-    // Create month tabs dynamically
+    const popup = document.getElementById("popupForm");
+    const addBtn = document.getElementById("addReminderBtn");
+    const closePopup = document.getElementById("closePopup");
+    const saveReminder = document.getElementById("saveReminder");
+
+    addBtn.onclick = () => popup.style.display = "flex";
+    closePopup.onclick = () => popup.style.display = "none";
+
     monthNames.forEach((month, index) => {
       const btn = document.createElement("button");
       btn.textContent = month;
       btn.classList.toggle("active", index === currentMonth);
       btn.onclick = () => {
         currentMonth = index;
-        updateCalendar();
+        renderCalendar();
         document.querySelectorAll(".month-tabs button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
       };
       monthTabs.appendChild(btn);
     });
 
-    function updateCalendar() {
+    function renderCalendar() {
       calendarBody.innerHTML = "";
-
       const firstDay = new Date(currentYear, currentMonth, 1);
       const lastDay = new Date(currentYear, currentMonth + 1, 0);
       const startDay = firstDay.getDay();
@@ -245,15 +293,16 @@
           } else if (date > totalDays) {
             break;
           } else {
-            // Add icons dynamically for weekends (example)
-            let iconHTML = "";
-            if (j === 6) {
-              iconHTML = `<div class="icon"><img src="{{ url_for('static', filename='icons/meds.png') }}" alt="Take Meds"></div>`;
-            } else if (date % 10 === 0) {
-              iconHTML = `<div class="icon"><img src="{{ url_for('static', filename='icons/monster.png') }}" alt="Reminder"></div>`;
-            }
-
-            cell.innerHTML = `<div class="date">${date}</div>${iconHTML}`;
+            cell.innerHTML = `<div class="date">${date}</div>`;
+            const fullDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+            const reminders = JSON.parse(localStorage.getItem("reminders") || "[]")
+              .filter(r => r.date === fullDate);
+            reminders.forEach(r => {
+              const eventDiv = document.createElement("div");
+              eventDiv.className = "event";
+              eventDiv.textContent = r.title;
+              cell.appendChild(eventDiv);
+            });
             date++;
           }
           row.appendChild(cell);
@@ -262,7 +311,31 @@
       }
     }
 
-    updateCalendar();
+    saveReminder.onclick = () => {
+      const title = document.getElementById("reminderTitle").value;
+      const date = document.getElementById("reminderDate").value;
+      const time = document.getElementById("reminderTime").value;
+      const note = document.getElementById("reminderNote").value;
+
+      if (!title || !date) {
+        alert("Please enter a title and date!");
+        return;
+      }
+
+      const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+      reminders.push({ title, date, time, note });
+      localStorage.setItem("reminders", JSON.stringify(reminders));
+
+      popup.style.display = "none";
+      document.getElementById("reminderTitle").value = "";
+      document.getElementById("reminderDate").value = "";
+      document.getElementById("reminderTime").value = "";
+      document.getElementById("reminderNote").value = "";
+
+      renderCalendar();
+    };
+
+    renderCalendar();
   </script>
 </body>
 </html>
