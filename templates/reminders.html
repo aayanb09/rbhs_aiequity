@@ -3,6 +3,7 @@
 <head>
   <title>{% block title %}Calendar{% endblock %}</title>
   <style>
+    /* === Global Styles === */
     body {
       font-family: 'Calibri', sans-serif;
       background-color: #ffffff;
@@ -19,7 +20,7 @@
 
     nav {
       height: 75px;
-      background-color: #088502;
+      background-color: #004aad; /* Cobalt Blue */
       display: flex;
       align-items: center;
       gap: 20px;
@@ -34,15 +35,16 @@
 
     nav a:hover {
       text-decoration: underline;
+      color: #1f80ff; /* Sapphire Blue hover */
     }
 
     .content {
       padding: 20px;
     }
 
-    /* === Calendar Header === */
+    /* === Header === */
     header {
-      background: #1e5ab6;
+      background: #004aad;
       color: white;
       padding: 1rem 2rem;
       display: flex;
@@ -55,13 +57,13 @@
     header h1 {
       margin: 0;
       font-size: 1.8rem;
-      background-color: green;
-      padding: 0.5rem;
+      background-color: #1f80ff;
+      padding: 0.5rem 1rem;
       border-radius: 5px;
     }
 
     .add-btn {
-      background: #ff9800;
+      background: #d67802;
       color: white;
       border: none;
       font-size: 1.5rem;
@@ -69,12 +71,14 @@
       border-radius: 50%;
       cursor: pointer;
       transition: background 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .add-btn:hover {
-      background: #e68900;
+      background: #b96300;
     }
 
+    /* === Month Tabs === */
     .month-tabs {
       display: flex;
       justify-content: center;
@@ -91,29 +95,31 @@
       margin: 0.25rem;
       padding: 0.5rem 1rem;
       font-weight: bold;
-      color: #1e5ab6;
+      color: #004aad;
       cursor: pointer;
       border-radius: 8px;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
     }
 
     .month-tabs button.active,
     .month-tabs button:hover {
-      background: #1e5ab6;
+      background: #1f80ff;
       color: white;
     }
 
+    /* === Calendar === */
     table.calendar {
       width: 100%;
       max-width: 900px;
       margin: 0 auto;
       border-collapse: collapse;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background-color: #ffffff;
     }
 
     .calendar th,
     .calendar td {
-      border: 1px solid #ccc;
+      border: 1px solid #d6d4d3;
       width: 14.28%;
       height: 100px;
       vertical-align: top;
@@ -125,27 +131,40 @@
       background: #f0f4fa;
       text-align: center;
       font-size: 1.1rem;
-      color: #1e5ab6;
+      color: #004aad;
     }
 
     .date {
       font-weight: bold;
       margin-bottom: 0.3rem;
+      color: #000000;
     }
 
     .event {
-      background: #ffb74d;
-      color: #222;
-      padding: 0.2rem 0.4rem;
+      background: #d67802;
+      color: white;
+      padding: 0.3rem 0.5rem;
       border-radius: 5px;
       font-size: 0.85rem;
       margin: 0.2rem 0;
       cursor: pointer;
       transition: background 0.2s;
+      display: inline-block;
     }
 
     .event:hover {
-      background: #ffa726;
+      background: #b96300;
+    }
+
+    .icon {
+      display: block;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .icon img {
+      width: 40px;
+      height: 40px;
     }
   </style>
 </head>
@@ -173,18 +192,11 @@
     <table class="calendar">
       <thead>
         <tr>
-          <th>S</th>
-          <th>M</th>
-          <th>T</th>
-          <th>W</th>
-          <th>T</th>
-          <th>F</th>
-          <th>S</th>
+          <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
         </tr>
       </thead>
       <tbody id="calendarBody"></tbody>
     </table>
-
     {% endblock %}
   </div>
 
@@ -201,7 +213,7 @@
     const monthTabs = document.getElementById("monthTabs");
     const calendarBody = document.getElementById("calendarBody");
 
-    // Create month tabs
+    // Create month tabs dynamically
     monthNames.forEach((month, index) => {
       const btn = document.createElement("button");
       btn.textContent = month;
@@ -216,7 +228,6 @@
     });
 
     function updateCalendar() {
-      // Clear existing rows
       calendarBody.innerHTML = "";
 
       const firstDay = new Date(currentYear, currentMonth, 1);
@@ -227,16 +238,22 @@
       let date = 1;
       for (let i = 0; i < 6; i++) {
         const row = document.createElement("tr");
-
         for (let j = 0; j < 7; j++) {
           const cell = document.createElement("td");
-
           if (i === 0 && j < startDay) {
             cell.innerHTML = "";
           } else if (date > totalDays) {
             break;
           } else {
-            cell.innerHTML = `<div class="date">${date}</div>`;
+            // Add icons dynamically for weekends (example)
+            let iconHTML = "";
+            if (j === 6) {
+              iconHTML = `<div class="icon"><img src="{{ url_for('static', filename='icons/meds.png') }}" alt="Take Meds"></div>`;
+            } else if (date % 10 === 0) {
+              iconHTML = `<div class="icon"><img src="{{ url_for('static', filename='icons/monster.png') }}" alt="Reminder"></div>`;
+            }
+
+            cell.innerHTML = `<div class="date">${date}</div>${iconHTML}`;
             date++;
           }
           row.appendChild(cell);
