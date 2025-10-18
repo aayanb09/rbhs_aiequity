@@ -3,7 +3,6 @@
 <head>
   <title>{% block title %}Calendar{% endblock %}</title>
   <style>
-    /* === Global Styles === */
     body {
       font-family: 'Calibri', sans-serif;
       background-color: #ffffff;
@@ -37,12 +36,11 @@
       text-decoration: underline;
     }
 
-    /* === Page Content === */
     .content {
       padding: 20px;
     }
 
-    /* === Calendar Styles === */
+    /* === Calendar Header === */
     header {
       background: #1e5ab6;
       color: white;
@@ -84,12 +82,13 @@
       padding: 0.5rem 0;
       border-radius: 8px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .month-tabs button {
       background: none;
       border: none;
-      margin: 0 0.5rem;
+      margin: 0.25rem;
       padding: 0.5rem 1rem;
       font-weight: bold;
       color: #1e5ab6;
@@ -104,7 +103,7 @@
       color: white;
     }
 
-    .calendar {
+    table.calendar {
       width: 100%;
       max-width: 900px;
       margin: 0 auto;
@@ -148,16 +147,10 @@
     .event:hover {
       background: #ffa726;
     }
-
-    .icon {
-      font-size: 2rem;
-      text-align: center;
-    }
   </style>
 </head>
 
 <body>
-  <!-- ✅ Navigation Bar -->
   <nav>
     <a href="/">
       <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
@@ -168,52 +161,91 @@
     <a href="/symptomTracker">Symptom Tracker</a>
   </nav>
 
-  <!-- ✅ Page Content -->
   <div class="content">
     {% block content %}
-
     <header>
-      <h1>Gylco Genie Calendar</h1>
+      <h1>Glyco Genie Calendar</h1>
       <button class="add-btn">+</button>
     </header>
 
-    <div class="month-tabs">
-      <button>September</button>
-      <button class="active">October</button>
-      <button>November</button>
-    </div>
+    <div class="month-tabs" id="monthTabs"></div>
 
     <table class="calendar">
-      <tr>
-        <th>S</th>
-        <th>M</th>
-        <th>T</th>
-        <th>W</th>
-        <th>T</th>
-        <th>F</th>
-        <th>S</th>
-      </tr>
-      <tr>
-        <td></td>
-        <td><div class="date">1</div></td>
-        <td><div class="date">2</div></td>
-        <td><div class="date">3</div><div class="event">Monthly Refill</div></td>
-        <td><div class="date">4</div></td>
-        <td><div class="date">5</div></td>
-        <td><div class="date">6</div><div class="icon">Take Meds</div></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td><div class="event">Meeting</div></td>
-        <td><div class="event">Report</div></td>
-        <td><div class="event">Symptom Report</div></td>
-        <td><div class="event">Checkup</div></td>
-        <td></td>
-        <td><div class="icon">Take Meds</div></td>
-      </tr>
+      <thead>
+        <tr>
+          <th>S</th>
+          <th>M</th>
+          <th>T</th>
+          <th>W</th>
+          <th>T</th>
+          <th>F</th>
+          <th>S</th>
+        </tr>
+      </thead>
+      <tbody id="calendarBody"></tbody>
     </table>
 
     {% endblock %}
   </div>
+
+  <script>
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    const now = new Date();
+    let currentMonth = now.getMonth();
+    let currentYear = now.getFullYear();
+
+    const monthTabs = document.getElementById("monthTabs");
+    const calendarBody = document.getElementById("calendarBody");
+
+    // Create month tabs
+    monthNames.forEach((month, index) => {
+      const btn = document.createElement("button");
+      btn.textContent = month;
+      btn.classList.toggle("active", index === currentMonth);
+      btn.onclick = () => {
+        currentMonth = index;
+        updateCalendar();
+        document.querySelectorAll(".month-tabs button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      };
+      monthTabs.appendChild(btn);
+    });
+
+    function updateCalendar() {
+      // Clear existing rows
+      calendarBody.innerHTML = "";
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const startDay = firstDay.getDay();
+      const totalDays = lastDay.getDate();
+
+      let date = 1;
+      for (let i = 0; i < 6; i++) {
+        const row = document.createElement("tr");
+
+        for (let j = 0; j < 7; j++) {
+          const cell = document.createElement("td");
+
+          if (i === 0 && j < startDay) {
+            cell.innerHTML = "";
+          } else if (date > totalDays) {
+            break;
+          } else {
+            cell.innerHTML = `<div class="date">${date}</div>`;
+            date++;
+          }
+          row.appendChild(cell);
+        }
+        calendarBody.appendChild(row);
+      }
+    }
+
+    updateCalendar();
+  </script>
 </body>
 </html>
