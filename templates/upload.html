@@ -1,51 +1,145 @@
 {% extends "base.html" %}
-
-{% block title %}Home {% endblock %}
-
+{% block title %}Home{% endblock %}
 {% block content %}
+
+<!-- HEIC Converter Library -->
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
 <p>Aasiyah and Satvik</p>
 
 <div id="main-flex" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 32px; margin-top: 40px; max-width: 98vw; margin-left: auto; margin-right: auto;">
-	
-	<div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-				<h3 style="text-align:center; color:#007bff;">Nutritional Needs</h3>
-				<ul style="font-size:1rem; color:#333; padding-left: 18px;">
-					<li>Low Sodium</li>
-					<li>High Protein</li>
-					<li>Vegetarian</li>
-					<li>Gluten Free</li>
-				</ul>
-	</div>
 
-	
-	<div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-		<div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px;">
-			<button style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #007bff; color: white; cursor: pointer;">Upload</button>
-			<button style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #28a745; color: white; cursor: pointer;">Capture</button>
-		</div>
-		<div style="width: 800px; height: 470px; background: #222; border-radius: 16px; margin-bottom: 30px;"></div>
-	</div>
+    <!-- Nutritional Needs Survey -->
+    <div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="text-align:center; color:#007bff;">Nutritional Needs</h3>
+        <form id="nutrition-form" style="font-size:1rem; color:#333; display:flex; flex-direction:column; gap:8px;">
+            <label><input type="checkbox" name="need" value="Low Sodium"> Low Sodium</label>
+            <label><input type="checkbox" name="need" value="High Protein"> High Protein</label>
+            <label><input type="checkbox" name="need" value="Vegetarian"> Vegetarian</label>
+            <label><input type="checkbox" name="need" value="Gluten Free"> Gluten Free</label>
+            <label><input type="checkbox" name="need" value="Low Sugar"> Low Sugar</label>
+            <label><input type="checkbox" name="need" value="High Fiber"> High Fiber</label>
+        </form>
+    </div>
 
-	
-	<div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-				<h3 style="text-align:center; color:#28a745;">What the food has</h3>
-				<ul style="font-size:1rem; color:#333; padding-left: 18px;">
-					<li>High Protein</li>
-					<li>Vegetarian</li>
-					<li>Contains Gluten</li>
-					<li>Moderate Sodium</li>
-				</ul>
-	</div>
+    <!-- Center Section -->
+    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+        <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px;">
+            <button id="upload-btn" style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #007bff; color: white; cursor: pointer;">Upload</button>
+            <button id="capture-btn" style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #28a745; color: white; cursor: pointer;">Capture</button>
+        </div>
+
+        <!-- Display Area -->
+        <div id="display-box" style="width: 800px; height: 470px; background: #222; border-radius: 16px; margin-bottom: 30px; display:flex; justify-content:center; align-items:center; overflow:hidden; position:relative;">
+            <p id="placeholder-text" style="color:white; font-size:1.2rem; position:absolute;">Your image will appear here</p>
+            <video id="camera-stream" autoplay style="display:none; width:100%; height:100%; object-fit:cover; border-radius:16px;"></video>
+            <img id="uploaded-img" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:16px; background-color:#000;">
+            <canvas id="snapshot-canvas" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:16px; background-color:#000;"></canvas>
+        </div>
+    </div>
+
+    <!-- Placeholder Right Panel -->
+    <div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="text-align:center; color:#28a745;">What the food has</h3>
+        <ul style="font-size:1rem; color:#333; padding-left: 18px;">
+            <li>High Protein</li>
+            <li>Vegetarian</li>
+            <li>Contains Gluten</li>
+            <li>Moderate Sodium</li>
+        </ul>
+    </div>
 </div>
 
-
-
-
+<!-- Bottom Placeholder -->
 <div style="margin: 16px auto 0 auto; background: #333; color: #fff; border-radius: 10px; padding: 18px 32px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center;">
-	<div style="width: calc(200px + 32px + 800px + 32px + 200px); max-width: 100%;">
-		Continuing with this should lead to you fulfilling your nutrition requirements.
-	</div>
+    <div style="width: calc(200px + 32px + 800px + 32px + 200px); max-width: 100%;">
+        Continuing with this should lead to you fulfilling your nutrition requirements.
+    </div>
 </div>
+
+<!-- JavaScript -->
+<script>
+const uploadBtn = document.getElementById("upload-btn");
+const captureBtn = document.getElementById("capture-btn");
+const video = document.getElementById("camera-stream");
+const img = document.getElementById("uploaded-img");
+const placeholder = document.getElementById("placeholder-text");
+const canvas = document.getElementById("snapshot-canvas");
+let stream = null;
+let capturing = false;
+
+// --- Image Upload (HEIC supported) ---
+uploadBtn.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.tif,.tiff,.heic,.heif,image/*";
+    input.onchange = async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.type === "image/heic" || file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
+            try {
+                const converted = await heic2any({
+                    blob: file,
+                    toType: "image/jpeg",
+                    quality: 0.9
+                });
+                const reader = new FileReader();
+                reader.onload = ev => showUploadedImage(ev.target.result);
+                reader.readAsDataURL(converted);
+            } catch (err) {
+                console.error(err);
+                alert("Could not convert HEIC image. Try exporting it as JPEG or PNG.");
+            }
+        } else {
+            const reader = new FileReader();
+            reader.onload = ev => showUploadedImage(ev.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+    input.click();
+});
+
+function showUploadedImage(dataUrl) {
+    img.src = dataUrl;
+    img.style.display = "block";
+    video.style.display = "none";
+    canvas.style.display = "none";
+    placeholder.style.display = "none";
+}
+
+// --- Camera Capture ---
+captureBtn.addEventListener("click", async () => {
+    if (!capturing) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = "block";
+            img.style.display = "none";
+            canvas.style.display = "none";
+            placeholder.style.display = "none";
+            capturing = true;
+            captureBtn.textContent = "Snap";
+        } catch (err) {
+            alert("Camera access denied or not available.");
+        }
+    } else {
+        const context = canvas.getContext("2d");
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        canvas.width = w;
+        canvas.height = h;
+        context.drawImage(video, 0, 0, w, h);
+
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+
+        video.style.display = "none";
+        canvas.style.display = "block";
+        captureBtn.textContent = "Capture";
+        capturing = false;
+    }
+});
+</script>
 
 {% endblock %}
