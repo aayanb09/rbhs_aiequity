@@ -1,63 +1,261 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Upload Food{% endblock %}
 {% block content %}
 
 <!-- HEIC Converter Library -->
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
-<p>Aasiyah and Satvik</p>
+<style>
+.upload-container {
+    padding: 30px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 100%);
+    min-height: 100vh;
+}
 
-<div id="main-flex" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 32px; margin-top: 40px; max-width: 98vw; margin-left: auto; margin-right: auto;">
+.upload-header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: #fff;
+    padding: 32px;
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.25);
+    margin-bottom: 30px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 
-    <!-- Nutritional Needs Survey -->
-    <div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <h3 style="text-align:center; color:#007bff;">Nutritional Needs</h3>
-        <form id="nutrition-form" style="font-size:1rem; color:#333; display:flex; flex-direction:column; gap:8px;">
-            <label><input type="checkbox" name="need" value="Low Sodium"> Low Sodium</label>
-            <label><input type="checkbox" name="need" value="High Protein"> High Protein</label>
-            <label><input type="checkbox" name="need" value="Vegetarian"> Vegetarian</label>
-            <label><input type="checkbox" name="need" value="Gluten Free"> Gluten Free</label>
-            <label><input type="checkbox" name="need" value="Low Sugar"> Low Sugar</label>
-            <label><input type="checkbox" name="need" value="High Fiber"> High Fiber</label>
-        </form>
-    </div>
+.main-flex {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-    <!-- Center Section -->
-    <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-        <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px;">
-            <button id="upload-btn" style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #007bff; color: white; cursor: pointer;">Upload</button>
-            <button id="capture-btn" style="padding: 12px 32px; font-size: 1.1rem; border-radius: 8px; border: none; background-color: #28a745; color: white; cursor: pointer;">Capture</button>
+.side-panel {
+    width: 260px;
+    min-height: 510px;
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
+    border: 2px solid #e3f2fd;
+}
+
+.side-panel h3 {
+    text-align: center;
+    color: #1976d2;
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.nutrition-form {
+    font-size: 1rem;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nutrition-form label {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.nutrition-form label:hover {
+    background: #e3f2fd;
+}
+
+.nutrition-form input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.center-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 800px;
+}
+
+.button-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.action-btn {
+    padding: 14px 36px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.upload-btn {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+}
+
+.capture-btn {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+}
+
+.display-box {
+    width: 100%;
+    max-width: 800px;
+    height: 470px;
+    background: #1a1a1a;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: 3px solid #e3f2fd;
+}
+
+.placeholder-text {
+    color: white;
+    font-size: 1.3rem;
+    position: absolute;
+    text-align: center;
+    padding: 20px;
+}
+
+.camera-stream, .uploaded-img, .snapshot-canvas {
+    display: none;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 16px;
+    background-color: #000;
+}
+
+.results-list {
+    font-size: 1rem;
+    color: #333;
+    padding-left: 24px;
+    line-height: 1.8;
+}
+
+.results-list li {
+    margin-bottom: 8px;
+}
+
+.bottom-message {
+    margin: 30px auto 0;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 20px 32px;
+    text-align: center;
+    font-size: 1.1rem;
+    max-width: 1200px;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    font-weight: 500;
+}
+
+.credits {
+    text-align: center;
+    color: #888;
+    font-size: 0.95rem;
+    margin-top: 20px;
+}
+
+@media (max-width: 1200px) {
+    .main-flex {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .side-panel {
+        width: 100%;
+        max-width: 500px;
+    }
+    
+    .display-box {
+        height: 400px;
+    }
+}
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">📤 Upload Food Image</div>
+    
+    <div class="main-flex">
+        <!-- Nutritional Needs Survey -->
+        <div class="side-panel">
+            <h3>🥗 Nutritional Needs</h3>
+            <form id="nutrition-form" class="nutrition-form">
+                <label><input type="checkbox" name="need" value="Low Sodium"> Low Sodium</label>
+                <label><input type="checkbox" name="need" value="High Protein"> High Protein</label>
+                <label><input type="checkbox" name="need" value="Vegetarian"> Vegetarian</label>
+                <label><input type="checkbox" name="need" value="Gluten Free"> Gluten Free</label>
+                <label><input type="checkbox" name="need" value="Low Sugar"> Low Sugar</label>
+                <label><input type="checkbox" name="need" value="High Fiber"> High Fiber</label>
+            </form>
         </div>
 
-        <!-- Display Area -->
-        <div id="display-box" style="width: 800px; height: 470px; background: #222; border-radius: 16px; margin-bottom: 30px; display:flex; justify-content:center; align-items:center; overflow:hidden; position:relative;">
-            <p id="placeholder-text" style="color:white; font-size:1.2rem; position:absolute;">Your image will appear here</p>
-            <video id="camera-stream" autoplay style="display:none; width:100%; height:100%; object-fit:cover; border-radius:16px;"></video>
-            <img id="uploaded-img" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:16px; background-color:#000;">
-            <canvas id="snapshot-canvas" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:16px; background-color:#000;"></canvas>
+        <!-- Center Section -->
+        <div class="center-section">
+            <div class="button-group">
+                <button id="upload-btn" class="action-btn upload-btn">📁 Upload</button>
+                <button id="capture-btn" class="action-btn capture-btn">📸 Capture</button>
+            </div>
+
+            <!-- Display Area -->
+            <div id="display-box" class="display-box">
+                <p id="placeholder-text" class="placeholder-text">Your image will appear here</p>
+                <video id="camera-stream" autoplay class="camera-stream"></video>
+                <img id="uploaded-img" class="uploaded-img">
+                <canvas id="snapshot-canvas" class="snapshot-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="side-panel">
+            <h3>🍽️ What the food has</h3>
+            <ul class="results-list">
+                <li>High Protein</li>
+                <li>Vegetarian</li>
+                <li>Contains Gluten</li>
+                <li>Moderate Sodium</li>
+            </ul>
         </div>
     </div>
 
-    <!-- Placeholder Right Panel -->
-    <div style="width: 200px; min-height: 510px; background: #f0f4f8; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <h3 style="text-align:center; color:#28a745;">What the food has</h3>
-        <ul style="font-size:1rem; color:#333; padding-left: 18px;">
-            <li>High Protein</li>
-            <li>Vegetarian</li>
-            <li>Contains Gluten</li>
-            <li>Moderate Sodium</li>
-        </ul>
-    </div>
-</div>
-
-<!-- Bottom Placeholder -->
-<div style="margin: 16px auto 0 auto; background: #333; color: #fff; border-radius: 10px; padding: 18px 32px; text-align: center; font-size: 1.1rem; display: flex; justify-content: center;">
-    <div style="width: calc(200px + 32px + 800px + 32px + 200px); max-width: 100%;">
+    <!-- Bottom Message -->
+    <div class="bottom-message">
         Continuing with this should lead to you fulfilling your nutrition requirements.
     </div>
+    
+    <p class="credits">Aasiyah and Satvik</p>
 </div>
 
-<!-- JavaScript -->
 <script>
 const uploadBtn = document.getElementById("upload-btn");
 const captureBtn = document.getElementById("capture-btn");
@@ -119,7 +317,7 @@ captureBtn.addEventListener("click", async () => {
             canvas.style.display = "none";
             placeholder.style.display = "none";
             capturing = true;
-            captureBtn.textContent = "Snap";
+            captureBtn.innerHTML = "📸 Snap";
         } catch (err) {
             alert("Camera access denied or not available.");
         }
@@ -136,7 +334,7 @@ captureBtn.addEventListener("click", async () => {
 
         video.style.display = "none";
         canvas.style.display = "block";
-        captureBtn.textContent = "Capture";
+        captureBtn.innerHTML = "📸 Capture";
         capturing = false;
     }
 });

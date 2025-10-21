@@ -1,47 +1,167 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>{% block title %}CalcuPlate{% endblock %}</title>
+ <title>{% block title %}GlycoGenie{% endblock %}</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <style>
-   .logo {
-     height: 75px; /* Adjust size */
-     width: auto; /* Keeps aspect ratio */
-     margin-right: 1px; /* Adds spacing from links */
+   * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
    }
-   body { font-family: 'Calibri', sans-serif; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); margin: 0; }
-  
-   nav {
-     height: 75px;
-     background-color: #088502;
+   
+   body { 
+     font-family: 'Inter', 'Segoe UI', Arial, sans-serif; 
+     background: linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 100%);
+     color: #1a1a1a; 
+     margin: 0;
+     min-height: 100vh;
+   }
+   
+   /* Sidebar Navigation */
+   .sidebar {
+     position: fixed;
+     left: 0;
+     top: 0;
+     width: 280px;
+     height: 100vh;
+     background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%);
+     padding: 30px 20px;
+     display: flex;
+     flex-direction: column;
+     box-shadow: 4px 0 15px rgba(25, 118, 210, 0.2);
+     z-index: 1000;
+   }
+   
+   .logo-container {
      display: flex;
      align-items: center;
-     gap: 20px;
-     padding: 0 20px; /* horizontal padding only */
+     justify-content: center;
+     margin-bottom: 40px;
+     padding-bottom: 30px;
+     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
    }
-   nav a {
-     color: rgb(255, 255, 255);
+   
+   .logo {
+     max-width: 120px;
+     height: auto;
+     border-radius: 12px;
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+   }
+   
+   .app-title {
+     color: white;
+     font-size: 1.8rem;
+     font-weight: 700;
+     text-align: center;
+     margin-top: 15px;
+     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+   }
+   
+   .nav-links {
+     display: flex;
+     flex-direction: column;
+     gap: 12px;
+     flex: 1;
+   }
+   
+   .nav-links a {
+     color: white;
      text-decoration: none;
-     font-weight: bold;
+     padding: 16px 20px;
+     border-radius: 10px;
+     font-weight: 600;
+     font-size: 1.05rem;
+     transition: all 0.3s ease;
+     display: flex;
+     align-items: center;
+     gap: 12px;
+     background: rgba(255, 255, 255, 0.1);
    }
-   nav a:hover {
-     text-decoration: underline;
+   
+   .nav-links a:hover {
+     background: rgba(255, 255, 255, 0.25);
+     transform: translateX(8px);
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
    }
-  .content { padding: 0 20px; }
+   
+   .nav-links a.active {
+     background: rgba(255, 255, 255, 0.3);
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+   }
+   
+   .nav-icon {
+     font-size: 1.3rem;
+   }
+   
+   /* Main Content Area */
+   .content { 
+     margin-left: 280px;
+     padding: 0;
+     min-height: 100vh;
+   }
+   
+   /* Mobile Responsive */
+   @media (max-width: 768px) {
+     .sidebar {
+       width: 100%;
+       height: auto;
+       position: relative;
+       padding: 20px;
+     }
+     
+     .content {
+       margin-left: 0;
+     }
+     
+     .nav-links {
+       flex-direction: row;
+       flex-wrap: wrap;
+       gap: 8px;
+     }
+     
+     .nav-links a {
+       flex: 1;
+       min-width: 140px;
+       font-size: 0.95rem;
+       padding: 12px 16px;
+     }
+   }
  </style>
 </head>
 <body>
- <nav>
-   <a href="/">
-       <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
-   </a>   
-   <a href="/">Home</a>
-   <a href ="/reminders">Reminders</a>
-   <a href ="/upload">Upload</a>
-   <a href ="/symptomTracker">Symptom Tracker</a>
-  </nav>
+ <div class="sidebar">
+   <div class="logo-container">
+     <div>
+       <a href="/">
+         <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
+       </a>
+       <div class="app-title">GlycoGenie</div>
+     </div>
+   </div>
+   
+   <div class="nav-links">
+     <a href="/" class="{% if request.endpoint == 'home' %}active{% endif %}">
+       <span class="nav-icon">🏠</span>
+       <span>Home</span>
+     </a>
+     <a href="/symptomTracker" class="{% if request.endpoint == 'symptom' %}active{% endif %}">
+       <span class="nav-icon">📋</span>
+       <span>Track Symptoms</span>
+     </a>
+     <a href="/reminders" class="{% if request.endpoint == 'reminder' %}active{% endif %}">
+       <span class="nav-icon">⏰</span>
+       <span>Reminders</span>
+     </a>
+     <a href="/upload" class="{% if request.endpoint == 'upload' %}active{% endif %}">
+       <span class="nav-icon">📤</span>
+       <span>Upload Food</span>
+     </a>
+   </div>
+ </div>
+ 
  <div class="content">
    {% block content %}{% endblock %}
  </div>
 </body>
 </html>
-<endblock>
