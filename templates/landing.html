@@ -4,53 +4,60 @@
 
 {% block content %}
 <div style="
-    position: fixed;
-    top: 75px; /* offset for the navbar height */
-    left: 0;
-    width: 100vw;
-    height: calc(100vh - 75px);
+    width: 100%;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
+    align-items: center;
+    padding: 40px 60px;
     box-sizing: border-box;
-    overflow: hidden;
 ">
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; max-width: 1400px; padding: 80px 60px 40px 60px;">
-
-        <!-- Sidebar Navigation -->
-        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 18px; width: 250px; align-self: flex-start;">
-            <h2 style="color: #088502; margin-bottom: 10px;">Activities</h2>
-            <a href="/symptomTracker" style="background: #088502; color: white; padding: 0.9em 1.5em; border-radius: 8px; text-decoration: none; font-size: 1.1em; width: 100%;">Track Symptoms</a>
-            <a href="/reminders" style="background: #088502; color: white; padding: 0.9em 1.5em; border-radius: 8px; text-decoration: none; font-size: 1.1em; width: 100%;">Reminders</a>
-            <a href="/upload" style="background: #088502; color: white; padding: 0.9em 1.5em; border-radius: 8px; text-decoration: none; font-size: 1.1em; width: 100%;">Upload Food</a>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; max-width: 1200px; gap: 40px;">
 
         <!-- Main Centered Section -->
-        <div style="flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; gap: 20px;">
-            <h1 style="font-size: 2.8em; margin: 0.2em 0; color: #088502;">GlycoGenie</h1>
-            <h2 style="font-weight: 400; color: #333; margin-bottom: 1em;">Your Health Management Dashboard</h2>
-            <p style="max-width: 600px; color: #444; line-height: 1.6; margin: 0 auto 1.5em auto;">
+        <div style="flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px;">
+            <h1 style="font-size: 3.2em; margin: 0.2em 0; color: #1976d2; font-weight: 700; text-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);">GlycoGenie</h1>
+            <h2 style="font-weight: 400; color: #424242; margin-bottom: 1em; font-size: 1.5em;">Your Health Management Dashboard</h2>
+            <p style="max-width: 600px; color: #555; line-height: 1.8; margin: 0 auto 1.5em auto; font-size: 1.1em;">
                 Welcome to your personalized health dashboard. Here, you can record symptoms, schedule reminders, and generate accurate food analysis reports — all in one place.
             </p>
-            <p style="margin-top: 2em; color: #666; font-size: 0.9em;">Developed by Henry, Opparam, and Rita</p>
-            <p style="color:#888;">Test value: {{test_value}}</p>
+            
+            <!-- Quick Action Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 700px; margin-top: 30px;">
+                <a href="/symptomTracker" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <span style="font-size: 2em;">📋</span>
+                    <span>Track Symptoms</span>
+                </a>
+                <a href="/reminders" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <span style="font-size: 2em;">⏰</span>
+                    <span>Reminders</span>
+                </a>
+                <a href="/upload" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <span style="font-size: 2em;">📤</span>
+                    <span>Upload Food</span>
+                </a>
+            </div>
+            
+            <p style="margin-top: 3em; color: #888; font-size: 0.95em;">Developed by Henry, Opparam, and Rita</p>
+            <p style="color:#999; font-size: 0.85em;">Test value: {{test_value}}</p>
         </div>
 
         <!-- Right Widgets -->
-        <div style="display: flex; flex-direction: column; gap: 20px; width: 260px; align-self: flex-start;">
+        <div style="display: flex; flex-direction: column; gap: 20px; width: 300px;">
 
             <!-- Today's Symptoms Widget -->
-            <div id="todaysSymptomsWidget" style="display: block; background: #f8fdf8; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); color: #222;">
-                <h3 style="color: #088502; margin-bottom: 8px;">📋 Today's Symptoms</h3>
-                <div id="todaysSymptomsContent" style="font-size: 0.95em; color: #555; line-height: 1.4;">
+            <div id="todaysSymptomsWidget" style="display: block; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15); color: #222; border: 2px solid #e3f2fd;">
+                <h3 style="color: #1976d2; margin-bottom: 12px; font-size: 1.2em; font-weight: 700;">📋 Today's Symptoms</h3>
+                <div id="todaysSymptomsContent" style="font-size: 0.95em; color: #555; line-height: 1.6;">
                     Loading...
                 </div>
             </div>
 
             <!-- Today's Reminders Widget -->
-            <div id="todaysRemindersWidget" style="display: block; background: #f8fdf8; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); color: #222;">
-                <h3 style="color: #088502; margin-bottom: 8px;">⏰ Today's Reminders</h3>
-                <div id="todaysRemindersContent" style="font-size: 0.95em; color: #555; line-height: 1.4;">
+            <div id="todaysRemindersWidget" style="display: block; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15); color: #222; border: 2px solid #e3f2fd;">
+                <h3 style="color: #1976d2; margin-bottom: 12px; font-size: 1.2em; font-weight: 700;">⏰ Today's Reminders</h3>
+                <div id="todaysRemindersContent" style="font-size: 0.95em; color: #555; line-height: 1.6;">
                     Loading...
                 </div>
             </div>
@@ -64,16 +71,25 @@
     html, body {
         height: 100%;
         margin: 0;
-        overflow: hidden;
         font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
     }
+    
     a:hover {
-        background: #0a9e06;
-        transform: translateX(5px);
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4) !important;
     }
-    .widget:hover {
-        transform: scale(1.03);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    
+    /* Mobile Responsive */
+    @media (max-width: 968px) {
+        div[style*="display: flex; justify-content: space-between"] {
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+        
+        div[style*="width: 300px"] {
+            width: 100% !important;
+            max-width: 600px;
+        }
     }
 </style>
 
