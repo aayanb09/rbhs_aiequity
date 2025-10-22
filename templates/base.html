@@ -3,6 +3,9 @@
 <head>
  <title>{% block title %}GlycoGenie{% endblock %}</title>
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
  <style>
    * {
      margin: 0;
@@ -11,137 +14,244 @@
    }
    
    body { 
-     font-family: 'Inter', 'Segoe UI', Arial, sans-serif; 
-     background: linear-gradient(135deg, #e3f2fd 0%, #f5f9ff 100%);
-     color: #1a1a1a; 
+     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+     background: #f8fafc;
+     color: #1e293b; 
      margin: 0;
      min-height: 100vh;
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+   }
+   
+   /* Menu Toggle Button */
+   .menu-toggle {
+     position: fixed;
+     left: 20px;
+     top: 20px;
+     width: 48px;
+     height: 48px;
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+     border: none;
+     border-radius: 12px;
+     cursor: pointer;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     gap: 5px;
+     z-index: 1001;
+     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .menu-toggle:hover {
+     transform: scale(1.05);
+     box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+   }
+   
+   .menu-toggle span {
+     width: 24px;
+     height: 3px;
+     background: white;
+     border-radius: 2px;
+     transition: all 0.3s ease;
+   }
+   
+   .menu-toggle.active span:nth-child(1) {
+     transform: rotate(45deg) translate(7px, 7px);
+   }
+   
+   .menu-toggle.active span:nth-child(2) {
+     opacity: 0;
+   }
+   
+   .menu-toggle.active span:nth-child(3) {
+     transform: rotate(-45deg) translate(7px, -7px);
    }
    
    /* Sidebar Navigation */
    .sidebar {
      position: fixed;
-     left: 0;
+     left: -260px;
      top: 0;
-     width: 280px;
+     width: 260px;
      height: 100vh;
-     background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%);
-     padding: 30px 20px;
+     background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+     padding: 24px 16px;
      display: flex;
      flex-direction: column;
-     box-shadow: 4px 0 15px rgba(25, 118, 210, 0.2);
+     box-shadow: 4px 0 24px rgba(30, 64, 175, 0.12);
      z-index: 1000;
+     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .sidebar.open {
+     left: 0;
+   }
+   
+   /* Overlay for mobile */
+   .sidebar-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0, 0, 0, 0.5);
+     z-index: 999;
+     opacity: 0;
+     visibility: hidden;
+     transition: opacity 0.3s ease, visibility 0.3s ease;
+     backdrop-filter: blur(2px);
+   }
+   
+   .sidebar-overlay.active {
+     opacity: 1;
+     visibility: visible;
    }
    
    .logo-container {
      display: flex;
+     flex-direction: column;
      align-items: center;
      justify-content: center;
-     margin-bottom: 40px;
-     padding-bottom: 30px;
-     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+     margin-bottom: 32px;
+     padding-bottom: 24px;
+     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
    }
    
    .logo {
-     max-width: 120px;
+     max-width: 80px;
      height: auto;
-     border-radius: 12px;
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+     border-radius: 16px;
+     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+     margin-bottom: 12px;
    }
    
    .app-title {
      color: white;
-     font-size: 1.8rem;
+     font-size: 1.5rem;
      font-weight: 700;
      text-align: center;
-     margin-top: 15px;
-     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+     letter-spacing: -0.02em;
    }
    
    .nav-links {
      display: flex;
      flex-direction: column;
-     gap: 12px;
+     gap: 6px;
      flex: 1;
    }
    
    .nav-links a {
-     color: white;
+     color: rgba(255, 255, 255, 0.9);
      text-decoration: none;
-     padding: 16px 20px;
+     padding: 12px 16px;
      border-radius: 10px;
-     font-weight: 600;
-     font-size: 1.05rem;
-     transition: all 0.3s ease;
+     font-weight: 500;
+     font-size: 0.95rem;
+     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
      display: flex;
      align-items: center;
      gap: 12px;
-     background: rgba(255, 255, 255, 0.1);
+     background: transparent;
+     position: relative;
+   }
+   
+   .nav-links a::before {
+     content: '';
+     position: absolute;
+     left: 0;
+     top: 50%;
+     transform: translateY(-50%);
+     width: 3px;
+     height: 0;
+     background: white;
+     border-radius: 0 2px 2px 0;
+     transition: height 0.2s ease;
    }
    
    .nav-links a:hover {
-     background: rgba(255, 255, 255, 0.25);
-     transform: translateX(8px);
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+     background: rgba(255, 255, 255, 0.1);
+     color: white;
+   }
+   
+   .nav-links a:hover::before {
+     height: 24px;
    }
    
    .nav-links a.active {
-     background: rgba(255, 255, 255, 0.3);
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+     background: rgba(255, 255, 255, 0.15);
+     color: white;
+     font-weight: 600;
+   }
+   
+   .nav-links a.active::before {
+     height: 24px;
    }
    
    .nav-icon {
-     font-size: 1.3rem;
+     font-size: 1.25rem;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     width: 24px;
    }
    
    /* Main Content Area */
    .content { 
-     margin-left: 280px;
+     margin-left: 0;
      padding: 0;
      min-height: 100vh;
+     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    /* Mobile Responsive */
    @media (max-width: 768px) {
-     .sidebar {
-       width: 100%;
-       height: auto;
-       position: relative;
-       padding: 20px;
+     .menu-toggle {
+       left: 16px;
+       top: 16px;
      }
      
-     .content {
-       margin-left: 0;
-     }
-     
-     .nav-links {
+     .logo-container {
        flex-direction: row;
-       flex-wrap: wrap;
-       gap: 8px;
+       padding-bottom: 0;
+       border-bottom: none;
+       margin-bottom: 16px;
+       gap: 12px;
      }
      
-     .nav-links a {
-       flex: 1;
-       min-width: 140px;
-       font-size: 0.95rem;
-       padding: 12px 16px;
+     .logo {
+       max-width: 48px;
+       margin-bottom: 0;
+     }
+     
+     .app-title {
+       font-size: 1.25rem;
      }
    }
  </style>
 </head>
 <body>
- <div class="sidebar">
+ <!-- Menu Toggle Button -->
+ <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+   <span></span>
+   <span></span>
+   <span></span>
+ </button>
+
+ <!-- Overlay -->
+ <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+ <div class="sidebar" id="sidebar">
    <div class="logo-container">
-     <div>
-       <a href="/">
-         <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
-       </a>
-       <div class="app-title">GlycoGenie</div>
-     </div>
+     <a href="/">
+       <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
+     </a>
+     <div class="app-title">GlycoGenie</div>
    </div>
    
    <div class="nav-links">
-     <a href="/" class="{% if request.endpoint == 'home' %}active{% endif %}">
+     <a href="/home" class="{% if request.endpoint == 'home' %}active{% endif %}">
        <span class="nav-icon">🏠</span>
        <span>Home</span>
      </a>
@@ -163,5 +273,39 @@
  <div class="content">
    {% block content %}{% endblock %}
  </div>
+
+ <script>
+   const menuToggle = document.getElementById('menuToggle');
+   const sidebar = document.getElementById('sidebar');
+   const overlay = document.getElementById('sidebarOverlay');
+   const navLinks = document.querySelectorAll('.nav-links a');
+
+   function toggleSidebar() {
+     sidebar.classList.toggle('open');
+     overlay.classList.toggle('active');
+     menuToggle.classList.toggle('active');
+   }
+
+   function closeSidebar() {
+     sidebar.classList.remove('open');
+     overlay.classList.remove('active');
+     menuToggle.classList.remove('active');
+   }
+
+   menuToggle.addEventListener('click', toggleSidebar);
+   overlay.addEventListener('click', closeSidebar);
+   
+   // Close sidebar when clicking a nav link
+   navLinks.forEach(link => {
+     link.addEventListener('click', closeSidebar);
+   });
+
+   // Close sidebar on escape key
+   document.addEventListener('keydown', (e) => {
+     if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+       closeSidebar();
+     }
+   });
+ </script>
 </body>
 </html>

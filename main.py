@@ -7,6 +7,10 @@ app.secret_key = "password"
 test_value = os.environ.get("TEST_KEY")
 
 @app.route("/")
+def welcome():
+    return render_template("welcome.html")
+
+@app.route("/home")
 def home():
     return render_template("landing.html", test_value=test_value)
 
