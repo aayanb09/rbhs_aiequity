@@ -23,10 +23,56 @@
      -moz-osx-font-smoothing: grayscale;
    }
    
+   /* Menu Toggle Button */
+   .menu-toggle {
+     position: fixed;
+     left: 20px;
+     top: 20px;
+     width: 48px;
+     height: 48px;
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+     border: none;
+     border-radius: 12px;
+     cursor: pointer;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     gap: 5px;
+     z-index: 1001;
+     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .menu-toggle:hover {
+     transform: scale(1.05);
+     box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+   }
+   
+   .menu-toggle span {
+     width: 24px;
+     height: 3px;
+     background: white;
+     border-radius: 2px;
+     transition: all 0.3s ease;
+   }
+   
+   .menu-toggle.active span:nth-child(1) {
+     transform: rotate(45deg) translate(7px, 7px);
+   }
+   
+   .menu-toggle.active span:nth-child(2) {
+     opacity: 0;
+   }
+   
+   .menu-toggle.active span:nth-child(3) {
+     transform: rotate(-45deg) translate(7px, -7px);
+   }
+   
    /* Sidebar Navigation */
    .sidebar {
      position: fixed;
-     left: 0;
+     left: -260px;
      top: 0;
      width: 260px;
      height: 100vh;
@@ -36,6 +82,31 @@
      flex-direction: column;
      box-shadow: 4px 0 24px rgba(30, 64, 175, 0.12);
      z-index: 1000;
+     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .sidebar.open {
+     left: 0;
+   }
+   
+   /* Overlay for mobile */
+   .sidebar-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0, 0, 0, 0.5);
+     z-index: 999;
+     opacity: 0;
+     visibility: hidden;
+     transition: opacity 0.3s ease, visibility 0.3s ease;
+     backdrop-filter: blur(2px);
+   }
+   
+   .sidebar-overlay.active {
+     opacity: 1;
+     visibility: visible;
    }
    
    .logo-container {
@@ -128,22 +199,17 @@
    
    /* Main Content Area */
    .content { 
-     margin-left: 260px;
+     margin-left: 0;
      padding: 0;
      min-height: 100vh;
+     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    /* Mobile Responsive */
    @media (max-width: 768px) {
-     .sidebar {
-       width: 100%;
-       height: auto;
-       position: relative;
-       padding: 16px;
-     }
-     
-     .content {
-       margin-left: 0;
+     .menu-toggle {
+       left: 16px;
+       top: 16px;
      }
      
      .logo-container {
@@ -162,29 +228,21 @@
      .app-title {
        font-size: 1.25rem;
      }
-     
-     .nav-links {
-       flex-direction: row;
-       flex-wrap: wrap;
-       gap: 8px;
-     }
-     
-     .nav-links a {
-       flex: 1;
-       min-width: 120px;
-       font-size: 0.875rem;
-       padding: 10px 12px;
-       justify-content: center;
-     }
-     
-     .nav-links a::before {
-       display: none;
-     }
    }
  </style>
 </head>
 <body>
- <div class="sidebar">
+ <!-- Menu Toggle Button -->
+ <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+   <span></span>
+   <span></span>
+   <span></span>
+ </button>
+
+ <!-- Overlay -->
+ <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+ <div class="sidebar" id="sidebar">
    <div class="logo-container">
      <a href="/">
        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
@@ -193,7 +251,7 @@
    </div>
    
    <div class="nav-links">
-     <a href="/" class="{% if request.endpoint == 'home' %}active{% endif %}">
+     <a href="/home" class="{% if request.endpoint == 'home' %}active{% endif %}">
        <span class="nav-icon">🏠</span>
        <span>Home</span>
      </a>
@@ -215,5 +273,39 @@
  <div class="content">
    {% block content %}{% endblock %}
  </div>
+
+ <script>
+   const menuToggle = document.getElementById('menuToggle');
+   const sidebar = document.getElementById('sidebar');
+   const overlay = document.getElementById('sidebarOverlay');
+   const navLinks = document.querySelectorAll('.nav-links a');
+
+   function toggleSidebar() {
+     sidebar.classList.toggle('open');
+     overlay.classList.toggle('active');
+     menuToggle.classList.toggle('active');
+   }
+
+   function closeSidebar() {
+     sidebar.classList.remove('open');
+     overlay.classList.remove('active');
+     menuToggle.classList.remove('active');
+   }
+
+   menuToggle.addEventListener('click', toggleSidebar);
+   overlay.addEventListener('click', closeSidebar);
+   
+   // Close sidebar when clicking a nav link
+   navLinks.forEach(link => {
+     link.addEventListener('click', closeSidebar);
+   });
+
+   // Close sidebar on escape key
+   document.addEventListener('keydown', (e) => {
+     if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+       closeSidebar();
+     }
+   });
+ </script>
 </body>
 </html>
