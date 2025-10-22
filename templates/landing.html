@@ -3,98 +3,254 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div style="
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 60px;
-    box-sizing: border-box;
-">
+<style>
+    .home-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+    }
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; max-width: 1200px; gap: 40px;">
+    .home-content {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 32px;
+        width: 100%;
+        max-width: 1200px;
+        align-items: start;
+    }
 
-        <!-- Main Centered Section -->
-        <div style="flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px;">
-            <h1 style="font-size: 3.2em; margin: 0.2em 0; color: #1976d2; font-weight: 700; text-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);">GlycoGenie</h1>
-            <h2 style="font-weight: 400; color: #424242; margin-bottom: 1em; font-size: 1.5em;">Your Health Management Dashboard</h2>
-            <p style="max-width: 600px; color: #555; line-height: 1.8; margin: 0 auto 1.5em auto; font-size: 1.1em;">
-                Welcome to your personalized health dashboard. Here, you can record symptoms, schedule reminders, and generate accurate food analysis reports — all in one place.
+    .hero-section {
+        text-align: center;
+        padding: 40px 0;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        margin: 0 0 16px 0;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .hero-subtitle {
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 24px;
+        font-size: 1.5rem;
+        letter-spacing: -0.01em;
+    }
+
+    .hero-description {
+        max-width: 600px;
+        color: #475569;
+        line-height: 1.7;
+        margin: 0 auto 48px;
+        font-size: 1.05rem;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .action-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        padding: 24px 20px;
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(30, 64, 175, 0.15);
+        border-color: #3b82f6;
+    }
+
+    .action-icon {
+        font-size: 2.5rem;
+        transition: transform 0.25s ease;
+    }
+
+    .action-card:hover .action-icon {
+        transform: scale(1.1);
+    }
+
+    .action-text {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .widgets-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: sticky;
+        top: 40px;
+    }
+
+    .widget {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .widget:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .widget-title {
+        color: #1e40af;
+        margin-bottom: 16px;
+        font-size: 1.125rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .widget-content {
+        font-size: 0.9375rem;
+        color: #475569;
+        line-height: 1.6;
+    }
+
+    .widget-empty {
+        color: #94a3b8;
+        font-style: italic;
+        font-size: 0.875rem;
+    }
+
+    .symptom-item, .reminder-item {
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 3px solid #3b82f6;
+    }
+
+    .symptom-item:last-child, .reminder-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .item-label {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.875rem;
+    }
+
+    .item-value {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 64px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+    }
+
+    .test-value {
+        color: #cbd5e1;
+        font-size: 0.8125rem;
+        margin-top: 8px;
+    }
+
+    @media (max-width: 968px) {
+        .home-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .widgets-sidebar {
+            position: relative;
+            top: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+<div class="home-container">
+    <div class="home-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">GlycoGenie</h1>
+            <h2 class="hero-subtitle">Your Health Management Dashboard</h2>
+            <p class="hero-description">
+                Welcome to your personalized health dashboard. Track symptoms, schedule reminders, and analyze your food intake — all in one streamlined platform.
             </p>
             
             <!-- Quick Action Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 700px; margin-top: 30px;">
-                <a href="/symptomTracker" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <span style="font-size: 2em;">📋</span>
-                    <span>Track Symptoms</span>
+            <div class="quick-actions">
+                <a href="/symptomTracker" class="action-card">
+                    <span class="action-icon">📋</span>
+                    <span class="action-text">Track Symptoms</span>
                 </a>
-                <a href="/reminders" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <span style="font-size: 2em;">⏰</span>
-                    <span>Reminders</span>
+                <a href="/reminders" class="action-card">
+                    <span class="action-icon">⏰</span>
+                    <span class="action-text">Reminders</span>
                 </a>
-                <a href="/upload" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5em; border-radius: 12px; text-decoration: none; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <span style="font-size: 2em;">📤</span>
-                    <span>Upload Food</span>
+                <a href="/upload" class="action-card">
+                    <span class="action-icon">📤</span>
+                    <span class="action-text">Upload Food</span>
                 </a>
             </div>
             
-            <p style="margin-top: 3em; color: #888; font-size: 0.95em;">Developed by Aryan</p>
-            <p style="color:#999; font-size: 0.85em;">Test value: {{test_value}}</p>
+            <div class="footer-text">
+                <p>Developed by Aryan</p>
+                <p class="test-value">Test value: {{test_value}}</p>
+            </div>
         </div>
 
-        <!-- Right Widgets -->
-        <div style="display: flex; flex-direction: column; gap: 20px; width: 300px;">
-
+        <!-- Widgets Sidebar -->
+        <div class="widgets-sidebar">
             <!-- Today's Symptoms Widget -->
-            <div id="todaysSymptomsWidget" style="display: block; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15); color: #222; border: 2px solid #e3f2fd;">
-                <h3 style="color: #1976d2; margin-bottom: 12px; font-size: 1.2em; font-weight: 700;">📋 Today's Symptoms</h3>
-                <div id="todaysSymptomsContent" style="font-size: 0.95em; color: #555; line-height: 1.6;">
+            <div class="widget">
+                <h3 class="widget-title">📋 Today's Symptoms</h3>
+                <div id="todaysSymptomsContent" class="widget-content">
                     Loading...
                 </div>
             </div>
 
             <!-- Today's Reminders Widget -->
-            <div id="todaysRemindersWidget" style="display: block; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15); color: #222; border: 2px solid #e3f2fd;">
-                <h3 style="color: #1976d2; margin-bottom: 12px; font-size: 1.2em; font-weight: 700;">⏰ Today's Reminders</h3>
-                <div id="todaysRemindersContent" style="font-size: 0.95em; color: #555; line-height: 1.6;">
+            <div class="widget">
+                <h3 class="widget-title">⏰ Today's Reminders</h3>
+                <div id="todaysRemindersContent" class="widget-content">
                     Loading...
                 </div>
             </div>
-
         </div>
-
     </div>
 </div>
 
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-    }
-    
-    a:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4) !important;
-    }
-    
-    /* Mobile Responsive */
-    @media (max-width: 968px) {
-        div[style*="display: flex; justify-content: space-between"] {
-            flex-direction: column !important;
-            align-items: center !important;
-        }
-        
-        div[style*="width: 300px"] {
-            width: 100% !important;
-            max-width: 600px;
-        }
-    }
-</style>
-
 <script>
-// --- Utility Functions ---
 function getTodayDate() {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
@@ -108,7 +264,6 @@ function loadReminders() {
     return JSON.parse(localStorage.getItem('reminders') || '[]');
 }
 
-// --- Symptoms Widget ---
 function displayTodaysSymptoms() {
     const today = getTodayDate();
     const s = loadSymptoms();
@@ -117,25 +272,24 @@ function displayTodaysSymptoms() {
     if (s[today]) {
         const dt = s[today];
         let html = '';
-        if (dt.feeling) html += `<div><strong>Overall Feeling:</strong> ${dt.feeling}</div>`;
-        if (dt.fever) html += `<div><strong>Fever:</strong> ${dt.fever === 'Yes' ? dt.feverSeverity : 'None'}</div>`;
-        if (dt.cough) html += `<div><strong>Cough:</strong> ${dt.cough === 'Yes' ? dt.coughSeverity : 'None'}</div>`;
-        if (dt.fatigue) html += `<div><strong>Fatigue:</strong> ${dt.fatigue === 'Yes' ? dt.fatigueSeverity : 'None'}</div>`;
-        if (dt.other) html += `<div><strong>Other:</strong> ${dt.other}</div>`;
+        if (dt.feeling) html += `<div class="symptom-item"><span class="item-label">Overall Feeling:</span> <span class="item-value">${dt.feeling}</span></div>`;
+        if (dt.fever) html += `<div class="symptom-item"><span class="item-label">Fever:</span> <span class="item-value">${dt.fever === 'Yes' ? dt.feverSeverity : 'None'}</span></div>`;
+        if (dt.cough) html += `<div class="symptom-item"><span class="item-label">Cough:</span> <span class="item-value">${dt.cough === 'Yes' ? dt.coughSeverity : 'None'}</span></div>`;
+        if (dt.fatigue) html += `<div class="symptom-item"><span class="item-label">Fatigue:</span> <span class="item-value">${dt.fatigue === 'Yes' ? dt.fatigueSeverity : 'None'}</span></div>`;
+        if (dt.other) html += `<div class="symptom-item"><span class="item-label">Other:</span> <span class="item-value">${dt.other}</span></div>`;
         contentDiv.innerHTML = html;
     } else {
-        contentDiv.innerHTML = '<div style="color:#888;font-style:italic;">No symptoms recorded today.</div>';
+        contentDiv.innerHTML = '<div class="widget-empty">No symptoms recorded today.</div>';
     }
 }
 
-// --- Reminders Widget with AM/PM ---
 function displayTodaysReminders() {
     const today = getTodayDate();
     const reminders = loadReminders().filter(r => r.date === today);
     const contentDiv = document.getElementById('todaysRemindersContent');
 
     if (reminders.length > 0) {
-        let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+        let html = '';
         reminders.forEach(r => {
             let timeStr = '';
             if (r.time) {
@@ -147,25 +301,23 @@ function displayTodaysReminders() {
                 else if (hour > 12) hour -= 12;
                 timeStr = ` at ${hour}:${min} ${ampm}`;
             }
-            html += `<div style="background: #f5f9ff; padding: 10px; border-radius: 8px; border-left: 3px solid #1976d2;">`;
-            html += `<strong style="color: #1976d2;">${r.title}</strong>${timeStr}`;
-            if (r.note) html += `<div style="font-size:0.85em;color:#666;margin-top:4px;">${r.note}</div>`;
+            html += `<div class="reminder-item">`;
+            html += `<div class="item-label">${r.title}</div>`;
+            if (timeStr) html += `<div class="item-value">${timeStr.trim()}</div>`;
+            if (r.note) html += `<div class="item-value" style="margin-top:4px;font-size:0.8125rem;">${r.note}</div>`;
             html += `</div>`;
         });
-        html += '</div>';
         contentDiv.innerHTML = html;
     } else {
-        contentDiv.innerHTML = '<div style="color:#888;font-style:italic;">No reminders for today.</div>';
+        contentDiv.innerHTML = '<div class="widget-empty">No reminders for today.</div>';
     }
 }
 
-// --- Initialize Widgets ---
 document.addEventListener('DOMContentLoaded', () => {
     displayTodaysSymptoms();
     displayTodaysReminders();
 });
 
-// --- Listen for storage changes to update widgets in real-time ---
 window.addEventListener('storage', () => {
     displayTodaysSymptoms();
     displayTodaysReminders();

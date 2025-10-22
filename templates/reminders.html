@@ -3,630 +3,646 @@
 {% block content %}
 
 <style>
-    /* === Header === */
-    header {
-      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-      color: white;
-      padding: 1.5rem 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-radius: 16px;
-      margin: 30px;
-      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.25);
-    }
+.reminders-container {
+  background: #f8fafc;
+  min-height: 100vh;
+  padding: 40px;
+}
 
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 700;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+.page-header {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #1e293b;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-    .add-btn {
-      background: white;
-      color: #1976d2;
-      border: none;
-      font-size: 1.8rem;
-      padding: 0.5rem 1rem;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      font-weight: 700;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.page-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
 
-    .add-btn:hover { 
-      transform: scale(1.1);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-    }
+.add-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+  font-weight: 700;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    /* === Month Tabs === */
-    .month-tabs {
-      display: flex;
-      justify-content: center;
-      background: white;
-      padding: 0.8rem;
-      border-radius: 12px;
-      margin: 0 30px 30px 30px;
-      flex-wrap: wrap;
-      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
-      gap: 8px;
-    }
+.add-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+}
 
-    .month-tabs button {
-      background: #e3f2fd;
-      border: 2px solid transparent;
-      margin: 0;
-      padding: 0.6rem 1.2rem;
-      font-weight: 600;
-      color: #1976d2;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
+.month-tabs {
+  display: flex;
+  justify-content: center;
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 0 auto 32px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  gap: 8px;
+  max-width: 1200px;
+  border: 2px solid #e2e8f0;
+}
 
-    .month-tabs button.active,
-    .month-tabs button:hover {
-      background: #1976d2;
-      color: white;
-      border-color: #1565c0;
-      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
-    }
+.month-tabs button {
+  background: #f8fafc;
+  border: 2px solid transparent;
+  margin: 0;
+  padding: 10px 20px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9375rem;
+}
 
-    /* === Calendar === */
-    .calendar-container {
-      padding: 0 30px 30px 30px;
-    }
-    
-    table.calendar {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      border-collapse: collapse;
-      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
-      background-color: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+.month-tabs button.active,
+.month-tabs button:hover {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #3b82f6;
+}
 
-    .calendar th,
-    .calendar td {
-      border: 1px solid #e3f2fd;
-      width: 14.28%;
-      height: 120px;
-      vertical-align: top;
-      padding: 0.8rem;
-      position: relative;
-    }
+.calendar-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 0 40px 0;
+}
 
-    .calendar th {
-      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-      text-align: center;
-      font-size: 1.1rem;
-      color: white;
-      font-weight: 700;
-      padding: 1rem;
-    }
+table.calendar {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
 
-    .calendar td {
-      background: white;
-      transition: background 0.2s ease;
-    }
-    
-    .calendar td:hover {
-      background: #f5f9ff;
-    }
+.calendar th,
+.calendar td {
+  border: 1px solid #e2e8f0;
+  width: 14.28%;
+  height: 120px;
+  vertical-align: top;
+  padding: 12px;
+  position: relative;
+}
 
-    .date {
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: #1976d2;
-      font-size: 1.1rem;
-    }
+.calendar th {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  text-align: center;
+  font-size: 0.9375rem;
+  color: white;
+  font-weight: 600;
+  padding: 16px;
+  border: none;
+}
 
-    .today-marker {
-      background: #ffeb3b;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: #1976d2;
-      font-size: 1.1rem;
-    }
+.calendar td {
+  background: white;
+  transition: background 0.2s ease;
+}
 
-    .event {
-      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-      color: white;
-      padding: 0.4rem 0.6rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      margin-top: 0.4rem;
-      display: block;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(25, 118, 210, 0.3);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+.calendar td:hover {
+  background: #f8fafc;
+}
 
-    .event:hover {
-      background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-      transform: scale(1.05);
-    }
+.date {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
 
-    /* === Popup Form === */
-    .popup {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
+.today-marker {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 0.9375rem;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
 
-    .popup-content {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      width: 400px;
-      max-width: 90%;
-    }
-    
-    .popup-content h3 {
-      color: #1976d2;
-      margin-bottom: 20px;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
+.event {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  margin-top: 6px;
+  display: block;
+  text-align: left;
+  border-left: 3px solid #3b82f6;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.3;
+}
 
-    .popup-content label {
-      display: block;
-      font-weight: 600;
-      color: #1976d2;
-      margin-top: 12px;
-      margin-bottom: 6px;
-    }
+.event:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  transform: translateX(2px);
+}
 
-    .popup-content input,
-    .popup-content textarea {
-      width: calc(100% - 28px);
-      margin: 0 0 12px 0;
-      padding: 12px;
-      border: 2px solid #e3f2fd;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-    
-    .popup-content input:focus,
-    .popup-content textarea:focus {
-      outline: none;
-      border-color: #1976d2;
-    }
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
 
-    .popup-content button {
-      background: #1976d2;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      margin: 8px 4px 0 0;
-    }
+.modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 480px;
+}
 
-    .popup-content button:hover {
-      background: #1565c0;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-    }
+.modal-content h3 {
+  color: #1e293b;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
 
-    .close-btn {
-      background: #757575 !important;
-    }
-    
-    .close-btn:hover {
-      background: #616161 !important;
-    }
+.modal-content label {
+  display: block;
+  font-weight: 600;
+  color: #475569;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 0.9375rem;
+}
 
-    .delete-btn {
-      background: #d32f2f !important;
-    }
-    
-    .delete-btn:hover {
-      background: #c62828 !important;
-    }
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  margin: 0 0 12px 0;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  transition: border-color 0.2s ease;
+  color: #1e293b;
+}
 
-    /* === View Reminder Popup === */
-    .reminder-detail {
-      margin: 15px 0;
-    }
+.modal-content input:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
-    .reminder-detail strong {
-      color: #1976d2;
-      display: block;
-      margin-bottom: 5px;
-    }
+.modal-content textarea {
+  resize: vertical;
+  min-height: 80px;
+}
 
-    .reminder-detail div {
-      padding: 8px;
-      background: #f5f9ff;
-      border-radius: 6px;
-      border-left: 3px solid #1976d2;
-    }
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
 
-    /* === Mobile Responsive === */
-    @media (max-width: 768px) {
-      .calendar th,
-      .calendar td {
-        height: 80px;
-        padding: 0.4rem;
-        font-size: 0.85rem;
-      }
+.btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  min-width: 100px;
+}
 
-      .event {
-        font-size: 0.75rem;
-        padding: 0.3rem 0.4rem;
-      }
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+}
 
-      .month-tabs {
-        padding: 0.5rem;
-      }
+.btn-secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
-      .month-tabs button {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.9rem;
-      }
-    }
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+}
+
+.reminder-detail {
+  margin: 16px 0;
+}
+
+.reminder-detail strong {
+  color: #475569;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reminder-detail-value {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+  color: #1e293b;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 768px) {
+  .reminders-container {
+    padding: 24px;
+  }
+
+  .page-header {
+    padding: 20px;
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .calendar th,
+  .calendar td {
+    height: 80px;
+    padding: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .event {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+  }
+
+  .month-tabs {
+    padding: 8px;
+  }
+
+  .month-tabs button {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+  }
+
+  .modal-content {
+    padding: 24px;
+  }
+}
 </style>
 
-<div>
-    <header>
-      <h1>📅 GlycoGenie Calendar</h1>
-      <button class="add-btn" id="addReminderBtn">+</button>
-    </header>
+<div class="reminders-container">
+  <div class="page-header">
+    <h1>📅 Calendar & Reminders</h1>
+    <button class="add-btn" id="addReminderBtn">+</button>
+  </div>
 
-    <div class="month-tabs" id="monthTabs"></div>
+  <div class="month-tabs" id="monthTabs"></div>
 
-    <div class="calendar-container">
-      <table class="calendar">
-        <thead>
-          <tr>
-            <th>Sunday</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
-          </tr>
-        </thead>
-        <tbody id="calendarBody"></tbody>
-      </table>
-    </div>
+  <div class="calendar-wrapper">
+    <table class="calendar">
+      <thead>
+        <tr>
+          <th>Sunday</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+        </tr>
+      </thead>
+      <tbody id="calendarBody"></tbody>
+    </table>
+  </div>
 
-    <!-- Add/Edit Reminder Popup -->
-    <div class="popup" id="popupForm">
-      <div class="popup-content">
-        <h3 id="popupTitle">Create Reminder</h3>
-        <label for="reminderTitle">Title *</label>
-        <input type="text" id="reminderTitle" placeholder="e.g., Take medication">
-        
-        <label for="reminderDate">Date *</label>
-        <input type="date" id="reminderDate">
-        
-        <label for="reminderTime">Time</label>
-        <input type="time" id="reminderTime">
-        
-        <label for="reminderNote">Notes</label>
-        <textarea id="reminderNote" placeholder="Add any additional notes..." rows="4"></textarea>
-        
-        <div>
-          <button id="saveReminder">💾 Save</button>
-          <button class="close-btn" id="closePopup">✖ Cancel</button>
-        </div>
+  <!-- Add/Edit Reminder Modal -->
+  <div class="modal" id="popupForm">
+    <div class="modal-content">
+      <h3 id="popupTitle">Create Reminder</h3>
+      <label for="reminderTitle">Title *</label>
+      <input type="text" id="reminderTitle" placeholder="e.g., Take medication">
+      
+      <label for="reminderDate">Date *</label>
+      <input type="date" id="reminderDate">
+      
+      <label for="reminderTime">Time</label>
+      <input type="time" id="reminderTime">
+      
+      <label for="reminderNote">Notes</label>
+      <textarea id="reminderNote" placeholder="Add any additional notes..."></textarea>
+      
+      <div class="button-group">
+        <button class="btn" id="saveReminder">Save</button>
+        <button class="btn btn-secondary" id="closePopup">Cancel</button>
       </div>
     </div>
+  </div>
 
-    <!-- View Reminder Popup -->
-    <div class="popup" id="viewReminderPopup">
-      <div class="popup-content">
-        <h3>📋 Reminder Details</h3>
-        <div id="reminderDetails"></div>
-        <div style="margin-top: 20px;">
-          <button id="editReminderBtn">✏️ Edit</button>
-          <button class="delete-btn" id="deleteReminderBtn">🗑️ Delete</button>
-          <button class="close-btn" id="closeViewPopup">✖ Close</button>
-        </div>
+  <!-- View Reminder Modal -->
+  <div class="modal" id="viewReminderPopup">
+    <div class="modal-content">
+      <h3>Reminder Details</h3>
+      <div id="reminderDetails"></div>
+      <div class="button-group">
+        <button class="btn" id="editReminderBtn">Edit</button>
+        <button class="btn btn-danger" id="deleteReminderBtn">Delete</button>
+        <button class="btn btn-secondary" id="closeViewPopup">Close</button>
       </div>
     </div>
+  </div>
 </div>
 
 <script>
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-    let editingReminderId = null;
-    let viewingReminderId = null;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let editingReminderId = null;
+let viewingReminderId = null;
 
-    const monthTabs = document.getElementById("monthTabs");
-    const calendarBody = document.getElementById("calendarBody");
+const monthTabs = document.getElementById("monthTabs");
+const calendarBody = document.getElementById("calendarBody");
+const popup = document.getElementById("popupForm");
+const viewPopup = document.getElementById("viewReminderPopup");
+const addBtn = document.getElementById("addReminderBtn");
+const closePopup = document.getElementById("closePopup");
+const closeViewPopup = document.getElementById("closeViewPopup");
+const saveReminder = document.getElementById("saveReminder");
+const editReminderBtn = document.getElementById("editReminderBtn");
+const deleteReminderBtn = document.getElementById("deleteReminderBtn");
 
-    const popup = document.getElementById("popupForm");
-    const viewPopup = document.getElementById("viewReminderPopup");
-    const addBtn = document.getElementById("addReminderBtn");
-    const closePopup = document.getElementById("closePopup");
-    const closeViewPopup = document.getElementById("closeViewPopup");
-    const saveReminder = document.getElementById("saveReminder");
-    const editReminderBtn = document.getElementById("editReminderBtn");
-    const deleteReminderBtn = document.getElementById("deleteReminderBtn");
+function generateId() {
+  return 'reminder_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
 
-    // Generate unique ID for reminders
-    function generateId() {
-      return 'reminder_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
+function getTodayDate() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
 
-    // Get today's date in YYYY-MM-DD format
-    function getTodayDate() {
-      const today = new Date();
-      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    }
+function formatTime(time24) {
+  if (!time24) return '';
+  const [hourStr, minStr] = time24.split(':');
+  let hour = parseInt(hourStr);
+  const min = minStr;
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  if (hour === 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  return `${hour}:${min} ${ampm}`;
+}
 
-    // Format time to 12-hour format with AM/PM
-    function formatTime(time24) {
-      if (!time24) return '';
-      const [hourStr, minStr] = time24.split(':');
-      let hour = parseInt(hourStr);
-      const min = minStr;
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      if (hour === 0) hour = 12;
-      else if (hour > 12) hour -= 12;
-      return `${hour}:${min} ${ampm}`;
-    }
+addBtn.onclick = () => {
+  editingReminderId = null;
+  document.getElementById("popupTitle").textContent = "Create Reminder";
+  document.getElementById("reminderTitle").value = "";
+  document.getElementById("reminderDate").value = "";
+  document.getElementById("reminderTime").value = "";
+  document.getElementById("reminderNote").value = "";
+  popup.style.display = "flex";
+};
 
-    // Open add reminder popup
-    addBtn.onclick = () => {
-      editingReminderId = null;
-      document.getElementById("popupTitle").textContent = "Create Reminder";
-      document.getElementById("reminderTitle").value = "";
-      document.getElementById("reminderDate").value = "";
-      document.getElementById("reminderTime").value = "";
-      document.getElementById("reminderNote").value = "";
-      popup.style.display = "flex";
-    };
+closePopup.onclick = () => {
+  popup.style.display = "none";
+  editingReminderId = null;
+};
 
-    closePopup.onclick = () => {
-      popup.style.display = "none";
-      editingReminderId = null;
-    };
+closeViewPopup.onclick = () => {
+  viewPopup.style.display = "none";
+  viewingReminderId = null;
+};
 
-    closeViewPopup.onclick = () => {
-      viewPopup.style.display = "none";
-      viewingReminderId = null;
-    };
-
-    // Create month tabs
-    monthNames.forEach((month, index) => {
-      const btn = document.createElement("button");
-      btn.textContent = month;
-      btn.classList.toggle("active", index === currentMonth);
-      btn.onclick = () => {
-        currentMonth = index;
-        renderCalendar();
-        document.querySelectorAll(".month-tabs button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-      };
-      monthTabs.appendChild(btn);
-    });
-
-    // Render calendar
-    function renderCalendar() {
-      calendarBody.innerHTML = "";
-      const firstDay = new Date(currentYear, currentMonth, 1);
-      const lastDay = new Date(currentYear, currentMonth + 1, 0);
-      const startDay = firstDay.getDay();
-      const totalDays = lastDay.getDate();
-      const today = getTodayDate();
-
-      let date = 1;
-      for (let i = 0; i < 6; i++) {
-        const row = document.createElement("tr");
-        for (let j = 0; j < 7; j++) {
-          const cell = document.createElement("td");
-          if (i === 0 && j < startDay) {
-            cell.innerHTML = "";
-          } else if (date > totalDays) {
-            break;
-          } else {
-            const fullDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-            
-            // Highlight today's date
-            if (fullDate === today) {
-              cell.innerHTML = `<div class="today-marker">${date}</div>`;
-            } else {
-              cell.innerHTML = `<div class="date">${date}</div>`;
-            }
-
-            // Add reminders for this date
-            const reminders = JSON.parse(localStorage.getItem("reminders") || "[]")
-              .filter(r => r.date === fullDate);
-            
-            reminders.forEach(reminder => {
-              const eventDiv = document.createElement("div");
-              eventDiv.className = "event";
-              let eventText = reminder.title;
-              if (reminder.time) {
-                eventText += ` (${formatTime(reminder.time)})`;
-              }
-              eventDiv.textContent = eventText;
-              eventDiv.onclick = () => viewReminder(reminder.id);
-              cell.appendChild(eventDiv);
-            });
-            
-            date++;
-          }
-          row.appendChild(cell);
-        }
-        calendarBody.appendChild(row);
-        if (date > totalDays) break;
-      }
-    }
-
-    // Save reminder
-    saveReminder.onclick = () => {
-      const title = document.getElementById("reminderTitle").value.trim();
-      const date = document.getElementById("reminderDate").value;
-      const time = document.getElementById("reminderTime").value;
-      const note = document.getElementById("reminderNote").value.trim();
-
-      if (!title || !date) {
-        alert("Please enter a title and date!");
-        return;
-      }
-
-      const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-      
-      if (editingReminderId) {
-        // Update existing reminder
-        const index = reminders.findIndex(r => r.id === editingReminderId);
-        if (index !== -1) {
-          reminders[index] = {
-            id: editingReminderId,
-            title,
-            date,
-            time,
-            note
-          };
-        }
-      } else {
-        // Add new reminder
-        reminders.push({
-          id: generateId(),
-          title,
-          date,
-          time,
-          note
-        });
-      }
-      
-      localStorage.setItem("reminders", JSON.stringify(reminders));
-
-      popup.style.display = "none";
-      editingReminderId = null;
-      renderCalendar();
-      
-      // Trigger storage event for homepage widget
-      window.dispatchEvent(new Event('storage'));
-    };
-
-    // View reminder details
-    function viewReminder(reminderId) {
-      const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-      const reminder = reminders.find(r => r.id === reminderId);
-      
-      if (!reminder) return;
-      
-      viewingReminderId = reminderId;
-      
-      let detailsHTML = `
-        <div class="reminder-detail">
-          <strong>Title</strong>
-          <div>${reminder.title}</div>
-        </div>
-        <div class="reminder-detail">
-          <strong>Date</strong>
-          <div>${new Date(reminder.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-        </div>
-      `;
-      
-      if (reminder.time) {
-        detailsHTML += `
-          <div class="reminder-detail">
-            <strong>Time</strong>
-            <div>${formatTime(reminder.time)}</div>
-          </div>
-        `;
-      }
-      
-      if (reminder.note) {
-        detailsHTML += `
-          <div class="reminder-detail">
-            <strong>Notes</strong>
-            <div>${reminder.note}</div>
-          </div>
-        `;
-      }
-      
-      document.getElementById("reminderDetails").innerHTML = detailsHTML;
-      viewPopup.style.display = "flex";
-    }
-
-    // Edit reminder
-    editReminderBtn.onclick = () => {
-      const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-      const reminder = reminders.find(r => r.id === viewingReminderId);
-      
-      if (!reminder) return;
-      
-      editingReminderId = viewingReminderId;
-      document.getElementById("popupTitle").textContent = "Edit Reminder";
-      document.getElementById("reminderTitle").value = reminder.title;
-      document.getElementById("reminderDate").value = reminder.date;
-      document.getElementById("reminderTime").value = reminder.time || "";
-      document.getElementById("reminderNote").value = reminder.note || "";
-      
-      viewPopup.style.display = "none";
-      popup.style.display = "flex";
-    };
-
-    // Delete reminder
-    deleteReminderBtn.onclick = () => {
-      if (!confirm("Are you sure you want to delete this reminder?")) return;
-      
-      let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-      reminders = reminders.filter(r => r.id !== viewingReminderId);
-      localStorage.setItem("reminders", JSON.stringify(reminders));
-      
-      viewPopup.style.display = "none";
-      viewingReminderId = null;
-      renderCalendar();
-      
-      // Trigger storage event for homepage widget
-      window.dispatchEvent(new Event('storage'));
-    };
-
-    // Close popups when clicking outside
-    popup.onclick = (e) => {
-      if (e.target === popup) {
-        popup.style.display = "none";
-        editingReminderId = null;
-      }
-    };
-
-    viewPopup.onclick = (e) => {
-      if (e.target === viewPopup) {
-        viewPopup.style.display = "none";
-        viewingReminderId = null;
-      }
-    };
-
-    // Initial render
+monthNames.forEach((month, index) => {
+  const btn = document.createElement("button");
+  btn.textContent = month;
+  btn.classList.toggle("active", index === currentMonth);
+  btn.onclick = () => {
+    currentMonth = index;
     renderCalendar();
+    document.querySelectorAll(".month-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  };
+  monthTabs.appendChild(btn);
+});
+
+function renderCalendar() {
+  calendarBody.innerHTML = "";
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  const startDay = firstDay.getDay();
+  const totalDays = lastDay.getDate();
+  const today = getTodayDate();
+
+  let date = 1;
+  for (let i = 0; i < 6; i++) {
+    const row = document.createElement("tr");
+    for (let j = 0; j < 7; j++) {
+      const cell = document.createElement("td");
+      if (i === 0 && j < startDay) {
+        cell.innerHTML = "";
+      } else if (date > totalDays) {
+        break;
+      } else {
+        const fullDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+        
+        if (fullDate === today) {
+          cell.innerHTML = `<div class="today-marker">${date}</div>`;
+        } else {
+          cell.innerHTML = `<div class="date">${date}</div>`;
+        }
+
+        const reminders = JSON.parse(localStorage.getItem("reminders") || "[]").filter(r => r.date === fullDate);
+        
+        reminders.forEach(reminder => {
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event";
+          let eventText = reminder.title;
+          if (reminder.time) {
+            eventText += ` (${formatTime(reminder.time)})`;
+          }
+          eventDiv.textContent = eventText;
+          eventDiv.onclick = () => viewReminder(reminder.id);
+          cell.appendChild(eventDiv);
+        });
+        
+        date++;
+      }
+      row.appendChild(cell);
+    }
+    calendarBody.appendChild(row);
+    if (date > totalDays) break;
+  }
+}
+
+saveReminder.onclick = () => {
+  const title = document.getElementById("reminderTitle").value.trim();
+  const date = document.getElementById("reminderDate").value;
+  const time = document.getElementById("reminderTime").value;
+  const note = document.getElementById("reminderNote").value.trim();
+
+  if (!title || !date) {
+    alert("Please enter a title and date!");
+    return;
+  }
+
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  
+  if (editingReminderId) {
+    const index = reminders.findIndex(r => r.id === editingReminderId);
+    if (index !== -1) {
+      reminders[index] = { id: editingReminderId, title, date, time, note };
+    }
+  } else {
+    reminders.push({ id: generateId(), title, date, time, note });
+  }
+  
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+  popup.style.display = "none";
+  editingReminderId = null;
+  renderCalendar();
+  window.dispatchEvent(new Event('storage'));
+};
+
+function viewReminder(reminderId) {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminder = reminders.find(r => r.id === reminderId);
+  
+  if (!reminder) return;
+  
+  viewingReminderId = reminderId;
+  
+  let detailsHTML = `
+    <div class="reminder-detail">
+      <strong>Title</strong>
+      <div class="reminder-detail-value">${reminder.title}</div>
+    </div>
+    <div class="reminder-detail">
+      <strong>Date</strong>
+      <div class="reminder-detail-value">${new Date(reminder.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    </div>
+  `;
+  
+  if (reminder.time) {
+    detailsHTML += `
+      <div class="reminder-detail">
+        <strong>Time</strong>
+        <div class="reminder-detail-value">${formatTime(reminder.time)}</div>
+      </div>
+    `;
+  }
+  
+  if (reminder.note) {
+    detailsHTML += `
+      <div class="reminder-detail">
+        <strong>Notes</strong>
+        <div class="reminder-detail-value">${reminder.note}</div>
+      </div>
+    `;
+  }
+  
+  document.getElementById("reminderDetails").innerHTML = detailsHTML;
+  viewPopup.style.display = "flex";
+}
+
+editReminderBtn.onclick = () => {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminder = reminders.find(r => r.id === viewingReminderId);
+  
+  if (!reminder) return;
+  
+  editingReminderId = viewingReminderId;
+  document.getElementById("popupTitle").textContent = "Edit Reminder";
+  document.getElementById("reminderTitle").value = reminder.title;
+  document.getElementById("reminderDate").value = reminder.date;
+  document.getElementById("reminderTime").value = reminder.time || "";
+  document.getElementById("reminderNote").value = reminder.note || "";
+  
+  viewPopup.style.display = "none";
+  popup.style.display = "flex";
+};
+
+deleteReminderBtn.onclick = () => {
+  if (!confirm("Are you sure you want to delete this reminder?")) return;
+  
+  let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  reminders = reminders.filter(r => r.id !== viewingReminderId);
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+  
+  viewPopup.style.display = "none";
+  viewingReminderId = null;
+  renderCalendar();
+  window.dispatchEvent(new Event('storage'));
+};
+
+popup.onclick = (e) => {
+  if (e.target === popup) {
+    popup.style.display = "none";
+    editingReminderId = null;
+  }
+};
+
+viewPopup.onclick = (e) => {
+  if (e.target === viewPopup) {
+    viewPopup.style.display = "none";
+    viewingReminderId = null;
+  }
+};
+
+renderCalendar();
 </script>
 
 {% endblock %}
