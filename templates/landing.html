@@ -9,149 +9,240 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 40px;
+        padding: 48px;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        position: relative;
+    }
+
+    .home-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+        pointer-events: none;
     }
 
     .home-content {
         display: grid;
-        grid-template-columns: 1fr 320px;
-        gap: 32px;
+        grid-template-columns: 1fr 360px;
+        gap: 40px;
         width: 100%;
-        max-width: 1200px;
+        max-width: 1400px;
         align-items: start;
+        position: relative;
+        z-index: 1;
     }
 
     .hero-section {
         text-align: center;
-        padding: 40px 0;
+        padding: 48px 0;
     }
 
     .hero-title {
-        font-size: 3.5rem;
-        margin: 0 0 16px 0;
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        font-size: 4rem;
+        margin: 0 0 20px 0;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #8b5cf6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        font-weight: 800;
-        letter-spacing: -0.03em;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .hero-subtitle {
-        font-weight: 500;
-        color: #64748b;
-        margin-bottom: 24px;
-        font-size: 1.5rem;
-        letter-spacing: -0.01em;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 28px;
+        font-size: 1.625rem;
+        letter-spacing: -0.02em;
+        animation: fadeInUp 0.6s ease 0.1s backwards;
     }
 
     .hero-description {
-        max-width: 600px;
-        color: #475569;
-        line-height: 1.7;
-        margin: 0 auto 48px;
-        font-size: 1.05rem;
+        max-width: 640px;
+        color: #64748b;
+        line-height: 1.8;
+        margin: 0 auto 56px;
+        font-size: 1.125rem;
+        font-weight: 400;
+        animation: fadeInUp 0.6s ease 0.2s backwards;
     }
 
     .quick-actions {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 16px;
-        max-width: 700px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        max-width: 760px;
         margin: 0 auto;
+        animation: fadeInUp 0.6s ease 0.3s backwards;
     }
 
     .action-card {
         background: white;
         border: 2px solid #e2e8f0;
-        padding: 24px 20px;
-        border-radius: 16px;
+        padding: 32px 24px;
+        border-radius: 20px;
         text-decoration: none;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        gap: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
     }
 
     .action-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(30, 64, 175, 0.15);
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(59, 130, 246, 0.15);
         border-color: #3b82f6;
     }
 
+    .action-card:hover::before {
+        transform: scaleX(1);
+    }
+
     .action-icon {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         color: #3b82f6;
-        transition: transform 0.25s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        stroke-width: 2;
     }
 
     .action-card:hover .action-icon {
-        transform: scale(1.1);
+        transform: scale(1.15) rotate(-5deg);
+        color: #1e40af;
     }
 
     .action-text {
-        font-weight: 600;
-        color: #1e293b;
-        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.0625rem;
+        letter-spacing: -0.01em;
     }
 
     .widgets-sidebar {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 24px;
         position: sticky;
-        top: 40px;
+        top: 48px;
+        animation: fadeInRight 0.6s ease 0.4s backwards;
+    }
+
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     .widget {
         background: white;
         border: 2px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: box-shadow 0.3s ease;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     }
 
     .widget:hover {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
     }
 
     .widget-title {
         color: #1e40af;
-        margin-bottom: 16px;
-        font-size: 1.125rem;
-        font-weight: 700;
+        margin-bottom: 20px;
+        font-size: 1.1875rem;
+        font-weight: 800;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        letter-spacing: -0.02em;
     }
 
     .widget-title-icon {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
+        stroke-width: 2.5;
     }
 
     .widget-content {
-        font-size: 0.9375rem;
+        font-size: 0.9875rem;
         color: #475569;
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     .widget-empty {
         color: #94a3b8;
         font-style: italic;
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
+        text-align: center;
+        padding: 16px;
+        background: #f8fafc;
+        border-radius: 12px;
     }
 
     .symptom-item, .reminder-item {
-        background: #f8fafc;
-        padding: 12px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        border-left: 3px solid #3b82f6;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 16px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+        border-left: 4px solid #3b82f6;
+        transition: all 0.2s ease;
+    }
+
+    .symptom-item:hover, .reminder-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
     }
 
     .symptom-item:last-child, .reminder-item:last-child {
@@ -159,30 +250,34 @@
     }
 
     .item-label {
-        font-weight: 600;
-        color: #1e293b;
-        font-size: 0.875rem;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 0.9375rem;
+        margin-bottom: 4px;
     }
 
     .item-value {
         color: #64748b;
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
+        font-weight: 500;
     }
 
     .footer-text {
         text-align: center;
-        margin-top: 64px;
+        margin-top: 72px;
         color: #94a3b8;
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
+        font-weight: 500;
     }
 
     .test-value {
         color: #cbd5e1;
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
         margin-top: 8px;
+        font-weight: 400;
     }
 
-    @media (max-width: 968px) {
+    @media (max-width: 1100px) {
         .home-content {
             grid-template-columns: 1fr;
         }
@@ -190,16 +285,52 @@
         .widgets-sidebar {
             position: relative;
             top: 0;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
+            animation: fadeInUp 0.6s ease 0.5s backwards;
         }
         
         .hero-title {
-            font-size: 2.5rem;
+            font-size: 3.25rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .home-container {
+            padding: 32px 24px;
+        }
+
+        .hero-section {
+            padding: 32px 0;
+        }
+
+        .hero-title {
+            font-size: 2.75rem;
         }
         
         .hero-subtitle {
             font-size: 1.25rem;
+        }
+
+        .hero-description {
+            font-size: 1.0625rem;
+            margin-bottom: 44px;
+        }
+
+        .quick-actions {
+            gap: 16px;
+        }
+
+        .action-card {
+            padding: 28px 20px;
+        }
+
+        .widget {
+            padding: 24px;
         }
     }
 </style>
@@ -211,7 +342,7 @@
             <h1 class="hero-title">GlycoGenie</h1>
             <h2 class="hero-subtitle">Your Health Management Dashboard</h2>
             <p class="hero-description">
-                Welcome to your personalized health dashboard. Track symptoms, schedule reminders, and analyze your food intake — all in one streamlined platform.
+                Welcome to your personalized health dashboard. Track symptoms, schedule reminders, and analyze your food intake — all in one streamlined, intuitive platform designed for your wellness journey.
             </p>
             
             <!-- Quick Action Cards -->
@@ -288,11 +419,11 @@ function displayTodaysSymptoms() {
     if (s[today]) {
         const dt = s[today];
         let html = '';
-        if (dt.feeling) html += `<div class="symptom-item"><span class="item-label">Overall Feeling:</span> <span class="item-value">${dt.feeling}</span></div>`;
-        if (dt.fever) html += `<div class="symptom-item"><span class="item-label">Fever:</span> <span class="item-value">${dt.fever === 'Yes' ? dt.feverSeverity : 'None'}</span></div>`;
-        if (dt.cough) html += `<div class="symptom-item"><span class="item-label">Cough:</span> <span class="item-value">${dt.cough === 'Yes' ? dt.coughSeverity : 'None'}</span></div>`;
-        if (dt.fatigue) html += `<div class="symptom-item"><span class="item-label">Fatigue:</span> <span class="item-value">${dt.fatigue === 'Yes' ? dt.fatigueSeverity : 'None'}</span></div>`;
-        if (dt.other) html += `<div class="symptom-item"><span class="item-label">Other:</span> <span class="item-value">${dt.other}</span></div>`;
+        if (dt.feeling) html += `<div class="symptom-item"><div class="item-label">Overall Feeling</div><div class="item-value">${dt.feeling}</div></div>`;
+        if (dt.fever) html += `<div class="symptom-item"><div class="item-label">Fever</div><div class="item-value">${dt.fever === 'Yes' ? dt.feverSeverity : 'None'}</div></div>`;
+        if (dt.cough) html += `<div class="symptom-item"><div class="item-label">Cough</div><div class="item-value">${dt.cough === 'Yes' ? dt.coughSeverity : 'None'}</div></div>`;
+        if (dt.fatigue) html += `<div class="symptom-item"><div class="item-label">Fatigue</div><div class="item-value">${dt.fatigue === 'Yes' ? dt.fatigueSeverity : 'None'}</div></div>`;
+        if (dt.other) html += `<div class="symptom-item"><div class="item-label">Other</div><div class="item-value">${dt.other}</div></div>`;
         contentDiv.innerHTML = html;
     } else {
         contentDiv.innerHTML = '<div class="widget-empty">No symptoms recorded today.</div>';
@@ -320,7 +451,7 @@ function displayTodaysReminders() {
             html += `<div class="reminder-item">`;
             html += `<div class="item-label">${r.title}</div>`;
             if (timeStr) html += `<div class="item-value">${timeStr.trim()}</div>`;
-            if (r.note) html += `<div class="item-value" style="margin-top:4px;font-size:0.8125rem;">${r.note}</div>`;
+            if (r.note) html += `<div class="item-value" style="margin-top:6px;font-size:0.875rem;">${r.note}</div>`;
             html += `</div>`;
         });
         contentDiv.innerHTML = html;
