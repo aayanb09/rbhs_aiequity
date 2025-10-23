@@ -24,6 +24,17 @@
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.page-header svg {
+  width: 32px;
+  height: 32px;
+  color: #1e40af;
+  stroke-width: 2;
 }
 
 .symptom-form {
@@ -63,16 +74,30 @@
 .emoji-btn {
   background: #f8fafc;
   border: 2px solid #e2e8f0;
-  font-size: 2rem;
   cursor: pointer;
   border-radius: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 16px;
+  padding: 16px 8px;
   outline: 0;
-  aspect-ratio: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  min-height: 90px;
+}
+
+.emoji-btn svg {
+  width: 32px;
+  height: 32px;
+  color: #64748b;
+  stroke-width: 2;
+}
+
+.emoji-btn-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
 }
 
 .emoji-btn:hover {
@@ -81,10 +106,22 @@
   transform: scale(1.05);
 }
 
+.emoji-btn:hover svg {
+  color: #475569;
+}
+
 .emoji-btn.selected {
   background: #eff6ff;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.emoji-btn.selected svg {
+  color: #1e40af;
+}
+
+.emoji-btn.selected .emoji-btn-label {
+  color: #1e40af;
 }
 
 .yn-grid {
@@ -98,7 +135,6 @@
 .yn-btn {
   background: #f8fafc;
   border: 2px solid #e2e8f0;
-  font-size: 1.5rem;
   cursor: pointer;
   border-radius: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -106,6 +142,17 @@
   outline: 0;
   font-weight: 600;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.yn-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
 }
 
 .yn-btn:hover {
@@ -208,6 +255,14 @@
   box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
   z-index: 3000;
   animation: slideIn 0.3s ease;
+  align-items: center;
+  gap: 8px;
+}
+
+.success-toast svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
 }
 
 @keyframes slideIn {
@@ -242,6 +297,15 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
 }
 
 .action-btn:hover {
@@ -357,8 +421,13 @@
   }
 
   .emoji-btn {
-    font-size: 1.5rem;
-    padding: 12px;
+    padding: 12px 4px;
+    min-height: 80px;
+  }
+
+  .emoji-btn svg {
+    width: 24px;
+    height: 24px;
   }
 
   .action-buttons {
@@ -377,25 +446,49 @@
 </style>
 
 <div class="symptom-container">
-  <div class="page-header">📋 Symptom Tracker</div>
+  <div class="page-header">
+    <i data-lucide="activity"></i>
+    <span>Symptom Tracker</span>
+  </div>
   
   <form id="symptomForm" class="symptom-form">
     <div class="form-section">
       <label class="form-label">How are you feeling today?</label>
       <div class="emoji-grid" id="feeling-row">
-        <button type="button" class="emoji-btn" data-value="Great" title="Great">😄</button>
-        <button type="button" class="emoji-btn" data-value="Good" title="Good">🙂</button>
-        <button type="button" class="emoji-btn" data-value="Okay" title="Okay">😐</button>
-        <button type="button" class="emoji-btn" data-value="Bad" title="Bad">😕</button>
-        <button type="button" class="emoji-btn" data-value="Terrible" title="Terrible">😢</button>
+        <button type="button" class="emoji-btn" data-value="Great" title="Great">
+          <i data-lucide="smile"></i>
+          <span class="emoji-btn-label">Great</span>
+        </button>
+        <button type="button" class="emoji-btn" data-value="Good" title="Good">
+          <i data-lucide="smile"></i>
+          <span class="emoji-btn-label">Good</span>
+        </button>
+        <button type="button" class="emoji-btn" data-value="Okay" title="Okay">
+          <i data-lucide="meh"></i>
+          <span class="emoji-btn-label">Okay</span>
+        </button>
+        <button type="button" class="emoji-btn" data-value="Bad" title="Bad">
+          <i data-lucide="frown"></i>
+          <span class="emoji-btn-label">Bad</span>
+        </button>
+        <button type="button" class="emoji-btn" data-value="Terrible" title="Terrible">
+          <i data-lucide="frown"></i>
+          <span class="emoji-btn-label">Terrible</span>
+        </button>
       </div>
     </div>
     
     <div class="form-section">
       <label class="form-label">Do you have a fever?</label>
       <div class="yn-grid" id="fever-row">
-        <button type="button" class="yn-btn" data-value="Yes">✔️ Yes</button>
-        <button type="button" class="yn-btn" data-value="No">❌ No</button>
+        <button type="button" class="yn-btn" data-value="Yes">
+          <i data-lucide="check"></i>
+          <span>Yes</span>
+        </button>
+        <button type="button" class="yn-btn" data-value="No">
+          <i data-lucide="x"></i>
+          <span>No</span>
+        </button>
       </div>
       <div id="fever-severity" class="severity-select">
         <label for="fever_severity">Severity:</label>
@@ -410,8 +503,14 @@
     <div class="form-section">
       <label class="form-label">Do you have a cough?</label>
       <div class="yn-grid" id="cough-row">
-        <button type="button" class="yn-btn" data-value="Yes">✔️ Yes</button>
-        <button type="button" class="yn-btn" data-value="No">❌ No</button>
+        <button type="button" class="yn-btn" data-value="Yes">
+          <i data-lucide="check"></i>
+          <span>Yes</span>
+        </button>
+        <button type="button" class="yn-btn" data-value="No">
+          <i data-lucide="x"></i>
+          <span>No</span>
+        </button>
       </div>
       <div id="cough-severity" class="severity-select">
         <label for="cough_severity">Severity:</label>
@@ -426,8 +525,14 @@
     <div class="form-section">
       <label class="form-label">Are you experiencing fatigue?</label>
       <div class="yn-grid" id="fatigue-row">
-        <button type="button" class="yn-btn" data-value="Yes">✔️ Yes</button>
-        <button type="button" class="yn-btn" data-value="No">❌ No</button>
+        <button type="button" class="yn-btn" data-value="Yes">
+          <i data-lucide="check"></i>
+          <span>Yes</span>
+        </button>
+        <button type="button" class="yn-btn" data-value="No">
+          <i data-lucide="x"></i>
+          <span>No</span>
+        </button>
       </div>
       <div id="fatigue-severity" class="severity-select">
         <label for="fatigue_severity">Severity:</label>
@@ -448,11 +553,20 @@
   </form>
   
   <div class="action-buttons">
-    <button type="button" class="action-btn" onclick="exportToPDF()">📄 Export PDF</button>
-    <button type="button" class="action-btn" onclick="openHistoryModal()">📊 View History</button>
+    <button type="button" class="action-btn" onclick="exportToPDF()">
+      <i data-lucide="file-text"></i>
+      <span>Export PDF</span>
+    </button>
+    <button type="button" class="action-btn" onclick="openHistoryModal()">
+      <i data-lucide="bar-chart-2"></i>
+      <span>View History</span>
+    </button>
   </div>
   
-  <div id="successToast" class="success-toast">✓ Symptoms saved successfully!</div>
+  <div id="successToast" class="success-toast">
+    <i data-lucide="check-circle"></i>
+    <span>Symptoms saved successfully!</span>
+  </div>
   
   <div id="historyModal" class="modal">
     <div class="modal-content">
@@ -466,6 +580,9 @@
 </div>
 
 <script>
+// Initialize Lucide icons
+lucide.createIcons();
+
 document.querySelectorAll('.emoji-btn').forEach(btn => 
   btn.addEventListener('click', function() {
     document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
@@ -488,7 +605,7 @@ document.querySelectorAll('.yn-grid').forEach(row =>
 
 function getTodayDate() {
   const t = new Date();
-  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
 }
 
 function formatDate(d) {
@@ -545,7 +662,8 @@ document.getElementById('symptomForm').addEventListener('submit', function(e) {
   saveSymptoms(data);
   
   const toast = document.getElementById('successToast');
-  toast.style.display = 'block';
+  toast.style.display = 'flex';
+  lucide.createIcons(); // Re-initialize icons in toast
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
   
   document.querySelectorAll('.emoji-btn, .yn-btn').forEach(b => b.classList.remove('selected'));

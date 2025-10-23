@@ -25,6 +25,16 @@
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.page-header-icon {
+  width: 32px;
+  height: 32px;
+  color: #1e40af;
 }
 
 .main-grid {
@@ -52,6 +62,16 @@
   margin-bottom: 20px;
   font-size: 1.125rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.panel-title-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e40af;
 }
 
 .checkbox-list {
@@ -110,6 +130,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.action-btn-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .action-btn:hover {
@@ -246,12 +271,18 @@
 </style>
 
 <div class="upload-container">
-  <div class="page-header">📤 Food Analyzer</div>
+  <div class="page-header">
+    <i data-lucide="utensils" class="page-header-icon"></i>
+    <span>Food Analyzer</span>
+  </div>
   
   <div class="main-grid">
     <!-- Nutritional Needs Panel -->
     <div class="side-panel">
-      <h3 class="panel-title">🥗 Nutritional Needs</h3>
+      <h3 class="panel-title">
+        <i data-lucide="clipboard-check" class="panel-title-icon"></i>
+        <span>Nutritional Needs</span>
+      </h3>
       <form id="nutrition-form" class="checkbox-list">
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="Low Sodium">
@@ -284,11 +315,11 @@
     <div class="center-content">
       <div class="button-row">
         <button id="upload-btn" class="action-btn">
-          <span>📁</span>
+          <i data-lucide="image" class="action-btn-icon"></i>
           <span>Upload Image</span>
         </button>
         <button id="capture-btn" class="action-btn">
-          <span>📸</span>
+          <i data-lucide="camera" class="action-btn-icon"></i>
           <span>Take Photo</span>
         </button>
       </div>
@@ -304,7 +335,10 @@
 
     <!-- Results Panel -->
     <div class="side-panel results-panel">
-      <h3 class="panel-title">🍽️ Nutritional Analysis</h3>
+      <h3 class="panel-title">
+        <i data-lucide="bar-chart" class="panel-title-icon"></i>
+        <span>Nutritional Analysis</span>
+      </h3>
       <ul class="results-list">
         <li>High Protein</li>
         <li>Vegetarian</li>
@@ -323,6 +357,9 @@
 </div>
 
 <script>
+// Initialize Lucide icons
+lucide.createIcons();
+
 const uploadBtn = document.getElementById("upload-btn");
 const captureBtn = document.getElementById("capture-btn");
 const video = document.getElementById("camera-feed");
@@ -381,7 +418,8 @@ captureBtn.addEventListener("click", async () => {
       canvas.style.display = "none";
       placeholder.style.display = "none";
       capturing = true;
-      captureBtn.innerHTML = '<span>📸</span><span>Snap Photo</span>';
+      captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
+      lucide.createIcons(); // Re-initialize icons
     } catch (err) {
       alert("Camera access denied or not available.");
     }
@@ -398,7 +436,8 @@ captureBtn.addEventListener("click", async () => {
 
     video.style.display = "none";
     canvas.style.display = "block";
-    captureBtn.innerHTML = '<span>📸</span><span>Take Photo</span>';
+    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Take Photo</span>';
+    lucide.createIcons(); // Re-initialize icons
     capturing = false;
   }
 });
