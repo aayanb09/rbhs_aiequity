@@ -25,6 +25,18 @@
   margin-right: auto;
 }
 
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-header-icon {
+  width: 32px;
+  height: 32px;
+  color: #1e40af;
+}
+
 .page-header h1 {
   margin: 0;
   font-size: 2rem;
@@ -35,13 +47,10 @@
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   color: white;
   border: none;
-  font-size: 1.5rem;
-  padding: 0;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
-  font-weight: 700;
   width: 48px;
   height: 48px;
   display: flex;
@@ -52,6 +61,11 @@
 .add-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+}
+
+.add-btn-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .month-tabs {
@@ -353,8 +367,13 @@ table.calendar {
 
 <div class="reminders-container">
   <div class="page-header">
-    <h1>📅 Calendar & Reminders</h1>
-    <button class="add-btn" id="addReminderBtn">+</button>
+    <div class="page-header-content">
+      <i data-lucide="calendar" class="page-header-icon"></i>
+      <h1>Calendar & Reminders</h1>
+    </div>
+    <button class="add-btn" id="addReminderBtn">
+      <i data-lucide="plus" class="add-btn-icon"></i>
+    </button>
   </div>
 
   <div class="month-tabs" id="monthTabs"></div>
@@ -408,6 +427,9 @@ table.calendar {
 </div>
 
 <script>
+// Initialize Lucide icons
+lucide.createIcons();
+
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 let currentMonth = new Date().getMonth();

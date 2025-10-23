@@ -6,6 +6,7 @@
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <script src="https://unpkg.com/lucide@latest"></script>
  <style>
    * {
      margin: 0;
@@ -190,11 +191,11 @@
    }
    
    .nav-icon {
-     font-size: 1.25rem;
      display: flex;
      align-items: center;
      justify-content: center;
-     width: 24px;
+     width: 20px;
+     height: 20px;
    }
    
    /* Main Content Area */
@@ -252,19 +253,19 @@
    
    <div class="nav-links">
      <a href="/home" class="{% if request.endpoint == 'home' %}active{% endif %}">
-       <span class="nav-icon">🏠</span>
+       <span class="nav-icon"><i data-lucide="home"></i></span>
        <span>Home</span>
      </a>
      <a href="/symptomTracker" class="{% if request.endpoint == 'symptom' %}active{% endif %}">
-       <span class="nav-icon">📋</span>
+       <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
        <span>Track Symptoms</span>
      </a>
      <a href="/reminders" class="{% if request.endpoint == 'reminder' %}active{% endif %}">
-       <span class="nav-icon">⏰</span>
+       <span class="nav-icon"><i data-lucide="bell"></i></span>
        <span>Reminders</span>
      </a>
      <a href="/upload" class="{% if request.endpoint == 'upload' %}active{% endif %}">
-       <span class="nav-icon">📤</span>
+       <span class="nav-icon"><i data-lucide="upload"></i></span>
        <span>Upload Food</span>
      </a>
    </div>
@@ -275,6 +276,9 @@
  </div>
 
  <script>
+   // Initialize Lucide icons
+   lucide.createIcons();
+   
    const menuToggle = document.getElementById('menuToggle');
    const sidebar = document.getElementById('sidebar');
    const overlay = document.getElementById('sidebarOverlay');

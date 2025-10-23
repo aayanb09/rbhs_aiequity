@@ -82,7 +82,9 @@
     }
 
     .action-icon {
-        font-size: 2.5rem;
+        width: 40px;
+        height: 40px;
+        color: #3b82f6;
         transition: transform 0.25s ease;
     }
 
@@ -125,6 +127,11 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+
+    .widget-title-icon {
+        width: 20px;
+        height: 20px;
     }
 
     .widget-content {
@@ -210,15 +217,15 @@
             <!-- Quick Action Cards -->
             <div class="quick-actions">
                 <a href="/symptomTracker" class="action-card">
-                    <span class="action-icon">📋</span>
+                    <i data-lucide="clipboard-list" class="action-icon"></i>
                     <span class="action-text">Track Symptoms</span>
                 </a>
                 <a href="/reminders" class="action-card">
-                    <span class="action-icon">⏰</span>
+                    <i data-lucide="bell" class="action-icon"></i>
                     <span class="action-text">Reminders</span>
                 </a>
                 <a href="/upload" class="action-card">
-                    <span class="action-icon">📤</span>
+                    <i data-lucide="upload" class="action-icon"></i>
                     <span class="action-text">Upload Food</span>
                 </a>
             </div>
@@ -233,7 +240,10 @@
         <div class="widgets-sidebar">
             <!-- Today's Symptoms Widget -->
             <div class="widget">
-                <h3 class="widget-title">📋 Today's Symptoms</h3>
+                <h3 class="widget-title">
+                    <i data-lucide="activity" class="widget-title-icon"></i>
+                    Today's Symptoms
+                </h3>
                 <div id="todaysSymptomsContent" class="widget-content">
                     Loading...
                 </div>
@@ -241,7 +251,10 @@
 
             <!-- Today's Reminders Widget -->
             <div class="widget">
-                <h3 class="widget-title">⏰ Today's Reminders</h3>
+                <h3 class="widget-title">
+                    <i data-lucide="clock" class="widget-title-icon"></i>
+                    Today's Reminders
+                </h3>
                 <div id="todaysRemindersContent" class="widget-content">
                     Loading...
                 </div>
@@ -251,6 +264,9 @@
 </div>
 
 <script>
+// Initialize Lucide icons
+lucide.createIcons();
+
 function getTodayDate() {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;

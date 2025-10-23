@@ -6,6 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     * {
       margin: 0;
@@ -141,14 +142,21 @@
     .feature-icon {
       width: 48px;
       height: 48px;
+      min-width: 48px;
       background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
       flex-shrink: 0;
       border: 2px solid #bfdbfe;
+    }
+    
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
+      color: #1e40af;
+      stroke-width: 2;
     }
     
     .feature-content h3 {
@@ -176,8 +184,10 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3);
       text-decoration: none;
-      display: inline-block;
-      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     
     .cta-button:hover {
@@ -187,6 +197,11 @@
     
     .cta-button:active {
       transform: translateY(0);
+    }
+    
+    .cta-button svg {
+      width: 20px;
+      height: 20px;
     }
     
     @media (max-width: 968px) {
@@ -229,7 +244,6 @@
       .logo-large {
         width: 90px;
         height: 90px;
-        font-size: 3rem;
       }
       
       .logo-large img {
@@ -256,7 +270,12 @@
       .feature-icon {
         width: 40px;
         height: 40px;
-        font-size: 1.25rem;
+        min-width: 40px;
+      }
+      
+      .feature-icon svg {
+        width: 20px;
+        height: 20px;
       }
       
       .cta-button {
@@ -284,7 +303,9 @@
       
       <div class="features-list">
         <div class="feature-item">
-          <div class="feature-icon">📋</div>
+          <div class="feature-icon">
+            <i data-lucide="clipboard-list"></i>
+          </div>
           <div class="feature-content">
             <h3>Track Symptoms</h3>
             <p>Log daily symptoms and monitor your health trends over time</p>
@@ -292,7 +313,9 @@
         </div>
         
         <div class="feature-item">
-          <div class="feature-icon">⏰</div>
+          <div class="feature-icon">
+            <i data-lucide="bell"></i>
+          </div>
           <div class="feature-content">
             <h3>Smart Reminders</h3>
             <p>Never miss medications or appointments with our calendar system</p>
@@ -300,7 +323,9 @@
         </div>
         
         <div class="feature-item">
-          <div class="feature-icon">📤</div>
+          <div class="feature-icon">
+            <i data-lucide="utensils"></i>
+          </div>
           <div class="feature-content">
             <h3>Food Analysis</h3>
             <p>Analyze nutritional content and make informed dietary choices</p>
@@ -308,8 +333,16 @@
         </div>
       </div>
       
-      <a href="/home" class="cta-button">Get Started →</a>
+      <a href="/home" class="cta-button">
+        <span>Get Started</span>
+        <i data-lucide="arrow-right"></i>
+      </a>
     </div>
   </div>
+  
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
 </body>
 </html>
