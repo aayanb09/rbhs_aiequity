@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
  <script src="https://unpkg.com/lucide@latest"></script>
  <style>
    * {
@@ -16,8 +16,8 @@
    
    body { 
      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
-     background: #f8fafc;
-     color: #1e293b; 
+     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+     color: #0f172a; 
      margin: 0;
      min-height: 100vh;
      -webkit-font-smoothing: antialiased;
@@ -27,13 +27,13 @@
    /* Menu Toggle Button */
    .menu-toggle {
      position: fixed;
-     left: 20px;
-     top: 20px;
-     width: 48px;
-     height: 48px;
+     left: 24px;
+     top: 24px;
+     width: 52px;
+     height: 52px;
      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
      border: none;
-     border-radius: 12px;
+     border-radius: 14px;
      cursor: pointer;
      display: flex;
      flex-direction: column;
@@ -41,21 +41,25 @@
      align-items: center;
      gap: 5px;
      z-index: 1001;
-     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+     box-shadow: 0 8px 24px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    .menu-toggle:hover {
-     transform: scale(1.05);
-     box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+     transform: translateY(-2px);
+     box-shadow: 0 12px 32px rgba(30, 64, 175, 0.35), 0 4px 12px rgba(0, 0, 0, 0.15);
+   }
+   
+   .menu-toggle:active {
+     transform: translateY(0);
    }
    
    .menu-toggle span {
-     width: 24px;
+     width: 26px;
      height: 3px;
      background: white;
-     border-radius: 2px;
-     transition: all 0.3s ease;
+     border-radius: 3px;
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    .menu-toggle.active span:nth-child(1) {
@@ -64,6 +68,7 @@
    
    .menu-toggle.active span:nth-child(2) {
      opacity: 0;
+     transform: translateX(-10px);
    }
    
    .menu-toggle.active span:nth-child(3) {
@@ -73,17 +78,17 @@
    /* Sidebar Navigation */
    .sidebar {
      position: fixed;
-     left: -260px;
+     left: -280px;
      top: 0;
-     width: 260px;
+     width: 280px;
      height: 100vh;
      background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
-     padding: 24px 16px;
+     padding: 28px 20px;
      display: flex;
      flex-direction: column;
-     box-shadow: 4px 0 24px rgba(30, 64, 175, 0.12);
+     box-shadow: 8px 0 32px rgba(30, 64, 175, 0.15);
      z-index: 1000;
-     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    .sidebar.open {
@@ -97,12 +102,12 @@
      left: 0;
      width: 100%;
      height: 100%;
-     background: rgba(0, 0, 0, 0.5);
+     background: rgba(0, 0, 0, 0.6);
      z-index: 999;
      opacity: 0;
      visibility: hidden;
-     transition: opacity 0.3s ease, visibility 0.3s ease;
-     backdrop-filter: blur(2px);
+     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+     backdrop-filter: blur(4px);
    }
    
    .sidebar-overlay.active {
@@ -115,47 +120,53 @@
      flex-direction: column;
      align-items: center;
      justify-content: center;
-     margin-bottom: 32px;
-     padding-bottom: 24px;
+     margin-bottom: 36px;
+     padding-bottom: 28px;
      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
    }
    
    .logo {
-     max-width: 80px;
+     max-width: 88px;
      height: auto;
-     border-radius: 16px;
-     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-     margin-bottom: 12px;
+     border-radius: 18px;
+     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+     margin-bottom: 14px;
+     transition: transform 0.3s ease;
+   }
+   
+   .logo:hover {
+     transform: scale(1.05);
    }
    
    .app-title {
      color: white;
-     font-size: 1.5rem;
-     font-weight: 700;
+     font-size: 1.625rem;
+     font-weight: 800;
      text-align: center;
-     letter-spacing: -0.02em;
+     letter-spacing: -0.03em;
    }
    
    .nav-links {
      display: flex;
      flex-direction: column;
-     gap: 6px;
+     gap: 8px;
      flex: 1;
    }
    
    .nav-links a {
-     color: rgba(255, 255, 255, 0.9);
+     color: rgba(255, 255, 255, 0.85);
      text-decoration: none;
-     padding: 12px 16px;
-     border-radius: 10px;
+     padding: 14px 18px;
+     border-radius: 12px;
      font-weight: 500;
-     font-size: 0.95rem;
-     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+     font-size: 0.9875rem;
+     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
      display: flex;
      align-items: center;
-     gap: 12px;
+     gap: 14px;
      background: transparent;
      position: relative;
+     overflow: hidden;
    }
    
    .nav-links a::before {
@@ -164,38 +175,57 @@
      left: 0;
      top: 50%;
      transform: translateY(-50%);
-     width: 3px;
+     width: 4px;
      height: 0;
      background: white;
-     border-radius: 0 2px 2px 0;
-     transition: height 0.2s ease;
+     border-radius: 0 3px 3px 0;
+     transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .nav-links a::after {
+     content: '';
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+     opacity: 0;
+     transition: opacity 0.25s ease;
    }
    
    .nav-links a:hover {
-     background: rgba(255, 255, 255, 0.1);
+     background: rgba(255, 255, 255, 0.12);
      color: white;
+     transform: translateX(4px);
    }
    
    .nav-links a:hover::before {
-     height: 24px;
+     height: 28px;
+   }
+   
+   .nav-links a:hover::after {
+     opacity: 1;
    }
    
    .nav-links a.active {
-     background: rgba(255, 255, 255, 0.15);
+     background: rgba(255, 255, 255, 0.18);
      color: white;
      font-weight: 600;
    }
    
    .nav-links a.active::before {
-     height: 24px;
+     height: 28px;
    }
    
    .nav-icon {
      display: flex;
      align-items: center;
      justify-content: center;
-     width: 20px;
-     height: 20px;
+     width: 22px;
+     height: 22px;
+     position: relative;
+     z-index: 1;
    }
    
    /* Main Content Area */
@@ -203,31 +233,33 @@
      margin-left: 0;
      padding: 0;
      min-height: 100vh;
-     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
    /* Mobile Responsive */
    @media (max-width: 768px) {
      .menu-toggle {
-       left: 16px;
-       top: 16px;
+       left: 20px;
+       top: 20px;
+       width: 48px;
+       height: 48px;
      }
      
      .logo-container {
        flex-direction: row;
        padding-bottom: 0;
        border-bottom: none;
-       margin-bottom: 16px;
+       margin-bottom: 20px;
        gap: 12px;
      }
      
      .logo {
-       max-width: 48px;
+       max-width: 52px;
        margin-bottom: 0;
      }
      
      .app-title {
-       font-size: 1.25rem;
+       font-size: 1.375rem;
      }
    }
  </style>

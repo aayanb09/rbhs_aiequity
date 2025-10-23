@@ -6,163 +6,266 @@
 
 <style>
 .upload-container {
-  padding: 40px;
-  background: #f8fafc;
+  padding: 48px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
+  position: relative;
+}
+
+.upload-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .page-header {
   background: white;
   border: 2px solid #e2e8f0;
-  color: #1e293b;
-  padding: 32px;
+  color: #0f172a;
+  padding: 36px 40px;
   text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 32px;
-  max-width: 1400px;
+  font-size: 2.25rem;
+  font-weight: 800;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  max-width: 1600px;
   margin-left: auto;
   margin-right: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
+  letter-spacing: -0.03em;
+  position: relative;
+  z-index: 1;
+  animation: fadeInDown 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 20px 20px 0 0;
 }
 
 .page-header-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: #1e40af;
+  stroke-width: 2.5;
 }
 
 .main-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
-  gap: 24px;
-  max-width: 1400px;
+  grid-template-columns: 320px 1fr 320px;
+  gap: 28px;
+  max-width: 1600px;
   margin: 0 auto;
   align-items: start;
+  position: relative;
+  z-index: 1;
 }
 
 .side-panel {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   border: 2px solid #e2e8f0;
   position: sticky;
-  top: 40px;
+  top: 48px;
+  animation: fadeIn 0.5s ease 0.2s backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .panel-title {
   text-align: center;
-  color: #1e293b;
-  margin-bottom: 20px;
-  font-size: 1.125rem;
-  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 24px;
+  font-size: 1.1875rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  letter-spacing: -0.02em;
 }
 
 .panel-title-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: #1e40af;
+  stroke-width: 2.5;
 }
 
 .checkbox-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  border-radius: 10px;
-  transition: background 0.2s ease;
+  padding: 12px 14px;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  font-size: 0.9375rem;
+  font-size: 0.9875rem;
   color: #475569;
+  font-weight: 600;
+  border: 2px solid transparent;
 }
 
 .checkbox-label:hover {
   background: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 .checkbox-label input[type="checkbox"] {
-  margin-right: 10px;
-  width: 18px;
-  height: 18px;
+  margin-right: 12px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
   accent-color: #3b82f6;
+}
+
+.checkbox-label input[type="checkbox"]:checked + span {
+  color: #1e40af;
 }
 
 .center-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
+  animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .button-row {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   justify-content: center;
 }
 
 .action-btn {
-  padding: 14px 32px;
-  font-size: 1rem;
-  border-radius: 12px;
+  padding: 16px 36px;
+  font-size: 1.0625rem;
+  border-radius: 14px;
   border: none;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.25);
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   color: white;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  letter-spacing: -0.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.action-btn:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .action-btn-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.5;
+  position: relative;
+  z-index: 1;
+}
+
+.action-btn span {
+  position: relative;
+  z-index: 1;
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(30, 64, 175, 0.35);
+}
+
+.action-btn:active {
+  transform: translateY(-1px);
 }
 
 .display-area {
   width: 100%;
-  max-width: 800px;
-  height: 500px;
-  background: #1a1a1a;
-  border-radius: 16px;
+  max-width: 900px;
+  height: 550px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+  border-radius: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
   border: 3px solid #e2e8f0;
 }
 
 .placeholder {
-  color: white;
-  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1875rem;
   text-align: center;
-  padding: 20px;
-  font-weight: 500;
+  padding: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .camera-feed, .uploaded-image, .snapshot {
@@ -170,16 +273,17 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 16px;
+  border-radius: 20px;
   background-color: #000;
 }
 
 .results-panel {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   border: 2px solid #e2e8f0;
+  animation: fadeIn 0.5s ease 0.3s backwards;
 }
 
 .results-list {
@@ -189,14 +293,21 @@
 }
 
 .results-list li {
-  padding: 12px;
-  margin-bottom: 10px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border-left: 3px solid #3b82f6;
-  font-size: 0.9375rem;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+  font-size: 0.9875rem;
   color: #475569;
-  font-weight: 500;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.results-list li:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .results-list li:last-child {
@@ -204,59 +315,63 @@
 }
 
 .info-banner {
-  margin-top: 32px;
+  margin-top: 40px;
   background: white;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 28px;
   text-align: center;
-  font-size: 1rem;
-  max-width: 1400px;
+  font-size: 1.0625rem;
+  max-width: 1600px;
   margin-left: auto;
   margin-right: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   color: #475569;
-  font-weight: 500;
-  line-height: 1.6;
+  font-weight: 600;
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease 0.4s backwards;
 }
 
 .footer {
   text-align: center;
   color: #94a3b8;
-  font-size: 0.875rem;
-  margin-top: 32px;
+  font-size: 0.9375rem;
+  margin-top: 40px;
+  font-weight: 500;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   .main-grid {
     grid-template-columns: 1fr;
-    max-width: 800px;
+    max-width: 900px;
   }
   
   .side-panel {
     position: relative;
     top: 0;
-    max-width: 500px;
+    max-width: 550px;
     margin: 0 auto;
   }
   
   .display-area {
-    height: 450px;
+    height: 500px;
   }
 }
 
 @media (max-width: 768px) {
   .upload-container {
-    padding: 24px;
+    padding: 32px 24px;
   }
 
   .page-header {
-    padding: 24px;
-    font-size: 1.5rem;
+    padding: 28px 24px;
+    font-size: 1.75rem;
   }
 
   .display-area {
-    height: 350px;
+    height: 400px;
   }
 
   .button-row {
@@ -286,27 +401,27 @@
       <form id="nutrition-form" class="checkbox-list">
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="Low Sodium">
-          Low Sodium
+          <span>Low Sodium</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="High Protein">
-          High Protein
+          <span>High Protein</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="Vegetarian">
-          Vegetarian
+          <span>Vegetarian</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="Gluten Free">
-          Gluten Free
+          <span>Gluten Free</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="Low Sugar">
-          Low Sugar
+          <span>Low Sugar</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" name="need" value="High Fiber">
-          High Fiber
+          <span>High Fiber</span>
         </label>
       </form>
     </div>
