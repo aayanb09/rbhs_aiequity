@@ -1,0 +1,841 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+
+<style>
+.settings-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  padding: 48px;
+  position: relative;
+}
+
+.settings-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.page-header {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #0f172a;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInDown 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 36px;
+  height: 36px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.settings-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-section {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.settings-section:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.section-icon {
+  width: 26px;
+  height: 26px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.section-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-info {
+  flex: 1;
+  margin-right: 24px;
+}
+
+.setting-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.setting-description {
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 30px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Select Dropdown */
+.settings-select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.settings-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.settings-select:hover {
+  border-color: #3b82f6;
+}
+
+/* Input Field */
+.settings-input {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #0f172a;
+  background: white;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.settings-input:hover {
+  border-color: #3b82f6;
+}
+
+/* Button */
+.settings-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+  letter-spacing: -0.01em;
+}
+
+.settings-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+}
+
+.settings-btn:active {
+  transform: translateY(0);
+}
+
+.settings-btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.settings-btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.settings-btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.settings-btn-danger:hover {
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+}
+
+/* Action Buttons Group */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Success Message */
+.success-message {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border-left: 4px solid #22c55e;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  display: none;
+  animation: slideInDown 0.3s ease;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-message.show {
+  display: block;
+}
+
+/* Info Box */
+.info-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 4px solid #3b82f6;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-top: 16px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  color: #1e40af;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-text {
+  font-size: 0.9375rem;
+  color: #1e40af;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Data Management Section */
+.data-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px;
+  border-radius: 14px;
+  border-left: 4px solid #3b82f6;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 32px 24px;
+  }
+
+  .page-header {
+    padding: 28px 24px;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .settings-section {
+    padding: 24px 20px;
+  }
+
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .setting-info {
+    margin-right: 0;
+  }
+
+  .setting-control {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .settings-input,
+  .settings-select {
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+  }
+
+  .action-buttons button {
+    flex: 1;
+  }
+
+  .data-stats {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="settings-container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <i data-lucide="settings" class="page-header-icon"></i>
+      <h1>Settings</h1>
+    </div>
+  </div>
+
+  <div id="successMessage" class="success-message">
+    Settings saved successfully!
+  </div>
+
+  <div class="settings-content">
+    <!-- Appearance Settings -->
+    <div class="settings-section">
+      <div class="section-header">
+        <i data-lucide="palette" class="section-icon"></i>
+        <h2 class="section-title">Appearance</h2>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Theme</div>
+          <div class="setting-description">Choose your preferred color theme</div>
+        </div>
+        <div class="setting-control">
+          <select id="themeSelect" class="settings-select">
+            <option value="light">Light</option>
+            <option value="dark">Dark (Coming Soon)</option>
+            <option value="auto">Auto (Coming Soon)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Compact Mode</div>
+          <div class="setting-description">Reduce spacing and display more content on screen</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input type="checkbox" id="compactModeToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Settings -->
+    <div class="settings-section">
+      <div class="section-header">
+        <i data-lucide="bell" class="section-icon"></i>
+        <h2 class="section-title">Notifications</h2>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Reminder Notifications</div>
+          <div class="setting-description">Receive browser notifications for upcoming reminders</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input type="checkbox" id="notificationsToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Notification Sound</div>
+          <div class="setting-description">Play a sound when receiving notifications</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input type="checkbox" id="soundToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Advance Notice</div>
+          <div class="setting-description">How early to notify before a reminder is due</div>
+        </div>
+        <div class="setting-control">
+          <select id="advanceNoticeSelect" class="settings-select">
+            <option value="0">On time</option>
+            <option value="5">5 minutes before</option>
+            <option value="15">15 minutes before</option>
+            <option value="30">30 minutes before</option>
+            <option value="60">1 hour before</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <i data-lucide="info" class="info-icon"></i>
+        <div class="info-text">
+          Browser notifications require permission. Click "Enable Notifications" to allow GlycoGenie to send you reminders.
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy & Data Settings -->
+    <div class="settings-section">
+      <div class="section-header">
+        <i data-lucide="shield" class="section-icon"></i>
+        <h2 class="section-title">Privacy & Data</h2>
+      </div>
+
+      <div class="data-stats">
+        <div class="stat-card">
+          <div class="stat-label">Symptoms Recorded</div>
+          <div class="stat-value" id="symptomCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Reminders Created</div>
+          <div class="stat-value" id="reminderCount">0</div>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Auto-save</div>
+          <div class="setting-description">Automatically save your data as you make changes</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoSaveToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Data Management</div>
+          <div class="setting-description">Export your data or clear all stored information</div>
+        </div>
+        <div class="setting-control">
+          <div class="action-buttons">
+            <button class="settings-btn-secondary settings-btn" id="exportDataBtn">
+              <i data-lucide="download" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+              Export Data
+            </button>
+            <button class="settings-btn-danger settings-btn" id="clearDataBtn">
+              <i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+              Clear All Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <i data-lucide="info" class="info-icon"></i>
+        <div class="info-text">
+          All your data is stored locally in your browser. No information is sent to external servers.
+        </div>
+      </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="settings-section">
+      <div class="section-header">
+        <i data-lucide="info" class="section-icon"></i>
+        <h2 class="section-title">About</h2>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Application Version</div>
+          <div class="setting-description">GlycoGenie v1.0.0</div>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Developer</div>
+          <div class="setting-description">Developed by Aryan</div>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-label">Last Updated</div>
+          <div class="setting-description" id="lastUpdated">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// Load settings from localStorage
+function loadSettings() {
+  const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+  
+  // Apply loaded settings
+  if (settings.theme) {
+    document.getElementById('themeSelect').value = settings.theme;
+  }
+  
+  if (settings.compactMode !== undefined) {
+    document.getElementById('compactModeToggle').checked = settings.compactMode;
+  }
+  
+  if (settings.notifications !== undefined) {
+    document.getElementById('notificationsToggle').checked = settings.notifications;
+  }
+  
+  if (settings.sound !== undefined) {
+    document.getElementById('soundToggle').checked = settings.sound;
+  }
+  
+  if (settings.advanceNotice !== undefined) {
+    document.getElementById('advanceNoticeSelect').value = settings.advanceNotice;
+  }
+  
+  if (settings.autoSave !== undefined) {
+    document.getElementById('autoSaveToggle').checked = settings.autoSave;
+  } else {
+    // Default to true
+    document.getElementById('autoSaveToggle').checked = true;
+  }
+}
+
+// Save settings to localStorage
+function saveSettings() {
+  const settings = {
+    theme: document.getElementById('themeSelect').value,
+    compactMode: document.getElementById('compactModeToggle').checked,
+    notifications: document.getElementById('notificationsToggle').checked,
+    sound: document.getElementById('soundToggle').checked,
+    advanceNotice: document.getElementById('advanceNoticeSelect').value,
+    autoSave: document.getElementById('autoSaveToggle').checked
+  };
+  
+  localStorage.setItem('appSettings', JSON.stringify(settings));
+  showSuccessMessage();
+}
+
+// Show success message
+function showSuccessMessage() {
+  const message = document.getElementById('successMessage');
+  message.classList.add('show');
+  setTimeout(() => {
+    message.classList.remove('show');
+  }, 3000);
+}
+
+// Update data statistics
+function updateDataStats() {
+  const symptoms = JSON.parse(localStorage.getItem('symptomHistory') || '{}');
+  const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
+  
+  const symptomCount = Object.keys(symptoms).length;
+  const reminderCount = reminders.length;
+  
+  document.getElementById('symptomCount').textContent = symptomCount;
+  document.getElementById('reminderCount').textContent = reminderCount;
+}
+
+// Export data
+function exportData() {
+  const data = {
+    symptoms: JSON.parse(localStorage.getItem('symptomHistory') || '{}'),
+    reminders: JSON.parse(localStorage.getItem('reminders') || '[]'),
+    settings: JSON.parse(localStorage.getItem('appSettings') || '{}'),
+    exportDate: new Date().toISOString()
+  };
+  
+  const dataStr = JSON.stringify(data, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `glycogenie-data-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  showSuccessMessage();
+}
+
+// Clear all data
+function clearAllData() {
+  if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+    if (confirm('This will delete all symptoms, reminders, and settings. Continue?')) {
+      localStorage.removeItem('symptomHistory');
+      localStorage.removeItem('reminders');
+      localStorage.removeItem('appSettings');
+      updateDataStats();
+      loadSettings();
+      alert('All data has been cleared successfully.');
+    }
+  }
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted');
+      }
+    });
+  }
+}
+
+// Set last updated date
+function setLastUpdated() {
+  const date = new Date();
+  const formatted = date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  document.getElementById('lastUpdated').textContent = formatted;
+}
+
+// Event listeners
+document.getElementById('themeSelect').addEventListener('change', saveSettings);
+document.getElementById('compactModeToggle').addEventListener('change', saveSettings);
+document.getElementById('soundToggle').addEventListener('change', saveSettings);
+document.getElementById('advanceNoticeSelect').addEventListener('change', saveSettings);
+document.getElementById('autoSaveToggle').addEventListener('change', saveSettings);
+
+document.getElementById('notificationsToggle').addEventListener('change', function() {
+  if (this.checked) {
+    requestNotificationPermission();
+  }
+  saveSettings();
+});
+
+document.getElementById('exportDataBtn').addEventListener('click', exportData);
+document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  updateDataStats();
+  setLastUpdated();
+});
+</script>
+
+{% endblock %}
