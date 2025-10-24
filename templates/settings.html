@@ -3,6 +3,163 @@
 {% block content %}
 
 <style>
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --hover-bg: #f8fafc;
+}
+
+/* Dark Theme Overrides */
+body.dark-theme {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+body.dark-theme .settings-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+body.dark-theme .settings-container::before {
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 50%);
+}
+
+body.dark-theme .page-header {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+body.dark-theme .settings-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark-theme .section-header {
+  border-bottom-color: #334155;
+}
+
+body.dark-theme .section-title,
+body.dark-theme .setting-label {
+  color: #f8fafc;
+}
+
+body.dark-theme .setting-description {
+  color: #94a3b8;
+}
+
+body.dark-theme .setting-item {
+  border-bottom-color: #334155;
+}
+
+body.dark-theme .settings-select,
+body.dark-theme .settings-input {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+body.dark-theme .settings-select:hover,
+body.dark-theme .settings-input:hover {
+  border-color: #3b82f6;
+}
+
+body.dark-theme .settings-btn-secondary {
+  background: #334155;
+  color: #f8fafc;
+}
+
+body.dark-theme .settings-btn-secondary:hover {
+  background: #475569;
+}
+
+body.dark-theme .stat-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+body.dark-theme .stat-label {
+  color: #94a3b8;
+}
+
+body.dark-theme .stat-value {
+  color: #f8fafc;
+}
+
+body.dark-theme .info-box {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+  border-left-color: #3b82f6;
+}
+
+body.dark-theme .info-text {
+  color: #dbeafe;
+}
+
+/* Compact Mode */
+body.compact-mode .settings-container {
+  padding: 32px;
+}
+
+body.compact-mode .page-header {
+  padding: 24px 28px;
+  margin-bottom: 28px;
+}
+
+body.compact-mode .page-header h1 {
+  font-size: 1.875rem;
+}
+
+body.compact-mode .settings-section {
+  padding: 24px 28px;
+  margin-bottom: 18px;
+}
+
+body.compact-mode .section-header {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+}
+
+body.compact-mode .section-title {
+  font-size: 1.175rem;
+}
+
+body.compact-mode .setting-item {
+  padding: 14px 0;
+}
+
+body.compact-mode .setting-label {
+  font-size: 0.9375rem;
+}
+
+body.compact-mode .setting-description {
+  font-size: 0.875rem;
+}
+
+body.compact-mode .settings-select,
+body.compact-mode .settings-input,
+body.compact-mode .settings-btn {
+  padding: 10px 14px;
+  font-size: 0.875rem;
+}
+
+body.compact-mode .data-stats {
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+body.compact-mode .stat-card {
+  padding: 16px;
+}
+
+body.compact-mode .info-box {
+  padding: 12px 16px;
+  margin-top: 12px;
+}
+
 .settings-container {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
@@ -515,8 +672,8 @@
         <div class="setting-control">
           <select id="themeSelect" class="settings-select">
             <option value="light">Light</option>
-            <option value="dark">Dark (Coming Soon)</option>
-            <option value="auto">Auto (Coming Soon)</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto</option>
           </select>
         </div>
       </div>
@@ -685,40 +842,152 @@
 // Initialize Lucide icons
 lucide.createIcons();
 
-// Load settings from localStorage
-function loadSettings() {
-  const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+// ============== THEME MANAGEMENT ==============
+function applyTheme(theme) {
+  const root = document.documentElement;
   
-  // Apply loaded settings
-  if (settings.theme) {
-    document.getElementById('themeSelect').value = settings.theme;
+  let actualTheme = theme;
+  
+  // Handle auto theme detection
+  if (theme === 'auto') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    actualTheme = prefersDark ? 'dark' : 'light';
   }
   
-  if (settings.compactMode !== undefined) {
-    document.getElementById('compactModeToggle').checked = settings.compactMode;
-  }
-  
-  if (settings.notifications !== undefined) {
-    document.getElementById('notificationsToggle').checked = settings.notifications;
-  }
-  
-  if (settings.sound !== undefined) {
-    document.getElementById('soundToggle').checked = settings.sound;
-  }
-  
-  if (settings.advanceNotice !== undefined) {
-    document.getElementById('advanceNoticeSelect').value = settings.advanceNotice;
-  }
-  
-  if (settings.autoSave !== undefined) {
-    document.getElementById('autoSaveToggle').checked = settings.autoSave;
+  if (actualTheme === 'dark') {
+    root.style.setProperty('--bg-primary', '#0f172a');
+    root.style.setProperty('--bg-secondary', '#1e293b');
+    root.style.setProperty('--bg-tertiary', '#334155');
+    root.style.setProperty('--text-primary', '#f8fafc');
+    root.style.setProperty('--text-secondary', '#cbd5e1');
+    root.style.setProperty('--text-muted', '#94a3b8');
+    root.style.setProperty('--border-color', '#334155');
+    root.style.setProperty('--card-bg', '#1e293b');
+    root.style.setProperty('--hover-bg', '#334155');
+    document.body.classList.add('dark-theme');
+    document.body.classList.remove('light-theme');
   } else {
-    // Default to true
-    document.getElementById('autoSaveToggle').checked = true;
+    root.style.setProperty('--bg-primary', '#f8fafc');
+    root.style.setProperty('--bg-secondary', '#ffffff');
+    root.style.setProperty('--bg-tertiary', '#f1f5f9');
+    root.style.setProperty('--text-primary', '#0f172a');
+    root.style.setProperty('--text-secondary', '#475569');
+    root.style.setProperty('--text-muted', '#64748b');
+    root.style.setProperty('--border-color', '#e2e8f0');
+    root.style.setProperty('--card-bg', '#ffffff');
+    root.style.setProperty('--hover-bg', '#f8fafc');
+    document.body.classList.add('light-theme');
+    document.body.classList.remove('dark-theme');
   }
 }
 
-// Save settings to localStorage
+// Listen for system theme changes when using auto mode
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+  if (settings.theme === 'auto') {
+    applyTheme('auto');
+  }
+});
+
+// ============== COMPACT MODE ==============
+function applyCompactMode(enabled) {
+  if (enabled) {
+    document.body.classList.add('compact-mode');
+  } else {
+    document.body.classList.remove('compact-mode');
+  }
+}
+
+// ============== NOTIFICATION MANAGEMENT ==============
+function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('This browser does not support desktop notifications');
+    return Promise.resolve('denied');
+  }
+  
+  if (Notification.permission === 'granted') {
+    return Promise.resolve('granted');
+  }
+  
+  if (Notification.permission !== 'denied') {
+    return Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        // Show a test notification
+        new Notification('GlycoGenie', {
+          body: 'Notifications enabled! You\'ll receive reminders here.',
+          icon: '/static/logo.jpg',
+          badge: '/static/logo.jpg'
+        });
+      }
+      return permission;
+    });
+  }
+  
+  return Promise.resolve('denied');
+}
+
+function checkNotificationSupport() {
+  const toggle = document.getElementById('notificationsToggle');
+  if (!('Notification' in window)) {
+    toggle.disabled = true;
+    toggle.parentElement.parentElement.style.opacity = '0.5';
+  } else if (Notification.permission === 'denied') {
+    toggle.checked = false;
+    saveSettings();
+  }
+}
+
+// ============== SETTINGS MANAGEMENT ==============
+function loadSettings() {
+  const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+  
+  // Set default values
+  const defaultSettings = {
+    theme: 'light',
+    compactMode: false,
+    notifications: false,
+    sound: true,
+    advanceNotice: '15',
+    autoSave: true
+  };
+  
+  const mergedSettings = { ...defaultSettings, ...settings };
+  
+  // Apply theme
+  if (mergedSettings.theme) {
+    document.getElementById('themeSelect').value = mergedSettings.theme;
+    applyTheme(mergedSettings.theme);
+  }
+  
+  // Apply compact mode
+  if (mergedSettings.compactMode !== undefined) {
+    document.getElementById('compactModeToggle').checked = mergedSettings.compactMode;
+    applyCompactMode(mergedSettings.compactMode);
+  }
+  
+  // Apply notifications
+  if (mergedSettings.notifications !== undefined) {
+    document.getElementById('notificationsToggle').checked = mergedSettings.notifications;
+  }
+  
+  // Apply sound
+  if (mergedSettings.sound !== undefined) {
+    document.getElementById('soundToggle').checked = mergedSettings.sound;
+  }
+  
+  // Apply advance notice
+  if (mergedSettings.advanceNotice !== undefined) {
+    document.getElementById('advanceNoticeSelect').value = mergedSettings.advanceNotice;
+  }
+  
+  // Apply auto-save
+  if (mergedSettings.autoSave !== undefined) {
+    document.getElementById('autoSaveToggle').checked = mergedSettings.autoSave;
+  }
+  
+  checkNotificationSupport();
+}
+
 function saveSettings() {
   const settings = {
     theme: document.getElementById('themeSelect').value,
@@ -730,10 +999,14 @@ function saveSettings() {
   };
   
   localStorage.setItem('appSettings', JSON.stringify(settings));
+  
+  // Apply settings immediately
+  applyTheme(settings.theme);
+  applyCompactMode(settings.compactMode);
+  
   showSuccessMessage();
 }
 
-// Show success message
 function showSuccessMessage() {
   const message = document.getElementById('successMessage');
   message.classList.add('show');
@@ -742,7 +1015,7 @@ function showSuccessMessage() {
   }, 3000);
 }
 
-// Update data statistics
+// ============== DATA STATISTICS ==============
 function updateDataStats() {
   const symptoms = JSON.parse(localStorage.getItem('symptomHistory') || '{}');
   const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
@@ -754,13 +1027,14 @@ function updateDataStats() {
   document.getElementById('reminderCount').textContent = reminderCount;
 }
 
-// Export data
+// ============== DATA MANAGEMENT ==============
 function exportData() {
   const data = {
     symptoms: JSON.parse(localStorage.getItem('symptomHistory') || '{}'),
     reminders: JSON.parse(localStorage.getItem('reminders') || '[]'),
     settings: JSON.parse(localStorage.getItem('appSettings') || '{}'),
-    exportDate: new Date().toISOString()
+    exportDate: new Date().toISOString(),
+    version: '1.0.0'
   };
   
   const dataStr = JSON.stringify(data, null, 2);
@@ -777,32 +1051,37 @@ function exportData() {
   showSuccessMessage();
 }
 
-// Clear all data
 function clearAllData() {
-  if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+  if (confirm('⚠️ Are you sure you want to clear all data? This action cannot be undone.')) {
     if (confirm('This will delete all symptoms, reminders, and settings. Continue?')) {
       localStorage.removeItem('symptomHistory');
       localStorage.removeItem('reminders');
       localStorage.removeItem('appSettings');
+      
+      // Reset to defaults
       updateDataStats();
+      
+      // Reload settings with defaults
+      const defaultSettings = {
+        theme: 'light',
+        compactMode: false,
+        notifications: false,
+        sound: true,
+        advanceNotice: '15',
+        autoSave: true
+      };
+      localStorage.setItem('appSettings', JSON.stringify(defaultSettings));
+      
       loadSettings();
-      alert('All data has been cleared successfully.');
+      alert('✅ All data has been cleared successfully.');
+      
+      // Reload page to reset everything
+      setTimeout(() => location.reload(), 1000);
     }
   }
 }
 
-// Request notification permission
-function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        console.log('Notification permission granted');
-      }
-    });
-  }
-}
-
-// Set last updated date
+// ============== UTILITY FUNCTIONS ==============
 function setLastUpdated() {
   const date = new Date();
   const formatted = date.toLocaleDateString('en-US', { 
@@ -813,28 +1092,51 @@ function setLastUpdated() {
   document.getElementById('lastUpdated').textContent = formatted;
 }
 
-// Event listeners
+// ============== EVENT LISTENERS ==============
 document.getElementById('themeSelect').addEventListener('change', saveSettings);
+
 document.getElementById('compactModeToggle').addEventListener('change', saveSettings);
+
 document.getElementById('soundToggle').addEventListener('change', saveSettings);
+
 document.getElementById('advanceNoticeSelect').addEventListener('change', saveSettings);
+
 document.getElementById('autoSaveToggle').addEventListener('change', saveSettings);
 
 document.getElementById('notificationsToggle').addEventListener('change', function() {
   if (this.checked) {
-    requestNotificationPermission();
+    requestNotificationPermission().then(permission => {
+      if (permission !== 'granted') {
+        this.checked = false;
+        alert('⚠️ Notification permission was denied. Please enable notifications in your browser settings to use this feature.');
+      }
+      saveSettings();
+    });
+  } else {
+    saveSettings();
   }
-  saveSettings();
 });
 
 document.getElementById('exportDataBtn').addEventListener('click', exportData);
+
 document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
 
-// Initialize on page load
+// ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   updateDataStats();
   setLastUpdated();
+});
+
+// Apply settings on page load (for navigation between pages)
+window.addEventListener('load', () => {
+  const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+  if (settings.theme) {
+    applyTheme(settings.theme);
+  }
+  if (settings.compactMode) {
+    applyCompactMode(settings.compactMode);
+  }
 });
 </script>
 
