@@ -6,16 +6,25 @@
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+ <script>
+   // CRITICAL: Apply theme BEFORE anything else loads
+   try {
+     var settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+     console.log('Loading settings in HEAD:', settings);
+     if (settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+       document.documentElement.className += ' dark-theme';
+       document.documentElement.style.cssText = 'background: #0f172a; color: #f8fafc;';
+       console.log('Applied dark theme to HTML element');
+     }
+     if (settings.compactMode) {
+       document.documentElement.className += ' compact-mode';
+     }
+   } catch(e) {
+     console.error('Error in head script:', e);
+   }
+ </script>
  <script src="https://unpkg.com/lucide@latest"></script>
  <style>
-   :root {
-     --bg-primary: #f8fafc;
-     --bg-secondary: #ffffff;
-     --text-primary: #0f172a;
-     --text-secondary: #475569;
-     --border-color: #e2e8f0;
-   }
-   
    * {
      margin: 0;
      padding: 0;
@@ -30,48 +39,6 @@
      min-height: 100vh;
      -webkit-font-smoothing: antialiased;
      -moz-osx-font-smoothing: grayscale;
-     transition: background-color 0.3s ease, color 0.3s ease;
-   }
-   
-   /* Dark Theme */
-   body.dark-theme {
-     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-     color: #f8fafc;
-   }
-   
-   body.dark-theme .sidebar {
-     background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-   }
-   
-   body.dark-theme .menu-toggle {
-     background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-   }
-   
-   /* Compact Mode */
-   body.compact-mode .sidebar {
-     padding: 20px 16px;
-   }
-   
-   body.compact-mode .logo-container {
-     margin-bottom: 24px;
-     padding-bottom: 20px;
-   }
-   
-   body.compact-mode .logo {
-     max-width: 72px;
-   }
-   
-   body.compact-mode .app-title {
-     font-size: 1.375rem;
-   }
-   
-   body.compact-mode .nav-links {
-     gap: 6px;
-   }
-   
-   body.compact-mode .nav-links a {
-     padding: 11px 14px;
-     font-size: 0.9375rem;
    }
    
    /* Menu Toggle Button */
@@ -313,6 +280,293 @@
      }
    }
  </style>
+ 
+ <!-- DARK THEME OVERRIDE STYLES - Must come after other styles -->
+ <style id="dark-theme-overrides">
+   /* Dark Theme Global Overrides - High Specificity */
+   html.dark-theme,
+   html.dark-theme body,
+   body.dark-theme {
+     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .sidebar,
+   body.dark-theme .sidebar {
+     background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+   }
+   
+   html.dark-theme .menu-toggle,
+   body.dark-theme .menu-toggle {
+     background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+   }
+   
+   /* Dark theme for all page containers */
+   html.dark-theme .home-container,
+   html.dark-theme .symptom-container,
+   html.dark-theme .reminders-container,
+   html.dark-theme .upload-container,
+   html.dark-theme .settings-container,
+   body.dark-theme .home-container,
+   body.dark-theme .symptom-container,
+   body.dark-theme .reminders-container,
+   body.dark-theme .upload-container,
+   body.dark-theme .settings-container {
+     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+   }
+   
+   html.dark-theme .home-container::before,
+   html.dark-theme .symptom-container::before,
+   html.dark-theme .reminders-container::before,
+   html.dark-theme .upload-container::before,
+   html.dark-theme .settings-container::before,
+   body.dark-theme .home-container::before,
+   body.dark-theme .symptom-container::before,
+   body.dark-theme .reminders-container::before,
+   body.dark-theme .upload-container::before,
+   body.dark-theme .settings-container::before {
+     background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                 radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 50%) !important;
+   }
+   
+   /* Dark theme for cards and sections */
+   html.dark-theme .page-header,
+   html.dark-theme .symptom-form,
+   html.dark-theme .widget,
+   html.dark-theme .action-card,
+   html.dark-theme .side-panel,
+   html.dark-theme .modal-content,
+   html.dark-theme .history-item,
+   html.dark-theme .info-banner,
+   html.dark-theme .stat-card,
+   html.dark-theme .calendar,
+   html.dark-theme .settings-section,
+   body.dark-theme .page-header,
+   body.dark-theme .symptom-form,
+   body.dark-theme .widget,
+   body.dark-theme .action-card,
+   body.dark-theme .side-panel,
+   body.dark-theme .modal-content,
+   body.dark-theme .history-item,
+   body.dark-theme .info-banner,
+   body.dark-theme .stat-card,
+   body.dark-theme .calendar,
+   body.dark-theme .settings-section {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .calendar th,
+   body.dark-theme .calendar th {
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+   }
+   
+   html.dark-theme .calendar td,
+   body.dark-theme .calendar td {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .calendar td:hover,
+   body.dark-theme .calendar td:hover {
+     background: #334155 !important;
+   }
+   
+   /* Dark theme for text */
+   html.dark-theme .hero-title,
+   html.dark-theme .hero-subtitle,
+   html.dark-theme .page-header h1,
+   html.dark-theme .section-title,
+   html.dark-theme .setting-label,
+   html.dark-theme .action-text,
+   html.dark-theme .widget-title,
+   html.dark-theme .item-label,
+   html.dark-theme .form-label,
+   html.dark-theme .modal-title,
+   html.dark-theme .history-date,
+   html.dark-theme .stat-value,
+   html.dark-theme .panel-title,
+   body.dark-theme .hero-title,
+   body.dark-theme .hero-subtitle,
+   body.dark-theme .page-header h1,
+   body.dark-theme .section-title,
+   body.dark-theme .setting-label,
+   body.dark-theme .action-text,
+   body.dark-theme .widget-title,
+   body.dark-theme .item-label,
+   body.dark-theme .form-label,
+   body.dark-theme .modal-title,
+   body.dark-theme .history-date,
+   body.dark-theme .stat-value,
+   body.dark-theme .panel-title {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .hero-description,
+   html.dark-theme .setting-description,
+   html.dark-theme .widget-content,
+   html.dark-theme .item-value,
+   html.dark-theme .history-detail,
+   html.dark-theme .info-banner,
+   html.dark-theme .stat-label,
+   html.dark-theme .placeholder,
+   body.dark-theme .hero-description,
+   body.dark-theme .setting-description,
+   body.dark-theme .widget-content,
+   body.dark-theme .item-value,
+   body.dark-theme .history-detail,
+   body.dark-theme .info-banner,
+   body.dark-theme .stat-label,
+   body.dark-theme .placeholder {
+     color: #cbd5e1 !important;
+   }
+   
+   /* Dark theme for inputs */
+   html.dark-theme input,
+   html.dark-theme textarea,
+   html.dark-theme select,
+   html.dark-theme .form-textarea,
+   html.dark-theme .settings-input,
+   html.dark-theme .settings-select,
+   body.dark-theme input,
+   body.dark-theme textarea,
+   body.dark-theme select,
+   body.dark-theme .form-textarea,
+   body.dark-theme .settings-input,
+   body.dark-theme .settings-select {
+     background: #0f172a !important;
+     color: #f8fafc !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme input:focus,
+   html.dark-theme textarea:focus,
+   html.dark-theme select:focus,
+   body.dark-theme input:focus,
+   body.dark-theme textarea:focus,
+   body.dark-theme select:focus {
+     border-color: #3b82f6 !important;
+   }
+   
+   /* Dark theme for buttons */
+   html.dark-theme .emoji-btn,
+   html.dark-theme .yn-btn,
+   html.dark-theme .close-btn,
+   body.dark-theme .emoji-btn,
+   body.dark-theme .yn-btn,
+   body.dark-theme .close-btn {
+     background: #334155 !important;
+     border-color: #475569 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .emoji-btn:hover,
+   html.dark-theme .yn-btn:hover,
+   body.dark-theme .emoji-btn:hover,
+   body.dark-theme .yn-btn:hover {
+     background: #475569 !important;
+   }
+   
+   html.dark-theme .emoji-btn svg,
+   html.dark-theme .yn-btn svg,
+   html.dark-theme .emoji-btn-label,
+   body.dark-theme .emoji-btn svg,
+   body.dark-theme .yn-btn svg,
+   body.dark-theme .emoji-btn-label {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .emoji-btn.selected,
+   html.dark-theme .yn-btn.selected,
+   body.dark-theme .emoji-btn.selected,
+   body.dark-theme .yn-btn.selected {
+     background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%) !important;
+     border-color: #3b82f6 !important;
+     color: #dbeafe !important;
+   }
+   
+   html.dark-theme .emoji-btn.selected svg,
+   html.dark-theme .yn-btn.selected svg,
+   html.dark-theme .emoji-btn.selected .emoji-btn-label,
+   body.dark-theme .emoji-btn.selected svg,
+   body.dark-theme .yn-btn.selected svg,
+   body.dark-theme .emoji-btn.selected .emoji-btn-label {
+     color: #dbeafe !important;
+   }
+   
+   /* Dark theme for events and items */
+   html.dark-theme .event,
+   html.dark-theme .symptom-item,
+   html.dark-theme .reminder-item,
+   body.dark-theme .event,
+   body.dark-theme .symptom-item,
+   body.dark-theme .reminder-item {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     color: #dbeafe !important;
+   }
+   
+   html.dark-theme .widget-empty,
+   body.dark-theme .widget-empty {
+     background: #0f172a !important;
+     color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for checkbox labels */
+   html.dark-theme .checkbox-label,
+   body.dark-theme .checkbox-label {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .checkbox-label:hover,
+   body.dark-theme .checkbox-label:hover {
+     background: #334155 !important;
+   }
+   
+   /* Dark theme for results */
+   html.dark-theme .results-list li,
+   body.dark-theme .results-list li {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     color: #cbd5e1 !important;
+   }
+   
+   /* Dark theme for month tabs */
+   html.dark-theme .month-tabs,
+   body.dark-theme .month-tabs {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .month-tabs button,
+   body.dark-theme .month-tabs button {
+     background: #334155 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .month-tabs button.active,
+   html.dark-theme .month-tabs button:hover,
+   body.dark-theme .month-tabs button.active,
+   body.dark-theme .month-tabs button:hover {
+     background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%) !important;
+     color: #dbeafe !important;
+   }
+   
+   /* Dark theme for display area */
+   html.dark-theme .display-area,
+   body.dark-theme .display-area {
+     background: linear-gradient(135deg, #0f172a 0%, #000000 100%) !important;
+     border-color: #334155 !important;
+   }
+   
+   /* Dark theme for action buttons on pages */
+   html.dark-theme .action-btn,
+   
+   /* Dark theme for date elements */
+   html.dark-theme .date,
+   body.dark-theme .date {
+     color: #94a3b8 !important;
+   }
+ </style>
 </head>
 <body>
  <!-- Menu Toggle Button -->
@@ -394,70 +648,6 @@
    document.addEventListener('keydown', (e) => {
      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
        closeSidebar();
-     }
-   });
-
-   // ============== APPLY THEME SETTINGS ON ALL PAGES ==============
-   function applyGlobalTheme(theme) {
-     const root = document.documentElement;
-     let actualTheme = theme;
-     
-     if (theme === 'auto') {
-       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-       actualTheme = prefersDark ? 'dark' : 'light';
-     }
-     
-     if (actualTheme === 'dark') {
-       document.body.classList.add('dark-theme');
-       document.body.classList.remove('light-theme');
-       root.style.setProperty('--bg-primary', '#0f172a');
-       root.style.setProperty('--bg-secondary', '#1e293b');
-       root.style.setProperty('--text-primary', '#f8fafc');
-       root.style.setProperty('--text-secondary', '#cbd5e1');
-       root.style.setProperty('--border-color', '#334155');
-     } else {
-       document.body.classList.add('light-theme');
-       document.body.classList.remove('dark-theme');
-       root.style.setProperty('--bg-primary', '#f8fafc');
-       root.style.setProperty('--bg-secondary', '#ffffff');
-       root.style.setProperty('--text-primary', '#0f172a');
-       root.style.setProperty('--text-secondary', '#475569');
-       root.style.setProperty('--border-color', '#e2e8f0');
-     }
-   }
-   
-   function applyGlobalCompactMode(enabled) {
-     if (enabled) {
-       document.body.classList.add('compact-mode');
-     } else {
-       document.body.classList.remove('compact-mode');
-     }
-   }
-   
-   // Apply settings from localStorage
-   function applyStoredSettings() {
-     const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-     
-     if (settings.theme) {
-       applyGlobalTheme(settings.theme);
-     }
-     
-     if (settings.compactMode) {
-       applyGlobalCompactMode(settings.compactMode);
-     }
-   }
-   
-   // Apply immediately to prevent flash of unstyled content
-   applyStoredSettings();
-   
-   // Also apply when page loads
-   window.addEventListener('DOMContentLoaded', applyStoredSettings);
-   
-   // Listen for system theme changes
-   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-     const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-     if (settings.theme === 'auto') {
-       applyGlobalTheme('auto');
      }
    });
  </script>
