@@ -459,6 +459,9 @@ body.compact-mode .info-box {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .settings-btn:hover {
@@ -468,6 +471,12 @@ body.compact-mode .info-box {
 
 .settings-btn:active {
   transform: translateY(0);
+}
+
+.settings-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
 }
 
 .settings-btn-secondary {
@@ -692,62 +701,7 @@ body.compact-mode .info-box {
       </div>
     </div>
 
-    <!-- Notifications Settings -->
-    <div class="settings-section">
-      <div class="section-header">
-        <i data-lucide="bell" class="section-icon"></i>
-        <h2 class="section-title">Notifications</h2>
-      </div>
 
-      <div class="setting-item">
-        <div class="setting-info">
-          <div class="setting-label">Reminder Notifications</div>
-          <div class="setting-description">Receive browser notifications for upcoming reminders</div>
-        </div>
-        <div class="setting-control">
-          <label class="toggle-switch">
-            <input type="checkbox" id="notificationsToggle">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="setting-item">
-        <div class="setting-info">
-          <div class="setting-label">Notification Sound</div>
-          <div class="setting-description">Play a sound when receiving notifications</div>
-        </div>
-        <div class="setting-control">
-          <label class="toggle-switch">
-            <input type="checkbox" id="soundToggle">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="setting-item">
-        <div class="setting-info">
-          <div class="setting-label">Advance Notice</div>
-          <div class="setting-description">How early to notify before a reminder is due</div>
-        </div>
-        <div class="setting-control">
-          <select id="advanceNoticeSelect" class="settings-select">
-            <option value="0">On time</option>
-            <option value="5">5 minutes before</option>
-            <option value="15">15 minutes before</option>
-            <option value="30">30 minutes before</option>
-            <option value="60">1 hour before</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="info-box">
-        <i data-lucide="info" class="info-icon"></i>
-        <div class="info-text">
-          Browser notifications require permission. Click "Enable Notifications" to allow GlycoGenie to send you reminders.
-        </div>
-      </div>
-    </div>
 
     <!-- Privacy & Data Settings -->
     <div class="settings-section">
@@ -788,12 +742,12 @@ body.compact-mode .info-box {
         <div class="setting-control">
           <div class="action-buttons">
             <button class="settings-btn-secondary settings-btn" id="exportDataBtn">
-              <i data-lucide="download" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
-              Export Data
+              <i data-lucide="download"></i>
+              <span>Export Data</span>
             </button>
             <button class="settings-btn-danger settings-btn" id="clearDataBtn">
-              <i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
-              Clear All Data
+              <i data-lucide="trash-2"></i>
+              <span>Clear All Data</span>
             </button>
           </div>
         </div>
@@ -844,8 +798,6 @@ lucide.createIcons();
 
 // ============== THEME MANAGEMENT ==============
 function applyTheme(theme) {
-  const root = document.documentElement;
-  
   let actualTheme = theme;
   
   // Handle auto theme detection
@@ -855,29 +807,15 @@ function applyTheme(theme) {
   }
   
   if (actualTheme === 'dark') {
-    root.style.setProperty('--bg-primary', '#0f172a');
-    root.style.setProperty('--bg-secondary', '#1e293b');
-    root.style.setProperty('--bg-tertiary', '#334155');
-    root.style.setProperty('--text-primary', '#f8fafc');
-    root.style.setProperty('--text-secondary', '#cbd5e1');
-    root.style.setProperty('--text-muted', '#94a3b8');
-    root.style.setProperty('--border-color', '#334155');
-    root.style.setProperty('--card-bg', '#1e293b');
-    root.style.setProperty('--hover-bg', '#334155');
     document.body.classList.add('dark-theme');
     document.body.classList.remove('light-theme');
+    document.documentElement.classList.add('dark-theme');
+    document.documentElement.classList.remove('light-theme');
   } else {
-    root.style.setProperty('--bg-primary', '#f8fafc');
-    root.style.setProperty('--bg-secondary', '#ffffff');
-    root.style.setProperty('--bg-tertiary', '#f1f5f9');
-    root.style.setProperty('--text-primary', '#0f172a');
-    root.style.setProperty('--text-secondary', '#475569');
-    root.style.setProperty('--text-muted', '#64748b');
-    root.style.setProperty('--border-color', '#e2e8f0');
-    root.style.setProperty('--card-bg', '#ffffff');
-    root.style.setProperty('--hover-bg', '#f8fafc');
     document.body.classList.add('light-theme');
     document.body.classList.remove('dark-theme');
+    document.documentElement.classList.add('light-theme');
+    document.documentElement.classList.remove('dark-theme');
   }
 }
 
@@ -899,43 +837,7 @@ function applyCompactMode(enabled) {
 }
 
 // ============== NOTIFICATION MANAGEMENT ==============
-function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    alert('This browser does not support desktop notifications');
-    return Promise.resolve('denied');
-  }
-  
-  if (Notification.permission === 'granted') {
-    return Promise.resolve('granted');
-  }
-  
-  if (Notification.permission !== 'denied') {
-    return Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        // Show a test notification
-        new Notification('GlycoGenie', {
-          body: 'Notifications enabled! You\'ll receive reminders here.',
-          icon: '/static/logo.jpg',
-          badge: '/static/logo.jpg'
-        });
-      }
-      return permission;
-    });
-  }
-  
-  return Promise.resolve('denied');
-}
-
-function checkNotificationSupport() {
-  const toggle = document.getElementById('notificationsToggle');
-  if (!('Notification' in window)) {
-    toggle.disabled = true;
-    toggle.parentElement.parentElement.style.opacity = '0.5';
-  } else if (Notification.permission === 'denied') {
-    toggle.checked = false;
-    saveSettings();
-  }
-}
+// Removed - notifications section deleted
 
 // ============== SETTINGS MANAGEMENT ==============
 function loadSettings() {
@@ -945,9 +847,6 @@ function loadSettings() {
   const defaultSettings = {
     theme: 'light',
     compactMode: false,
-    notifications: false,
-    sound: true,
-    advanceNotice: '15',
     autoSave: true
   };
   
@@ -965,36 +864,16 @@ function loadSettings() {
     applyCompactMode(mergedSettings.compactMode);
   }
   
-  // Apply notifications
-  if (mergedSettings.notifications !== undefined) {
-    document.getElementById('notificationsToggle').checked = mergedSettings.notifications;
-  }
-  
-  // Apply sound
-  if (mergedSettings.sound !== undefined) {
-    document.getElementById('soundToggle').checked = mergedSettings.sound;
-  }
-  
-  // Apply advance notice
-  if (mergedSettings.advanceNotice !== undefined) {
-    document.getElementById('advanceNoticeSelect').value = mergedSettings.advanceNotice;
-  }
-  
   // Apply auto-save
   if (mergedSettings.autoSave !== undefined) {
     document.getElementById('autoSaveToggle').checked = mergedSettings.autoSave;
   }
-  
-  checkNotificationSupport();
 }
 
 function saveSettings() {
   const settings = {
     theme: document.getElementById('themeSelect').value,
     compactMode: document.getElementById('compactModeToggle').checked,
-    notifications: document.getElementById('notificationsToggle').checked,
-    sound: document.getElementById('soundToggle').checked,
-    advanceNotice: document.getElementById('advanceNoticeSelect').value,
     autoSave: document.getElementById('autoSaveToggle').checked
   };
   
@@ -1065,9 +944,6 @@ function clearAllData() {
       const defaultSettings = {
         theme: 'light',
         compactMode: false,
-        notifications: false,
-        sound: true,
-        advanceNotice: '15',
         autoSave: true
       };
       localStorage.setItem('appSettings', JSON.stringify(defaultSettings));
@@ -1097,25 +973,7 @@ document.getElementById('themeSelect').addEventListener('change', saveSettings);
 
 document.getElementById('compactModeToggle').addEventListener('change', saveSettings);
 
-document.getElementById('soundToggle').addEventListener('change', saveSettings);
-
-document.getElementById('advanceNoticeSelect').addEventListener('change', saveSettings);
-
 document.getElementById('autoSaveToggle').addEventListener('change', saveSettings);
-
-document.getElementById('notificationsToggle').addEventListener('change', function() {
-  if (this.checked) {
-    requestNotificationPermission().then(permission => {
-      if (permission !== 'granted') {
-        this.checked = false;
-        alert('⚠️ Notification permission was denied. Please enable notifications in your browser settings to use this feature.');
-      }
-      saveSettings();
-    });
-  } else {
-    saveSettings();
-  }
-});
 
 document.getElementById('exportDataBtn').addEventListener('click', exportData);
 
@@ -1126,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   updateDataStats();
   setLastUpdated();
+  lucide.createIcons();
 });
 
 // Apply settings on page load (for navigation between pages)
