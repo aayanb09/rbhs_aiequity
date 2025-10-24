@@ -8,6 +8,14 @@
  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
  <script src="https://unpkg.com/lucide@latest"></script>
  <style>
+   :root {
+     --bg-primary: #f8fafc;
+     --bg-secondary: #ffffff;
+     --text-primary: #0f172a;
+     --text-secondary: #475569;
+     --border-color: #e2e8f0;
+   }
+   
    * {
      margin: 0;
      padding: 0;
@@ -22,6 +30,48 @@
      min-height: 100vh;
      -webkit-font-smoothing: antialiased;
      -moz-osx-font-smoothing: grayscale;
+     transition: background-color 0.3s ease, color 0.3s ease;
+   }
+   
+   /* Dark Theme */
+   body.dark-theme {
+     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+     color: #f8fafc;
+   }
+   
+   body.dark-theme .sidebar {
+     background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+   }
+   
+   body.dark-theme .menu-toggle {
+     background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+   }
+   
+   /* Compact Mode */
+   body.compact-mode .sidebar {
+     padding: 20px 16px;
+   }
+   
+   body.compact-mode .logo-container {
+     margin-bottom: 24px;
+     padding-bottom: 20px;
+   }
+   
+   body.compact-mode .logo {
+     max-width: 72px;
+   }
+   
+   body.compact-mode .app-title {
+     font-size: 1.375rem;
+   }
+   
+   body.compact-mode .nav-links {
+     gap: 6px;
+   }
+   
+   body.compact-mode .nav-links a {
+     padding: 11px 14px;
+     font-size: 0.9375rem;
    }
    
    /* Menu Toggle Button */
@@ -344,6 +394,70 @@
    document.addEventListener('keydown', (e) => {
      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
        closeSidebar();
+     }
+   });
+
+   // ============== APPLY THEME SETTINGS ON ALL PAGES ==============
+   function applyGlobalTheme(theme) {
+     const root = document.documentElement;
+     let actualTheme = theme;
+     
+     if (theme === 'auto') {
+       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+       actualTheme = prefersDark ? 'dark' : 'light';
+     }
+     
+     if (actualTheme === 'dark') {
+       document.body.classList.add('dark-theme');
+       document.body.classList.remove('light-theme');
+       root.style.setProperty('--bg-primary', '#0f172a');
+       root.style.setProperty('--bg-secondary', '#1e293b');
+       root.style.setProperty('--text-primary', '#f8fafc');
+       root.style.setProperty('--text-secondary', '#cbd5e1');
+       root.style.setProperty('--border-color', '#334155');
+     } else {
+       document.body.classList.add('light-theme');
+       document.body.classList.remove('dark-theme');
+       root.style.setProperty('--bg-primary', '#f8fafc');
+       root.style.setProperty('--bg-secondary', '#ffffff');
+       root.style.setProperty('--text-primary', '#0f172a');
+       root.style.setProperty('--text-secondary', '#475569');
+       root.style.setProperty('--border-color', '#e2e8f0');
+     }
+   }
+   
+   function applyGlobalCompactMode(enabled) {
+     if (enabled) {
+       document.body.classList.add('compact-mode');
+     } else {
+       document.body.classList.remove('compact-mode');
+     }
+   }
+   
+   // Apply settings from localStorage
+   function applyStoredSettings() {
+     const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+     
+     if (settings.theme) {
+       applyGlobalTheme(settings.theme);
+     }
+     
+     if (settings.compactMode) {
+       applyGlobalCompactMode(settings.compactMode);
+     }
+   }
+   
+   // Apply immediately to prevent flash of unstyled content
+   applyStoredSettings();
+   
+   // Also apply when page loads
+   window.addEventListener('DOMContentLoaded', applyStoredSettings);
+   
+   // Listen for system theme changes
+   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+     const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+     if (settings.theme === 'auto') {
+       applyGlobalTheme('auto');
      }
    });
  </script>
