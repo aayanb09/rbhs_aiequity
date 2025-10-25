@@ -236,6 +236,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
+.btn-danger {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15) !important;
+}
+
+.btn-danger:hover {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
+}
+
 .prediction-result {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-left: 4px solid #3b82f6;
@@ -548,6 +560,17 @@
           <div class="stat-value" id="lastEntry" style="font-size: 1rem;">--</div>
         </div>
       </div>
+
+      <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button type="button" class="btn btn-secondary" onclick="exportData()">
+          <i data-lucide="download"></i>
+          <span>Export Data</span>
+        </button>
+        <button type="button" class="btn btn-danger" onclick="clearAllData()">
+          <i data-lucide="trash-2"></i>
+          <span>Clear All</span>
+        </button>
+      </div>
     </div>
 
     <!-- History Card -->
@@ -631,18 +654,27 @@ function predictGlucose() {
     return;
   }
 
-  const hours = parseFloat(document.getElementById('predictionHours').value);
-  if (!hours || hours <= 0) {
-    alert('Please enter a valid number of hours');
+  const hoursInput = document.getElementById('predictionHours').value;
+  const hours = parseFloat(hoursInput);
+  
+  if (!hoursInput || isNaN(hours) || hours <= 0) {
+    alert('Please enter a valid number of hours (greater than 0)');
+    return;
+  }
+
+  if (hours > 12) {
+    alert('Please enter a time period up to 12 hours for more accurate predictions');
     return;
   }
 
   // Get most recent entry
-  const latest = entries.sort((a, b) => {
+  const sortedEntries = entries.sort((a, b) => {
     const dateA = new Date(a.date + 'T' + a.time);
     const dateB = new Date(b.date + 'T' + b.time);
     return dateB - dateA;
-  })[0];
+  });
+  
+  const latest = sortedEntries[0];
 
   const params = getInsulinParams(latest.insulinType);
   const currentGlucose = parseFloat(latest.currentGlucose);
@@ -700,7 +732,15 @@ function predictGlucose() {
     <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. This is an estimate and should not replace medical advice.</small>
   `;
   
-  document.getElementById('predictionResult').style.display = 'block';
+  // Show the prediction result with animation
+  const resultDiv = document.getElementById('predictionResult');
+  resultDiv.style.display = 'block';
+  
+  // Reinitialize icons in the prediction result
+  lucide.createIcons();
+  
+  // Scroll to prediction result smoothly
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // Update statistics
@@ -771,28 +811,70 @@ function displayLogs() {
 
 // Delete entry
 function deleteEntry(id) {
-  if (!confirm('Delete this entry?')) return;
+  if (!confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
+    return;
+  }
   
   let entries = loadEntries();
+  const entryToDelete = entries.find(e => e.id === id);
+  
+  if (!entryToDelete) {
+    alert('Entry not found!');
+    return;
+  }
+  
   entries = entries.filter(e => e.id !== id);
   saveEntries(entries);
+  
+  // Update all displays
   displayLogs();
   updateStats();
   updateChart();
+  
+  // Notify other tabs
   window.dispatchEvent(new Event('storage'));
+  
+  // Show success message
+  console.log('Entry deleted successfully');
 }
 
 // Form submission
 document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   e.preventDefault();
   
+  // Validate all required fields
+  const currentGlucose = document.getElementById('currentGlucose').value;
+  const insulinDose = document.getElementById('insulinDose').value;
+  const insulinType = document.getElementById('insulinType').value;
+  const logDate = document.getElementById('logDate').value;
+  const logTime = document.getElementById('logTime').value;
+  
+  if (!currentGlucose || !insulinDose || !insulinType || !logDate || !logTime) {
+    alert('Please fill in all required fields!');
+    return;
+  }
+  
+  // Validate glucose value
+  const glucoseValue = parseFloat(currentGlucose);
+  if (isNaN(glucoseValue) || glucoseValue < 20 || glucoseValue > 600) {
+    alert('Please enter a valid glucose level between 20 and 600 mg/dL');
+    return;
+  }
+  
+  // Validate insulin dose
+  const doseValue = parseFloat(insulinDose);
+  if (isNaN(doseValue) || doseValue < 0 || doseValue > 100) {
+    alert('Please enter a valid insulin dose between 0 and 100 units');
+    return;
+  }
+  
   const entry = {
     id: generateId(),
-    currentGlucose: document.getElementById('currentGlucose').value,
-    insulinDose: document.getElementById('insulinDose').value,
-    insulinType: document.getElementById('insulinType').value,
-    date: document.getElementById('logDate').value,
-    time: document.getElementById('logTime').value,
+    currentGlucose: currentGlucose,
+    insulinDose: insulinDose,
+    insulinType: insulinType,
+    date: logDate,
+    time: logTime,
     notes: document.getElementById('notes').value.trim()
   };
   
@@ -806,12 +888,19 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   document.getElementById('logDate').valueAsDate = now;
   document.getElementById('logTime').value = now.toTimeString().slice(0, 5);
   
+  // Update all displays
   displayLogs();
   updateStats();
   updateChart();
+  
+  // Notify other tabs
   window.dispatchEvent(new Event('storage'));
   
-  alert('Entry saved successfully!');
+  // Show success message
+  alert('✓ Entry saved successfully!');
+  
+  // Scroll to the logs section to show the new entry
+  document.getElementById('logList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
 // Chart
@@ -903,6 +992,74 @@ function updateChart() {
       }
     }
   });
+}
+
+// Export data as JSON
+function exportData() {
+  const entries = loadEntries();
+  
+  if (entries.length === 0) {
+    alert('No data to export. Please add some entries first.');
+    return;
+  }
+  
+  const dataStr = JSON.stringify(entries, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `glucose-data-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  alert('✓ Data exported successfully!');
+}
+
+// Clear all data
+function clearAllData() {
+  const entries = loadEntries();
+  
+  if (entries.length === 0) {
+    alert('No data to clear.');
+    return;
+  }
+  
+  const confirmed = confirm(
+    `⚠️ Warning: This will permanently delete all ${entries.length} glucose entries!\n\n` +
+    'This action cannot be undone. Are you sure you want to continue?'
+  );
+  
+  if (!confirmed) {
+    return;
+  }
+  
+  // Double confirmation for safety
+  const doubleConfirm = confirm(
+    'Are you absolutely sure? This is your last chance to cancel!'
+  );
+  
+  if (!doubleConfirm) {
+    return;
+  }
+  
+  // Clear the data
+  localStorage.removeItem('glucoseEntries');
+  
+  // Update all displays
+  displayLogs();
+  updateStats();
+  updateChart();
+  
+  // Hide prediction result
+  document.getElementById('predictionResult').style.display = 'none';
+  
+  // Notify other tabs
+  window.dispatchEvent(new Event('storage'));
+  
+  alert('✓ All data has been cleared.');
 }
 
 // Initialize on page load
