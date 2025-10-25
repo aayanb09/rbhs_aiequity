@@ -26,6 +26,10 @@ def upload():
 def symptom():
     return render_template("symptomReport.html")
 
+@app.route("/glucose")
+def glucose():
+    return render_template("glucose.html")
+
 @app.route("/settings")
 def settings():
     return render_template("settings.html")
