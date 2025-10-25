@@ -736,6 +736,201 @@ function calculateInsulinActivity(hours, params) {
   return activity;
 }
 
+// Get user profile for personalized predictions
+function getUserProfile() {
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  return profile;
+}
+
+// Calculate personalized insulin sensitivity factor (ISF)
+function calculatePersonalizedISF(profile, currentGlucose) {
+  // Base ISF (Rule of 1800 for rapid-acting insulin)
+  let baseISF = 40; // Default for average adult
+  
+  // Adjust based on weight if available
+  if (profile.weight) {
+    // Rule of 1800: 1800 / total daily insulin dose
+    // Estimate total daily dose based on weight: ~0.5 units/kg is common
+    const estimatedTDD = parseFloat(profile.weight) * 0.5;
+    baseISF = 1800 / estimatedTDD;
+  }
+  
+  // Adjust for age
+  if (profile.age) {
+    const age = parseInt(profile.age);
+    if (age < 18) {
+      baseISF *= 1.2; // Children are more sensitive
+    } else if (age > 65) {
+      baseISF *= 1.15; // Elderly may be more sensitive
+    }
+  }
+  
+  // Adjust for physical activity level
+  if (profile.exerciseLevel) {
+    const exerciseMultipliers = {
+      'Sedentary': 0.9,
+      'Lightly active': 1.0,
+      'Moderately active': 1.1,
+      'Very active': 1.2,
+      'Extremely active': 1.3
+    };
+    baseISF *= (exerciseMultipliers[profile.exerciseLevel] || 1.0);
+  }
+  
+  // Adjust for BMI if available
+  if (profile.bmi) {
+    const bmi = parseFloat(profile.bmi);
+    if (bmi > 30) {
+      baseISF *= 0.8; // Obesity reduces insulin sensitivity
+    } else if (bmi < 18.5) {
+      baseISF *= 1.1; // Lower BMI may increase sensitivity
+    }
+  }
+  
+  // Adjust based on current glucose (Somogyi effect)
+  if (currentGlucose > 250) {
+    baseISF *= 0.9; // Reduced sensitivity at very high glucose
+  }
+  
+  return Math.max(20, Math.min(80, baseISF)); // Clamp between 20-80
+}
+
+// Calculate basal metabolic glucose change
+function calculateBasalGlucoseChange(hours, profile, currentGlucose) {
+  let netChange = 0;
+  
+  // Base hepatic glucose production
+  let glucoseProduction = 2.0; // mg/dL per hour (liver production)
+  let glucoseUtilization = 1.5; // mg/dL per hour (cellular uptake)
+  
+  // Adjust for physical activity
+  if (profile.exerciseLevel) {
+    const activityMultipliers = {
+      'Sedentary': 0.8,
+      'Lightly active': 1.0,
+      'Moderately active': 1.2,
+      'Very active': 1.4,
+      'Extremely active': 1.6
+    };
+    glucoseUtilization *= (activityMultipliers[profile.exerciseLevel] || 1.0);
+  }
+  
+  // Adjust for age
+  if (profile.age) {
+    const age = parseInt(profile.age);
+    if (age > 60) {
+      glucoseUtilization *= 0.9; // Reduced utilization with age
+    }
+  }
+  
+  // Adjust for medical conditions
+  if (profile.conditions) {
+    if (profile.conditions.includes('Obesity')) {
+      glucoseProduction *= 1.2; // Increased hepatic production
+      glucoseUtilization *= 0.8; // Reduced peripheral uptake
+    }
+    if (profile.conditions.includes('Kidney Disease')) {
+      glucoseUtilization *= 0.85; // Impaired glucose clearance
+    }
+  }
+  
+  // Net change
+  netChange = (glucoseProduction - glucoseUtilization) * hours;
+  
+  // Counter-regulatory response for hypoglycemia
+  const projectedGlucose = currentGlucose + netChange;
+  if (projectedGlucose < 70) {
+    const hypoglycemiaResponse = (70 - projectedGlucose) * 0.4;
+    netChange += hypoglycemiaResponse;
+  }
+  
+  // Dawn phenomenon (early morning hours)
+  const now = new Date();
+  const currentHour = now.getHours();
+  const targetHour = (currentHour + hours) % 24;
+  if (targetHour >= 4 && targetHour <= 8) {
+    netChange += 10; // Dawn phenomenon adds 10-20 mg/dL
+  }
+  
+  return netChange;
+}
+
+// Generate personalized advice based on profile
+function generatePersonalizedAdvice(predictedGlucose, profile) {
+  let advice = '';
+  
+  if (predictedGlucose < 70) {
+    advice = 'Risk of hypoglycemia detected. ';
+    advice += 'Consume 15g of fast-acting carbohydrates (4 glucose tablets, 4oz juice, or 1 tablespoon honey). ';
+    advice += 'Recheck in 15 minutes.';
+    
+    if (profile.conditions && profile.conditions.includes('Heart Disease')) {
+      advice += ' <strong>Important:</strong> Monitor closely due to heart condition - severe hypoglycemia can strain the heart.';
+    }
+  } else if (predictedGlucose < 100) {
+    advice = 'Your glucose is predicted to be in a healthy range. Continue monitoring. ';
+    
+    if (profile.exerciseLevel === 'Very active' || profile.exerciseLevel === 'Extremely active') {
+      advice += 'As an active individual, consider a small snack if planning exercise.';
+    }
+  } else if (predictedGlucose < 140) {
+    advice = 'Slightly elevated glucose. ';
+    
+    if (profile.exerciseLevel !== 'Sedentary') {
+      advice += 'A 15-20 minute walk could help lower levels. ';
+    } else {
+      advice += 'Consider light physical activity if possible. ';
+    }
+    
+    if (profile.diet && (profile.diet.includes('Low-carb') || profile.diet.includes('Ketogenic'))) {
+      advice += 'Your low-carb diet should help manage this elevation.';
+    }
+  } else if (predictedGlucose < 180) {
+    advice = 'Elevated glucose - needs attention. Monitor closely. ';
+    
+    if (profile.medications && profile.medications.toLowerCase().includes('metformin')) {
+      advice += 'Ensure you\'ve taken your Metformin as prescribed. ';
+    }
+    
+    advice += 'Stay hydrated and avoid additional carbohydrates.';
+  } else {
+    advice = 'High glucose level predicted. Contact your healthcare provider. ';
+    
+    if (profile.conditions && profile.conditions.includes('Diabetes')) {
+      advice += 'Check for ketones, especially if you have Type 1 diabetes. ';
+    }
+    
+    advice += 'Stay hydrated and monitor frequently.';
+  }
+  
+  return advice;
+}
+
+// Calculate prediction confidence score
+function calculateConfidence(hoursElapsed, hours, profile, entries) {
+  let confidence = 100;
+  
+  // Reduce confidence for stale readings
+  if (hoursElapsed > 2) confidence -= 10;
+  if (hoursElapsed > 4) confidence -= 15;
+  if (hoursElapsed > 6) confidence -= 20;
+  
+  // Reduce confidence for long predictions
+  if (hours > 4) confidence -= 10;
+  if (hours > 8) confidence -= 20;
+  
+  // Increase confidence if we have profile data
+  if (profile.weight) confidence += 5;
+  if (profile.exerciseLevel) confidence += 5;
+  if (profile.conditions && profile.conditions.length > 0) confidence += 5;
+  
+  // Increase confidence if we have historical data
+  if (entries.length > 10) confidence += 10;
+  if (entries.length > 30) confidence += 10;
+  
+  return Math.max(20, Math.min(95, confidence));
+}
+
 // Predict glucose level
 function predictGlucose() {
   const entries = loadEntries();
@@ -757,6 +952,9 @@ function predictGlucose() {
     return;
   }
 
+  // Get user profile
+  const profile = getUserProfile();
+
   // Get most recent entry
   const sortedEntries = entries.sort((a, b) => {
     const dateA = new Date(a.date + 'T' + a.time);
@@ -774,57 +972,56 @@ function predictGlucose() {
   const currentGlucose = parseFloat(latest.currentGlucose);
   const insulinDose = parseFloat(latest.insulinDose);
 
-  // Insulin sensitivity factor - varies by individual, 40 is average
-  // This represents how many mg/dL one unit of insulin will lower glucose
-  const isf = 40;
+  // Calculate personalized insulin sensitivity factor
+  const isf = calculatePersonalizedISF(profile, currentGlucose);
 
   // Calculate insulin activity at prediction time
   const insulinActivity = calculateInsulinActivity(totalHours, params);
   
   // Calculate total glucose reduction from insulin
-  // The maximum reduction is insulin dose * ISF, scaled by activity level
   const maxGlucoseReduction = insulinDose * isf;
   const glucoseDrop = maxGlucoseReduction * insulinActivity;
   
-  // Account for natural glucose dynamics
-  // Endogenous glucose production and cellular uptake
-  let naturalChange = 0;
+  // Calculate basal metabolic changes
+  const basalChange = calculateBasalGlucoseChange(hours, profile, currentGlucose);
   
-  // Fasting state: liver glucose production (~2 mg/dL per hour)
-  // Countered by basal glucose uptake (~1.5 mg/dL per hour)
-  const netGlucoseProduction = 0.5; // mg/dL per hour
-  naturalChange = hours * netGlucoseProduction;
-  
-  // Counter-regulatory hormones may increase glucose if going low
-  const projectedGlucose = currentGlucose - glucoseDrop + naturalChange;
-  if (projectedGlucose < 70) {
-    // Counter-regulatory response kicks in below 70 mg/dL
-    const counterRegulatoryEffect = (70 - projectedGlucose) * 0.3;
-    naturalChange += counterRegulatoryEffect;
-  }
-  
-  const predictedGlucose = Math.max(50, Math.round(currentGlucose - glucoseDrop + naturalChange));
+  // Final prediction
+  const predictedGlucose = Math.max(40, Math.round(currentGlucose - glucoseDrop + basalChange));
+
+  // Calculate confidence
+  const confidence = calculateConfidence(hoursElapsed, hours, profile, entries);
 
   // Display result
   document.getElementById('predictedValue').textContent = predictedGlucose + ' mg/dL';
   
   let rangeText = '';
-  let advice = '';
   if (predictedGlucose < 70) {
     rangeText = 'Low - Risk of hypoglycemia';
-    advice = 'Consider having 15g of fast-acting carbohydrates (e.g., glucose tablets, juice) to prevent low blood sugar.';
   } else if (predictedGlucose < 100) {
     rangeText = 'Normal - Good control';
-    advice = 'Your glucose is predicted to be in a healthy range. Continue monitoring.';
   } else if (predictedGlucose < 140) {
     rangeText = 'Slightly elevated';
-    advice = 'Consider light physical activity (e.g., a 15-minute walk) to help lower glucose levels.';
   } else if (predictedGlucose < 180) {
     rangeText = 'Elevated - Needs attention';
-    advice = 'Monitor closely and consider contacting your healthcare provider if levels remain high.';
   } else {
     rangeText = 'High - Medical attention recommended';
-    advice = 'Contact your healthcare provider. Check for ketones if you have Type 1 diabetes.';
+  }
+  
+  // Generate personalized advice
+  const advice = generatePersonalizedAdvice(predictedGlucose, profile);
+  
+  // Build details with personalization notes
+  let personalizationNotes = [];
+  if (profile.weight) personalizationNotes.push('weight');
+  if (profile.exerciseLevel) personalizationNotes.push('activity level');
+  if (profile.bmi) personalizationNotes.push('BMI');
+  if (profile.conditions && profile.conditions.length > 0) personalizationNotes.push('medical conditions');
+  
+  let personalizationText = '';
+  if (personalizationNotes.length > 0) {
+    personalizationText = `<br><strong>Personalized factors:</strong> This prediction considers your ${personalizationNotes.join(', ')}.`;
+  } else {
+    personalizationText = '<br><em>💡 Tip: Complete your profile in Settings for more accurate predictions!</em>';
   }
   
   // Calculate confidence based on time since last reading
@@ -836,11 +1033,16 @@ function predictGlucose() {
 
   document.getElementById('predictionDetails').innerHTML = `
     <strong>${rangeText}</strong><br>
-    ${advice}<br><br>
-    <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. 
-    Insulin activity at prediction time: ${(insulinActivity * 100).toFixed(1)}%
+    ${advice}<br>
+    ${personalizationText}<br><br>
+    <small><strong>Prediction Details:</strong><br>
+    • Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin<br>
+    • Taken at ${formatDateTime(latest.date, latest.time)}<br>
+    • Insulin activity: ${(insulinActivity * 100).toFixed(1)}%<br>
+    • Personalized ISF: ${isf.toFixed(0)} mg/dL per unit<br>
+    • Confidence: ${confidence}%
     ${confidenceNote}<br><br>
-    <em>⚠️ This is a mathematical estimate and should not replace blood glucose monitoring or medical advice. Individual responses vary.</em></small>
+    <em>⚠️ This is a mathematical estimate based on your profile and should not replace blood glucose monitoring or medical advice. Individual responses vary.</em></small>
   `;
   
   // Show the prediction result with animation
