@@ -3,28 +3,36 @@
 <head>
  <title>{% block title %}GlycoGenie{% endblock %}</title>
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+ <!-- CRITICAL: Apply theme BEFORE anything else loads to prevent flash -->
+ <script>
+   (function() {
+     try {
+       var settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+       var isDark = settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+       if (isDark) {
+         document.documentElement.classList.add('dark-theme');
+       }
+       if (settings.compactMode) {
+         document.documentElement.classList.add('compact-mode');
+       }
+     } catch(e) {}
+   })();
+ </script>
+ 
  <link rel="preconnect" href="https://fonts.googleapis.com">
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
- <script>
-   // CRITICAL: Apply theme BEFORE anything else loads
-   try {
-     var settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-     console.log('Loading settings in HEAD:', settings);
-     if (settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-       document.documentElement.className += ' dark-theme';
-       document.documentElement.style.cssText = 'background: #0f172a; color: #f8fafc;';
-       console.log('Applied dark theme to HTML element');
-     }
-     if (settings.compactMode) {
-       document.documentElement.className += ' compact-mode';
-     }
-   } catch(e) {
-     console.error('Error in head script:', e);
-   }
- </script>
  <script src="https://unpkg.com/lucide@latest"></script>
  <style>
+   :root {
+     --bg-primary: #f8fafc;
+     --bg-secondary: #ffffff;
+     --text-primary: #0f172a;
+     --text-secondary: #475569;
+     --border-color: #e2e8f0;
+   }
+   
    * {
      margin: 0;
      padding: 0;
@@ -39,6 +47,7 @@
      min-height: 100vh;
      -webkit-font-smoothing: antialiased;
      -moz-osx-font-smoothing: grayscale;
+     transition: background-color 0.3s ease, color 0.3s ease;
    }
    
    /* Menu Toggle Button */
@@ -253,6 +262,33 @@
      transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
    }
    
+   /* Compact Mode */
+   body.compact-mode .sidebar {
+     padding: 20px 16px;
+   }
+   
+   body.compact-mode .logo-container {
+     margin-bottom: 24px;
+     padding-bottom: 20px;
+   }
+   
+   body.compact-mode .logo {
+     max-width: 72px;
+   }
+   
+   body.compact-mode .app-title {
+     font-size: 1.375rem;
+   }
+   
+   body.compact-mode .nav-links {
+     gap: 6px;
+   }
+   
+   body.compact-mode .nav-links a {
+     padding: 11px 14px;
+     font-size: 0.9375rem;
+   }
+   
    /* Mobile Responsive */
    @media (max-width: 768px) {
      .menu-toggle {
@@ -279,11 +315,8 @@
        font-size: 1.375rem;
      }
    }
- </style>
- 
- <!-- DARK THEME OVERRIDE STYLES - Must come after other styles -->
- <style id="dark-theme-overrides">
-   /* Dark Theme Global Overrides - High Specificity */
+   
+   /* ========== DARK THEME - HIGH PRIORITY OVERRIDES ========== */
    html.dark-theme,
    html.dark-theme body,
    body.dark-theme {
@@ -301,7 +334,7 @@
      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
    }
    
-   /* Dark theme for all page containers */
+   /* Dark theme for page containers */
    html.dark-theme .home-container,
    html.dark-theme .symptom-container,
    html.dark-theme .reminders-container,
@@ -335,8 +368,6 @@
    html.dark-theme .widget,
    html.dark-theme .action-card,
    html.dark-theme .side-panel,
-   html.dark-theme .modal-content,
-   html.dark-theme .history-item,
    html.dark-theme .info-banner,
    html.dark-theme .stat-card,
    html.dark-theme .calendar,
@@ -346,8 +377,6 @@
    body.dark-theme .widget,
    body.dark-theme .action-card,
    body.dark-theme .side-panel,
-   body.dark-theme .modal-content,
-   body.dark-theme .history-item,
    body.dark-theme .info-banner,
    body.dark-theme .stat-card,
    body.dark-theme .calendar,
@@ -357,6 +386,57 @@
      color: #f8fafc !important;
    }
    
+   /* Dark theme for SYMPTOM HISTORY - IMPROVED READABILITY */
+   html.dark-theme .history-item,
+   body.dark-theme .history-item {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     border-left-color: #60a5fa !important;
+   }
+   
+   html.dark-theme .history-date,
+   body.dark-theme .history-date {
+     color: #60a5fa !important;
+   }
+   
+   html.dark-theme .history-detail,
+   body.dark-theme .history-detail {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .history-detail strong,
+   body.dark-theme .history-detail strong {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .modal-content,
+   body.dark-theme .modal-content {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .modal-title,
+   body.dark-theme .modal-title {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .close-btn,
+   body.dark-theme .close-btn {
+     background: #334155 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .close-btn:hover,
+   body.dark-theme .close-btn:hover {
+     background: #475569 !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .empty-state,
+   body.dark-theme .empty-state {
+     color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for calendar */
    html.dark-theme .calendar th,
    body.dark-theme .calendar th {
      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
@@ -373,7 +453,7 @@
      background: #334155 !important;
    }
    
-   /* Dark theme for text */
+   /* Dark theme for text elements */
    html.dark-theme .hero-title,
    html.dark-theme .hero-subtitle,
    html.dark-theme .page-header h1,
@@ -383,8 +463,6 @@
    html.dark-theme .widget-title,
    html.dark-theme .item-label,
    html.dark-theme .form-label,
-   html.dark-theme .modal-title,
-   html.dark-theme .history-date,
    html.dark-theme .stat-value,
    html.dark-theme .panel-title,
    body.dark-theme .hero-title,
@@ -396,8 +474,6 @@
    body.dark-theme .widget-title,
    body.dark-theme .item-label,
    body.dark-theme .form-label,
-   body.dark-theme .modal-title,
-   body.dark-theme .history-date,
    body.dark-theme .stat-value,
    body.dark-theme .panel-title {
      color: #f8fafc !important;
@@ -407,7 +483,6 @@
    html.dark-theme .setting-description,
    html.dark-theme .widget-content,
    html.dark-theme .item-value,
-   html.dark-theme .history-detail,
    html.dark-theme .info-banner,
    html.dark-theme .stat-label,
    html.dark-theme .placeholder,
@@ -415,7 +490,6 @@
    body.dark-theme .setting-description,
    body.dark-theme .widget-content,
    body.dark-theme .item-value,
-   body.dark-theme .history-detail,
    body.dark-theme .info-banner,
    body.dark-theme .stat-label,
    body.dark-theme .placeholder {
@@ -452,10 +526,8 @@
    /* Dark theme for buttons */
    html.dark-theme .emoji-btn,
    html.dark-theme .yn-btn,
-   html.dark-theme .close-btn,
    body.dark-theme .emoji-btn,
-   body.dark-theme .yn-btn,
-   body.dark-theme .close-btn {
+   body.dark-theme .yn-btn {
      background: #334155 !important;
      border-color: #475569 !important;
      color: #cbd5e1 !important;
@@ -558,13 +630,23 @@
      border-color: #334155 !important;
    }
    
-   /* Dark theme for action buttons on pages */
-   html.dark-theme .action-btn,
-   
    /* Dark theme for date elements */
    html.dark-theme .date,
    body.dark-theme .date {
      color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for action buttons */
+   html.dark-theme .action-btn,
+   body.dark-theme .action-btn {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .action-btn:hover,
+   body.dark-theme .action-btn:hover {
+     border-color: #3b82f6 !important;
    }
  </style>
 </head>
@@ -616,7 +698,7 @@
  </div>
 
  <script>
-   // Initialize Lucide icons
+   // Initialize Lucide icons once
    lucide.createIcons();
    
    const menuToggle = document.getElementById('menuToggle');
@@ -639,12 +721,10 @@
    menuToggle.addEventListener('click', toggleSidebar);
    overlay.addEventListener('click', closeSidebar);
    
-   // Close sidebar when clicking a nav link
    navLinks.forEach(link => {
      link.addEventListener('click', closeSidebar);
    });
 
-   // Close sidebar on escape key
    document.addEventListener('keydown', (e) => {
      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
        closeSidebar();
