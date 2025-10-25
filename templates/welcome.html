@@ -204,6 +204,244 @@
       height: 20px;
     }
     
+    /* Survey Modal Styles */
+    .survey-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.3s ease;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .survey-content {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+      max-width: 600px;
+      width: 100%;
+      animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid #e2e8f0;
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: auto;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .survey-header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      padding: 32px;
+      text-align: center;
+      color: white;
+      border-radius: 24px 24px 0 0;
+    }
+    
+    .survey-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    
+    .survey-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+      stroke-width: 2;
+    }
+    
+    .survey-header h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    
+    .survey-header p {
+      font-size: 1rem;
+      opacity: 0.95;
+    }
+    
+    .survey-body {
+      padding: 40px;
+    }
+    
+    .survey-section {
+      margin-bottom: 32px;
+    }
+    
+    .survey-section:last-of-type {
+      margin-bottom: 0;
+    }
+    
+    .survey-label {
+      display: block;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+    
+    .survey-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      color: #0f172a;
+      font-weight: 500;
+    }
+    
+    .survey-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    .survey-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      color: #0f172a;
+      font-weight: 500;
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .survey-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    .survey-description {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    
+    .condition-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    .condition-checkbox {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .condition-checkbox:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    
+    .condition-checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+    
+    .condition-checkbox label {
+      font-size: 0.9375rem;
+      color: #475569;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    .condition-checkbox input[type="checkbox"]:checked ~ label {
+      color: #1e40af;
+    }
+    
+    .survey-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    
+    .survey-btn {
+      flex: 1;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      letter-spacing: -0.01em;
+    }
+    
+    .survey-btn-primary {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+    }
+    
+    .survey-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+    }
+    
+    .survey-btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .survey-btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .survey-btn-secondary:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
     @media (max-width: 968px) {
       .welcome-container {
         grid-template-columns: 1fr;
@@ -277,10 +515,107 @@
         width: 100%;
         padding: 16px 32px;
       }
+      
+      .survey-content {
+        border-radius: 20px;
+      }
+      
+      .survey-header {
+        padding: 28px 24px;
+      }
+      
+      .survey-header h2 {
+        font-size: 1.5rem;
+      }
+      
+      .survey-body {
+        padding: 28px 24px;
+      }
+      
+      .survey-buttons {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Survey Modal -->
+  <div class="survey-modal" id="surveyModal">
+    <div class="survey-content">
+      <div class="survey-header">
+        <div class="survey-icon">
+          <i data-lucide="clipboard-list"></i>
+        </div>
+        <h2>Welcome! Tell Us About You</h2>
+        <p>This helps us personalize your experience</p>
+      </div>
+      
+      <div class="survey-body">
+        <form id="surveyForm">
+          <div class="survey-section">
+            <label class="survey-label" for="surveyAge">Age *</label>
+            <input 
+              type="number" 
+              id="surveyAge" 
+              class="survey-input" 
+              placeholder="Enter your age"
+              min="1"
+              max="120"
+              required
+            >
+            <p class="survey-description">Your age helps us provide age-appropriate health information</p>
+          </div>
+          
+          <div class="survey-section">
+            <label class="survey-label">Medical Conditions</label>
+            <p class="survey-description" style="margin-bottom: 12px;">Select all that apply (optional)</p>
+            <div class="condition-checkboxes">
+              <div class="condition-checkbox">
+                <input type="checkbox" id="diabetes" name="condition" value="Diabetes">
+                <label for="diabetes">Diabetes</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="hypertension" name="condition" value="Hypertension">
+                <label for="hypertension">Hypertension (High Blood Pressure)</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="heartDisease" name="condition" value="Heart Disease">
+                <label for="heartDisease">Heart Disease</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="asthma" name="condition" value="Asthma">
+                <label for="asthma">Asthma</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="arthritis" name="condition" value="Arthritis">
+                <label for="arthritis">Arthritis</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="thyroid" name="condition" value="Thyroid Disorder">
+                <label for="thyroid">Thyroid Disorder</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="survey-section">
+            <label class="survey-label" for="surveyOtherConditions">Other Medical Conditions</label>
+            <textarea 
+              id="surveyOtherConditions" 
+              class="survey-textarea" 
+              placeholder="List any other conditions or allergies..."
+            ></textarea>
+            <p class="survey-description">Include allergies, chronic conditions, or anything else we should know</p>
+          </div>
+          
+          <div class="survey-buttons">
+            <button type="button" class="survey-btn survey-btn-secondary" onclick="skipSurvey()">Skip for Now</button>
+            <button type="submit" class="survey-btn survey-btn-primary">Continue</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="welcome-container">
     <div class="welcome-left">
       <div class="logo-large">
@@ -328,15 +663,75 @@
         </div>
       </div>
       
-      <a href="/home" class="cta-button">
+      <button onclick="checkSurveyAndNavigate()" class="cta-button">
         <span>Get Started</span>
         <i data-lucide="arrow-right"></i>
-      </a>
+      </button>
     </div>
   </div>
   
   <script>
     lucide.createIcons();
+    
+    // Check if survey has been completed
+    function checkSurveyAndNavigate() {
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) {
+        // Show survey modal
+        document.getElementById('surveyModal').style.display = 'flex';
+        lucide.createIcons(); // Re-initialize icons in modal
+      } else {
+        // Go directly to home
+        window.location.href = '/home';
+      }
+    }
+    
+    // Handle survey form submission
+    document.getElementById('surveyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const age = document.getElementById('surveyAge').value;
+      
+      if (!age) {
+        alert('Please enter your age to continue.');
+        return;
+      }
+      
+      // Get selected conditions
+      const conditionCheckboxes = document.querySelectorAll('input[name="condition"]:checked');
+      const selectedConditions = Array.from(conditionCheckboxes).map(cb => cb.value);
+      
+      // Get other conditions
+      const otherConditions = document.getElementById('surveyOtherConditions').value.trim();
+      
+      // Save to localStorage
+      const userProfile = {
+        age: age,
+        conditions: selectedConditions,
+        otherConditions: otherConditions,
+        completedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      
+      // Navigate to home
+      window.location.href = '/home';
+    });
+    
+    // Skip survey function
+    function skipSurvey() {
+      // Save minimal profile to indicate survey was offered
+      const userProfile = {
+        age: null,
+        conditions: [],
+        otherConditions: '',
+        skipped: true,
+        completedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      window.location.href = '/home';
+    }
   </script>
 </body>
 </html>
