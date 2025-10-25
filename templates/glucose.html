@@ -635,15 +635,105 @@ function formatDateTime(date, time) {
   });
 }
 
-// Get insulin action parameters
+// Get insulin action parameters with improved pharmacokinetic profiles
 function getInsulinParams(type) {
   const params = {
-    rapid: { onset: 0.25, peak: 1, duration: 4, peakEffect: 0.7 },
-    short: { onset: 0.5, peak: 2, duration: 6, peakEffect: 0.65 },
-    intermediate: { onset: 2, peak: 6, duration: 12, peakEffect: 0.5 },
-    long: { onset: 2, peak: 8, duration: 24, peakEffect: 0.3 }
+    rapid: { 
+      onset: 0.17, // 10 minutes
+      peak: 1.0,   // 1 hour
+      duration: 5, // 5 hours
+      peakEffect: 1.0,
+      shape: 'biexponential' // Rapid rise and fall
+    },
+    short: { 
+      onset: 0.5,  // 30 minutes
+      peak: 2.5,   // 2.5 hours
+      duration: 8, // 8 hours
+      peakEffect: 0.85,
+      shape: 'gaussian' // Bell curve
+    },
+    intermediate: { 
+      onset: 1.5,  // 1.5 hours
+      peak: 6,     // 6 hours
+      duration: 18, // 18 hours
+      peakEffect: 0.6,
+      shape: 'plateau' // Sustained action
+    },
+    long: { 
+      onset: 2,    // 2 hours
+      peak: -1,    // No distinct peak (flat action)
+      duration: 24, // 24 hours
+      peakEffect: 0.25,
+      shape: 'flat' // Peakless
+    }
   };
   return params[type] || params.rapid;
+}
+
+// Calculate insulin activity using pharmacokinetic models
+function calculateInsulinActivity(hours, params) {
+  if (hours < params.onset) {
+    return 0;
+  }
+  
+  if (hours > params.duration) {
+    return 0;
+  }
+  
+  const effectiveTime = hours - params.onset;
+  const effectiveDuration = params.duration - params.onset;
+  
+  let activity = 0;
+  
+  if (params.shape === 'flat') {
+    // Long-acting insulin: flat profile with slight ramp up/down
+    if (effectiveTime < 2) {
+      activity = (effectiveTime / 2) * params.peakEffect;
+    } else if (effectiveTime > effectiveDuration - 2) {
+      activity = ((effectiveDuration - effectiveTime) / 2) * params.peakEffect;
+    } else {
+      activity = params.peakEffect;
+    }
+  } else if (params.shape === 'plateau') {
+    // Intermediate-acting: plateau with gradual rise and fall
+    const peakStart = params.peak - 2;
+    const peakEnd = params.peak + 3;
+    
+    if (effectiveTime < peakStart) {
+      // Rising phase
+      activity = (effectiveTime / peakStart) * params.peakEffect;
+    } else if (effectiveTime <= peakEnd) {
+      // Plateau phase
+      activity = params.peakEffect;
+    } else {
+      // Falling phase
+      const fallProgress = (effectiveTime - peakEnd) / (effectiveDuration - peakEnd);
+      activity = params.peakEffect * (1 - fallProgress);
+    }
+  } else if (params.shape === 'gaussian') {
+    // Short-acting: bell curve (Gaussian distribution)
+    const sigma = effectiveDuration / 6; // Standard deviation
+    const mu = params.peak - params.onset; // Mean (peak time relative to onset)
+    const gaussian = Math.exp(-Math.pow(effectiveTime - mu, 2) / (2 * Math.pow(sigma, 2)));
+    activity = params.peakEffect * gaussian;
+  } else {
+    // Biexponential for rapid-acting: fast rise, slower fall
+    const peakTime = params.peak - params.onset;
+    
+    if (effectiveTime <= peakTime) {
+      // Rising phase: quadratic curve
+      const progress = effectiveTime / peakTime;
+      activity = params.peakEffect * (1 - Math.pow(1 - progress, 2));
+    } else {
+      // Falling phase: exponential decay
+      const decayTime = effectiveTime - peakTime;
+      const decayDuration = effectiveDuration - peakTime;
+      const decayRate = 3 / decayDuration; // Decay constant
+      activity = params.peakEffect * Math.exp(-decayRate * decayTime);
+    }
+  }
+  
+  return activity;
 }
 
 // Predict glucose level
@@ -675,37 +765,45 @@ function predictGlucose() {
   });
   
   const latest = sortedEntries[0];
+  const entryTime = new Date(latest.date + 'T' + latest.time);
+  const now = new Date();
+  const hoursElapsed = (now - entryTime) / (1000 * 60 * 60);
+  const totalHours = hoursElapsed + hours;
 
   const params = getInsulinParams(latest.insulinType);
   const currentGlucose = parseFloat(latest.currentGlucose);
   const insulinDose = parseFloat(latest.insulinDose);
 
-  // Insulin sensitivity factor (typical: 1 unit lowers glucose by 30-50 mg/dL)
-  const isf = 40; // mg/dL per unit of insulin
+  // Insulin sensitivity factor - varies by individual, 40 is average
+  // This represents how many mg/dL one unit of insulin will lower glucose
+  const isf = 40;
 
-  // Calculate insulin action curve
-  let insulinEffect = 0;
-  if (hours < params.onset) {
-    insulinEffect = 0;
-  } else if (hours <= params.peak) {
-    // Ramp up to peak
-    const progress = (hours - params.onset) / (params.peak - params.onset);
-    insulinEffect = progress * params.peakEffect;
-  } else if (hours <= params.duration) {
-    // Ramp down from peak
-    const progress = (hours - params.peak) / (params.duration - params.peak);
-    insulinEffect = params.peakEffect * (1 - progress);
-  } else {
-    insulinEffect = 0;
+  // Calculate insulin activity at prediction time
+  const insulinActivity = calculateInsulinActivity(totalHours, params);
+  
+  // Calculate total glucose reduction from insulin
+  // The maximum reduction is insulin dose * ISF, scaled by activity level
+  const maxGlucoseReduction = insulinDose * isf;
+  const glucoseDrop = maxGlucoseReduction * insulinActivity;
+  
+  // Account for natural glucose dynamics
+  // Endogenous glucose production and cellular uptake
+  let naturalChange = 0;
+  
+  // Fasting state: liver glucose production (~2 mg/dL per hour)
+  // Countered by basal glucose uptake (~1.5 mg/dL per hour)
+  const netGlucoseProduction = 0.5; // mg/dL per hour
+  naturalChange = hours * netGlucoseProduction;
+  
+  // Counter-regulatory hormones may increase glucose if going low
+  const projectedGlucose = currentGlucose - glucoseDrop + naturalChange;
+  if (projectedGlucose < 70) {
+    // Counter-regulatory response kicks in below 70 mg/dL
+    const counterRegulatoryEffect = (70 - projectedGlucose) * 0.3;
+    naturalChange += counterRegulatoryEffect;
   }
-
-  // Calculate predicted glucose drop
-  const glucoseDrop = insulinDose * isf * insulinEffect;
   
-  // Account for natural glucose rise (without food, slight rise expected)
-  const naturalRise = hours * 5; // ~5 mg/dL per hour baseline
-  
-  const predictedGlucose = Math.max(70, Math.round(currentGlucose - glucoseDrop + naturalRise));
+  const predictedGlucose = Math.max(50, Math.round(currentGlucose - glucoseDrop + naturalChange));
 
   // Display result
   document.getElementById('predictedValue').textContent = predictedGlucose + ' mg/dL';
@@ -714,22 +812,35 @@ function predictGlucose() {
   let advice = '';
   if (predictedGlucose < 70) {
     rangeText = 'Low - Risk of hypoglycemia';
-    advice = 'Consider having a snack to prevent low blood sugar.';
+    advice = 'Consider having 15g of fast-acting carbohydrates (e.g., glucose tablets, juice) to prevent low blood sugar.';
   } else if (predictedGlucose < 100) {
     rangeText = 'Normal - Good control';
-    advice = 'Your glucose is predicted to be in a healthy range.';
+    advice = 'Your glucose is predicted to be in a healthy range. Continue monitoring.';
   } else if (predictedGlucose < 140) {
     rangeText = 'Slightly elevated';
-    advice = 'Monitor your glucose and consider activity to help lower it.';
+    advice = 'Consider light physical activity (e.g., a 15-minute walk) to help lower glucose levels.';
+  } else if (predictedGlucose < 180) {
+    rangeText = 'Elevated - Needs attention';
+    advice = 'Monitor closely and consider contacting your healthcare provider if levels remain high.';
   } else {
-    rangeText = 'High - May need attention';
-    advice = 'Consider consulting with your healthcare provider about adjusting insulin doses.';
+    rangeText = 'High - Medical attention recommended';
+    advice = 'Contact your healthcare provider. Check for ketones if you have Type 1 diabetes.';
+  }
+  
+  // Calculate confidence based on time since last reading
+  let confidenceNote = '';
+  if (hoursElapsed > 4) {
+    confidenceNote = '<br><strong>Note:</strong> This prediction is based on a reading from ' + 
+                     hoursElapsed.toFixed(1) + ' hours ago. For better accuracy, consider taking a new glucose reading.';
   }
 
   document.getElementById('predictionDetails').innerHTML = `
     <strong>${rangeText}</strong><br>
     ${advice}<br><br>
-    <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. This is an estimate and should not replace medical advice.</small>
+    <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. 
+    Insulin activity at prediction time: ${(insulinActivity * 100).toFixed(1)}%
+    ${confidenceNote}<br><br>
+    <em>⚠️ This is a mathematical estimate and should not replace blood glucose monitoring or medical advice. Individual responses vary.</em></small>
   `;
   
   // Show the prediction result with animation
@@ -761,8 +872,26 @@ function updateStats() {
       return dateB - dateA;
     });
     const lastDate = new Date(sorted[0].date + 'T' + sorted[0].time);
-    const hoursAgo = Math.round((Date.now() - lastDate) / (1000 * 60 * 60));
-    document.getElementById('lastEntry').textContent = hoursAgo === 0 ? 'Just now' : hoursAgo + 'h ago';
+    const now = new Date();
+    const diffMs = now - lastDate;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    let timeText;
+    if (diffMins < 1) {
+      timeText = 'Just now';
+    } else if (diffMins < 60) {
+      timeText = diffMins + 'm ago';
+    } else if (diffHours < 24) {
+      timeText = diffHours + 'h ago';
+    } else if (diffDays === 1) {
+      timeText = '1 day ago';
+    } else {
+      timeText = diffDays + ' days ago';
+    }
+    
+    document.getElementById('lastEntry').textContent = timeText;
   } else {
     document.getElementById('avgGlucose').textContent = '--';
     document.getElementById('lastEntry').textContent = '--';
