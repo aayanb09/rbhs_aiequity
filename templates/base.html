@@ -736,9 +736,209 @@
    {% block content %}{% endblock %}
  </div>
 
+ <!-- Custom Notification Modal -->
+ <div id="customNotificationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;">
+   <div id="customNotificationContent" style="background: white; padding: 40px; border-radius: 24px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%; animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #e2e8f0; text-align: center;">
+     <div id="customNotificationIcon" style="margin: 0 auto 20px; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"></div>
+     <h3 id="customNotificationTitle" style="color: #0f172a; margin-bottom: 16px; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;"></h3>
+     <p id="customNotificationMessage" style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 28px; font-weight: 500;"></p>
+     <div id="customNotificationButtons" style="display: flex; gap: 12px; justify-content: center;"></div>
+   </div>
+ </div>
+
+ <style>
+   @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+   }
+   
+   @keyframes scaleIn {
+     from {
+       opacity: 0;
+       transform: scale(0.9);
+     }
+     to {
+       opacity: 1;
+       transform: scale(1);
+     }
+   }
+   
+   .notification-btn {
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+     color: white;
+     border: none;
+     padding: 14px 32px;
+     border-radius: 12px;
+     cursor: pointer;
+     font-weight: 700;
+     font-size: 0.9375rem;
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+     letter-spacing: -0.01em;
+     font-family: 'Inter', sans-serif;
+   }
+   
+   .notification-btn:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+   }
+   
+   .notification-btn:active {
+     transform: translateY(0);
+   }
+   
+   .notification-btn-secondary {
+     background: #f1f5f9;
+     color: #475569;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+   }
+   
+   .notification-btn-secondary:hover {
+     background: #e2e8f0;
+     color: #1e293b;
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+   }
+   
+   .notification-btn-danger {
+     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+     color: white;
+     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+   }
+   
+   .notification-btn-danger:hover {
+     box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+   }
+   
+   /* Dark theme support */
+   html.dark-theme #customNotificationContent,
+   body.dark-theme #customNotificationContent {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme #customNotificationTitle,
+   body.dark-theme #customNotificationTitle {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme #customNotificationMessage,
+   body.dark-theme #customNotificationMessage {
+     color: #cbd5e1 !important;
+   }
+ </style>
+
  <script>
    // Initialize Lucide icons once
    lucide.createIcons();
+   
+   // Custom notification system
+   window.showNotification = function(options) {
+     const modal = document.getElementById('customNotificationModal');
+     const content = document.getElementById('customNotificationContent');
+     const icon = document.getElementById('customNotificationIcon');
+     const title = document.getElementById('customNotificationTitle');
+     const message = document.getElementById('customNotificationMessage');
+     const buttons = document.getElementById('customNotificationButtons');
+     
+     // Set content
+     title.textContent = options.title || 'Notification';
+     message.textContent = options.message || '';
+     
+     // Set icon
+     icon.innerHTML = '';
+     const iconElement = document.createElement('div');
+     iconElement.innerHTML = options.icon || '<i data-lucide="info" style="width: 32px; height: 32px;"></i>';
+     icon.appendChild(iconElement);
+     
+     // Set icon background color
+     const iconColors = {
+       success: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+       error: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+       warning: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+       info: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+     };
+     icon.style.background = iconColors[options.type] || iconColors.info;
+     
+     // Create buttons
+     buttons.innerHTML = '';
+     if (options.buttons && options.buttons.length > 0) {
+       options.buttons.forEach(btn => {
+         const button = document.createElement('button');
+         button.textContent = btn.text;
+         button.className = 'notification-btn';
+         if (btn.type === 'secondary') button.classList.add('notification-btn-secondary');
+         if (btn.type === 'danger') button.classList.add('notification-btn-danger');
+         button.onclick = () => {
+           modal.style.display = 'none';
+           if (btn.onClick) btn.onClick();
+         };
+         buttons.appendChild(button);
+       });
+     } else {
+       const okButton = document.createElement('button');
+       okButton.textContent = 'OK';
+       okButton.className = 'notification-btn';
+       okButton.onclick = () => {
+         modal.style.display = 'none';
+         if (options.onClose) options.onClose();
+       };
+       buttons.appendChild(okButton);
+     }
+     
+     // Show modal
+     modal.style.display = 'flex';
+     
+     // Reinitialize Lucide icons
+     lucide.createIcons();
+   };
+   
+   // Custom confirm dialog
+   window.showConfirm = function(options) {
+     return new Promise((resolve) => {
+       window.showNotification({
+         title: options.title || 'Confirm',
+         message: options.message || 'Are you sure?',
+         type: options.type || 'warning',
+         icon: options.icon || '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #f59e0b;"></i>',
+         buttons: [
+           {
+             text: options.confirmText || 'Confirm',
+             type: options.confirmType || 'primary',
+             onClick: () => resolve(true)
+           },
+           {
+             text: options.cancelText || 'Cancel',
+             type: 'secondary',
+             onClick: () => resolve(false)
+           }
+         ]
+       });
+     });
+   };
+   
+   // Custom alert (for simple messages)
+   window.showAlert = function(message, type = 'info', title = null) {
+     const icons = {
+       success: '<i data-lucide="check-circle" style="width: 32px; height: 32px; color: #22c55e;"></i>',
+       error: '<i data-lucide="x-circle" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+       warning: '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #f59e0b;"></i>',
+       info: '<i data-lucide="info" style="width: 32px; height: 32px; color: #3b82f6;"></i>'
+     };
+     
+     const titles = {
+       success: 'Success',
+       error: 'Error',
+       warning: 'Warning',
+       info: 'Information'
+     };
+     
+     window.showNotification({
+       title: title || titles[type] || 'Notification',
+       message: message,
+       type: type,
+       icon: icons[type] || icons.info
+     });
+   };
    
    const menuToggle = document.getElementById('menuToggle');
    const sidebar = document.getElementById('sidebar');

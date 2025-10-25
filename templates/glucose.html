@@ -740,7 +740,7 @@ function calculateInsulinActivity(hours, params) {
 function predictGlucose() {
   const entries = loadEntries();
   if (entries.length === 0) {
-    alert('Please add at least one entry first!');
+    showAlert('Please add at least one glucose entry before making predictions.', 'warning', 'No Entries Found');
     return;
   }
 
@@ -748,12 +748,12 @@ function predictGlucose() {
   const hours = parseFloat(hoursInput);
   
   if (!hoursInput || isNaN(hours) || hours <= 0) {
-    alert('Please enter a valid number of hours (greater than 0)');
+    showAlert('Please enter a valid number of hours greater than 0.', 'error', 'Invalid Input');
     return;
   }
 
   if (hours > 12) {
-    alert('Please enter a time period up to 12 hours for more accurate predictions');
+    showAlert('Please enter a time period up to 12 hours for more accurate predictions.', 'warning', 'Time Period Too Long');
     return;
   }
 
@@ -939,8 +939,18 @@ function displayLogs() {
 }
 
 // Delete entry
-function deleteEntry(id) {
-  if (!confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
+async function deleteEntry(id) {
+  const confirmed = await showConfirm({
+    title: 'Delete Entry?',
+    message: 'Are you sure you want to delete this entry? This action cannot be undone.',
+    type: 'warning',
+    icon: '<i data-lucide="trash-2" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Delete',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) {
     return;
   }
   
@@ -948,7 +958,7 @@ function deleteEntry(id) {
   const entryToDelete = entries.find(e => e.id === id);
   
   if (!entryToDelete) {
-    alert('Entry not found!');
+    showAlert('Entry not found in the database.', 'error', 'Entry Not Found');
     return;
   }
   
@@ -979,21 +989,21 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   const logTime = document.getElementById('logTime').value;
   
   if (!currentGlucose || !insulinDose || !insulinType || !logDate || !logTime) {
-    alert('Please fill in all required fields!');
+    showAlert('Please fill in all required fields before saving.', 'warning', 'Missing Fields');
     return;
   }
   
   // Validate glucose value
   const glucoseValue = parseFloat(currentGlucose);
   if (isNaN(glucoseValue) || glucoseValue < 20 || glucoseValue > 600) {
-    alert('Please enter a valid glucose level between 20 and 600 mg/dL');
+    showAlert('Please enter a valid glucose level between 20 and 600 mg/dL.', 'error', 'Invalid Glucose Value');
     return;
   }
   
   // Validate insulin dose
   const doseValue = parseFloat(insulinDose);
   if (isNaN(doseValue) || doseValue < 0 || doseValue > 100) {
-    alert('Please enter a valid insulin dose between 0 and 100 units');
+    showAlert('Please enter a valid insulin dose between 0 and 100 units.', 'error', 'Invalid Insulin Dose');
     return;
   }
   
@@ -1026,7 +1036,7 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   window.dispatchEvent(new Event('storage'));
   
   // Show success message
-  alert('✓ Entry saved successfully!');
+  showAlert('Your glucose entry has been saved successfully!', 'success', 'Entry Saved');
   
   // Scroll to the logs section to show the new entry
   document.getElementById('logList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1128,7 +1138,7 @@ function exportData() {
   const entries = loadEntries();
   
   if (entries.length === 0) {
-    alert('No data to export. Please add some entries first.');
+    showAlert('No data available to export. Please add some glucose entries first.', 'warning', 'No Data');
     return;
   }
   
@@ -1144,31 +1154,42 @@ function exportData() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
   
-  alert('✓ Data exported successfully!');
+  showAlert('Your glucose data has been exported successfully!', 'success', 'Export Complete');
 }
 
 // Clear all data
-function clearAllData() {
+async function clearAllData() {
   const entries = loadEntries();
   
   if (entries.length === 0) {
-    alert('No data to clear.');
+    showAlert('No data to clear. Your glucose tracker is already empty.', 'info', 'No Data');
     return;
   }
   
-  const confirmed = confirm(
-    `⚠️ Warning: This will permanently delete all ${entries.length} glucose entries!\n\n` +
-    'This action cannot be undone. Are you sure you want to continue?'
-  );
+  const confirmed = await showConfirm({
+    title: '⚠️ Delete All Data?',
+    message: `This will permanently delete all ${entries.length} glucose entries. This action cannot be undone!`,
+    type: 'error',
+    icon: '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Yes, Delete All',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
   
   if (!confirmed) {
     return;
   }
   
   // Double confirmation for safety
-  const doubleConfirm = confirm(
-    'Are you absolutely sure? This is your last chance to cancel!'
-  );
+  const doubleConfirm = await showConfirm({
+    title: 'Final Confirmation',
+    message: 'Are you absolutely sure? This is your last chance to cancel!',
+    type: 'error',
+    icon: '<i data-lucide="alert-octagon" style="width: 32px; height: 32px; color: #dc2626;"></i>',
+    confirmText: 'Yes, Delete All',
+    confirmType: 'danger',
+    cancelText: 'No, Go Back'
+  });
   
   if (!doubleConfirm) {
     return;
@@ -1188,7 +1209,7 @@ function clearAllData() {
   // Notify other tabs
   window.dispatchEvent(new Event('storage'));
   
-  alert('✓ All data has been cleared.');
+  showAlert('All glucose data has been cleared successfully.', 'success', 'Data Cleared');
 }
 
 // Initialize on page load

@@ -936,31 +936,51 @@ function exportData() {
   showSuccessMessage();
 }
 
-function clearAllData() {
-  if (confirm('⚠️ Are you sure you want to clear all data? This action cannot be undone.')) {
-    if (confirm('This will delete all symptoms, reminders, and settings. Continue?')) {
-      localStorage.removeItem('symptomHistory');
-      localStorage.removeItem('reminders');
-      localStorage.removeItem('appSettings');
-      
-      // Reset to defaults
-      updateDataStats();
-      
-      // Reload settings with defaults
-      const defaultSettings = {
-        theme: 'light',
-        compactMode: false,
-        autoSave: true
-      };
-      localStorage.setItem('appSettings', JSON.stringify(defaultSettings));
-      
-      loadSettings();
-      alert('✅ All data has been cleared successfully.');
-      
-      // Reload page to reset everything
-      setTimeout(() => location.reload(), 1000);
-    }
-  }
+async function clearAllData() {
+  const confirmed = await showConfirm({
+    title: '⚠️ Clear All Data?',
+    message: 'Are you sure you want to clear all data? This action cannot be undone.',
+    type: 'warning',
+    icon: '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Yes, Clear All',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) return;
+  
+  const doubleConfirm = await showConfirm({
+    title: 'Final Confirmation',
+    message: 'This will delete all symptoms, reminders, and settings. Continue?',
+    type: 'error',
+    icon: '<i data-lucide="alert-octagon" style="width: 32px; height: 32px; color: #dc2626;"></i>',
+    confirmText: 'Yes, Delete Everything',
+    confirmType: 'danger',
+    cancelText: 'No, Go Back'
+  });
+  
+  if (!doubleConfirm) return;
+  
+  localStorage.removeItem('symptomHistory');
+  localStorage.removeItem('reminders');
+  localStorage.removeItem('appSettings');
+  
+  // Reset to defaults
+  updateDataStats();
+  
+  // Reload settings with defaults
+  const defaultSettings = {
+    theme: 'light',
+    compactMode: false,
+    autoSave: true
+  };
+  localStorage.setItem('appSettings', JSON.stringify(defaultSettings));
+  
+  loadSettings();
+  showAlert('All data has been cleared successfully. The page will reload in a moment.', 'success', 'Data Cleared');
+  
+  // Reload page to reset everything
+  setTimeout(() => location.reload(), 2000);
 }
 
 // ============== UTILITY FUNCTIONS ==============
