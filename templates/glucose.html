@@ -1,0 +1,1231 @@
+{% extends "base.html" %}
+{% block title %}Glucose Tracker{% endblock %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<style>
+.glucose-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  padding: 48px;
+  position: relative;
+}
+
+.glucose-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.page-header {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #0f172a;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInDown 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 36px;
+  height: 36px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.02em;
+}
+
+.card-title svg {
+  width: 26px;
+  height: 26px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 10px;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  color: #0f172a;
+  font-weight: 500;
+  background: white;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.btn-danger {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15) !important;
+}
+
+.btn-danger:hover {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
+}
+
+.prediction-result {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 4px solid #3b82f6;
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 24px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prediction-title {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prediction-title svg {
+  width: 20px;
+  height: 20px;
+}
+
+.prediction-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e40af;
+  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+}
+
+.prediction-details {
+  color: #475569;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+  margin-top: 24px;
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.log-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.log-info {
+  flex: 1;
+}
+
+.log-time {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.9375rem;
+  margin-bottom: 4px;
+}
+
+.log-details {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.log-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  background: #e2e8f0;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+}
+
+.icon-btn.delete:hover svg {
+  color: #dc2626;
+}
+
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 48px 24px;
+  font-size: 1.0625rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .glucose-container {
+    padding: 32px 24px;
+  }
+
+  .page-header {
+    padding: 28px 24px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .card {
+    padding: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="glucose-container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <i data-lucide="activity" class="page-header-icon"></i>
+      <h1>Glucose Tracker</h1>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Log Entry Card -->
+    <div class="card">
+      <h2 class="card-title">
+        <i data-lucide="plus-circle"></i>
+        <span>Log Entry</span>
+      </h2>
+
+      <form id="glucoseForm">
+        <div class="form-section">
+          <label class="form-label">Current Blood Glucose (mg/dL)</label>
+          <input type="number" id="currentGlucose" class="form-input" placeholder="e.g., 120" min="0" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Insulin Dose (units)</label>
+            <input type="number" id="insulinDose" class="form-input" placeholder="e.g., 10" min="0" step="0.5" required>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Insulin Type</label>
+            <select id="insulinType" class="form-select" required>
+              <option value="">Select type</option>
+              <option value="rapid">Rapid-Acting</option>
+              <option value="short">Short-Acting</option>
+              <option value="intermediate">Intermediate-Acting</option>
+              <option value="long">Long-Acting</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Date</label>
+            <input type="date" id="logDate" class="form-input" required>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Time</label>
+            <input type="time" id="logTime" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Notes (optional)</label>
+          <input type="text" id="notes" class="form-input" placeholder="e.g., After breakfast">
+        </div>
+
+        <button type="submit" class="btn">
+          <i data-lucide="save"></i>
+          <span>Save Entry</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Prediction Card -->
+    <div class="card">
+      <h2 class="card-title">
+        <i data-lucide="trending-up"></i>
+        <span>Glucose Prediction</span>
+      </h2>
+
+      <div class="form-section">
+        <label class="form-label">Predict glucose level after (hours)</label>
+        <input type="number" id="predictionHours" class="form-input" placeholder="e.g., 2" min="0.5" max="12" step="0.5" value="2">
+      </div>
+
+      <button type="button" class="btn" onclick="predictGlucose()">
+        <i data-lucide="zap"></i>
+        <span>Calculate Prediction</span>
+      </button>
+
+      <div id="predictionResult" class="prediction-result">
+        <div class="prediction-title">
+          <i data-lucide="target"></i>
+          <span>Predicted Blood Glucose</span>
+        </div>
+        <div class="prediction-value" id="predictedValue">--</div>
+        <div class="prediction-details" id="predictionDetails">--</div>
+      </div>
+
+      <div class="stats-grid" style="margin-top: 32px;">
+        <div class="stat-box">
+          <div class="stat-label">Avg Glucose</div>
+          <div class="stat-value" id="avgGlucose">--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Entries</div>
+          <div class="stat-value" id="totalEntries">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Last Entry</div>
+          <div class="stat-value" id="lastEntry" style="font-size: 1rem;">--</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button type="button" class="btn btn-secondary" onclick="exportData()">
+          <i data-lucide="download"></i>
+          <span>Export Data</span>
+        </button>
+        <button type="button" class="btn btn-danger" onclick="clearAllData()">
+          <i data-lucide="trash-2"></i>
+          <span>Clear All</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- History Card -->
+    <div class="card full-width">
+      <h2 class="card-title">
+        <i data-lucide="clock"></i>
+        <span>Recent Entries</span>
+      </h2>
+
+      <div id="logList" class="log-list">
+        <div class="empty-state">No entries logged yet. Add your first entry to get started!</div>
+      </div>
+    </div>
+
+    <!-- Chart Card -->
+    <div class="card full-width">
+      <h2 class="card-title">
+        <i data-lucide="bar-chart-2"></i>
+        <span>Glucose Trend (Last 7 Days)</span>
+      </h2>
+      <div class="chart-container">
+        <canvas id="glucoseChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// Set default date and time to now
+const now = new Date();
+document.getElementById('logDate').valueAsDate = now;
+document.getElementById('logTime').value = now.toTimeString().slice(0, 5);
+
+// Generate unique ID
+function generateId() {
+  return 'glucose_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Load entries from localStorage
+function loadEntries() {
+  return JSON.parse(localStorage.getItem('glucoseEntries') || '[]');
+}
+
+// Save entries to localStorage
+function saveEntries(entries) {
+  localStorage.setItem('glucoseEntries', JSON.stringify(entries));
+}
+
+// Format date/time for display
+function formatDateTime(date, time) {
+  const d = new Date(date + 'T' + time);
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+// Get insulin action parameters with improved pharmacokinetic profiles
+function getInsulinParams(type) {
+  const params = {
+    rapid: { 
+      onset: 0.17, // 10 minutes
+      peak: 1.0,   // 1 hour
+      duration: 5, // 5 hours
+      peakEffect: 1.0,
+      shape: 'biexponential' // Rapid rise and fall
+    },
+    short: { 
+      onset: 0.5,  // 30 minutes
+      peak: 2.5,   // 2.5 hours
+      duration: 8, // 8 hours
+      peakEffect: 0.85,
+      shape: 'gaussian' // Bell curve
+    },
+    intermediate: { 
+      onset: 1.5,  // 1.5 hours
+      peak: 6,     // 6 hours
+      duration: 18, // 18 hours
+      peakEffect: 0.6,
+      shape: 'plateau' // Sustained action
+    },
+    long: { 
+      onset: 2,    // 2 hours
+      peak: -1,    // No distinct peak (flat action)
+      duration: 24, // 24 hours
+      peakEffect: 0.25,
+      shape: 'flat' // Peakless
+    }
+  };
+  return params[type] || params.rapid;
+}
+
+// Calculate insulin activity using pharmacokinetic models
+function calculateInsulinActivity(hours, params) {
+  if (hours < params.onset) {
+    return 0;
+  }
+  
+  if (hours > params.duration) {
+    return 0;
+  }
+  
+  const effectiveTime = hours - params.onset;
+  const effectiveDuration = params.duration - params.onset;
+  
+  let activity = 0;
+  
+  if (params.shape === 'flat') {
+    // Long-acting insulin: flat profile with slight ramp up/down
+    if (effectiveTime < 2) {
+      activity = (effectiveTime / 2) * params.peakEffect;
+    } else if (effectiveTime > effectiveDuration - 2) {
+      activity = ((effectiveDuration - effectiveTime) / 2) * params.peakEffect;
+    } else {
+      activity = params.peakEffect;
+    }
+  } else if (params.shape === 'plateau') {
+    // Intermediate-acting: plateau with gradual rise and fall
+    const peakStart = params.peak - 2;
+    const peakEnd = params.peak + 3;
+    
+    if (effectiveTime < peakStart) {
+      // Rising phase
+      activity = (effectiveTime / peakStart) * params.peakEffect;
+    } else if (effectiveTime <= peakEnd) {
+      // Plateau phase
+      activity = params.peakEffect;
+    } else {
+      // Falling phase
+      const fallProgress = (effectiveTime - peakEnd) / (effectiveDuration - peakEnd);
+      activity = params.peakEffect * (1 - fallProgress);
+    }
+  } else if (params.shape === 'gaussian') {
+    // Short-acting: bell curve (Gaussian distribution)
+    const sigma = effectiveDuration / 6; // Standard deviation
+    const mu = params.peak - params.onset; // Mean (peak time relative to onset)
+    const gaussian = Math.exp(-Math.pow(effectiveTime - mu, 2) / (2 * Math.pow(sigma, 2)));
+    activity = params.peakEffect * gaussian;
+  } else {
+    // Biexponential for rapid-acting: fast rise, slower fall
+    const peakTime = params.peak - params.onset;
+    
+    if (effectiveTime <= peakTime) {
+      // Rising phase: quadratic curve
+      const progress = effectiveTime / peakTime;
+      activity = params.peakEffect * (1 - Math.pow(1 - progress, 2));
+    } else {
+      // Falling phase: exponential decay
+      const decayTime = effectiveTime - peakTime;
+      const decayDuration = effectiveDuration - peakTime;
+      const decayRate = 3 / decayDuration; // Decay constant
+      activity = params.peakEffect * Math.exp(-decayRate * decayTime);
+    }
+  }
+  
+  return activity;
+}
+
+// Predict glucose level
+function predictGlucose() {
+  const entries = loadEntries();
+  if (entries.length === 0) {
+    showAlert('Please add at least one glucose entry before making predictions.', 'warning', 'No Entries Found');
+    return;
+  }
+
+  const hoursInput = document.getElementById('predictionHours').value;
+  const hours = parseFloat(hoursInput);
+  
+  if (!hoursInput || isNaN(hours) || hours <= 0) {
+    showAlert('Please enter a valid number of hours greater than 0.', 'error', 'Invalid Input');
+    return;
+  }
+
+  if (hours > 12) {
+    showAlert('Please enter a time period up to 12 hours for more accurate predictions.', 'warning', 'Time Period Too Long');
+    return;
+  }
+
+  // Get most recent entry
+  const sortedEntries = entries.sort((a, b) => {
+    const dateA = new Date(a.date + 'T' + a.time);
+    const dateB = new Date(b.date + 'T' + b.time);
+    return dateB - dateA;
+  });
+  
+  const latest = sortedEntries[0];
+  const entryTime = new Date(latest.date + 'T' + latest.time);
+  const now = new Date();
+  const hoursElapsed = (now - entryTime) / (1000 * 60 * 60);
+  const totalHours = hoursElapsed + hours;
+
+  const params = getInsulinParams(latest.insulinType);
+  const currentGlucose = parseFloat(latest.currentGlucose);
+  const insulinDose = parseFloat(latest.insulinDose);
+
+  // Insulin sensitivity factor - varies by individual, 40 is average
+  // This represents how many mg/dL one unit of insulin will lower glucose
+  const isf = 40;
+
+  // Calculate insulin activity at prediction time
+  const insulinActivity = calculateInsulinActivity(totalHours, params);
+  
+  // Calculate total glucose reduction from insulin
+  // The maximum reduction is insulin dose * ISF, scaled by activity level
+  const maxGlucoseReduction = insulinDose * isf;
+  const glucoseDrop = maxGlucoseReduction * insulinActivity;
+  
+  // Account for natural glucose dynamics
+  // Endogenous glucose production and cellular uptake
+  let naturalChange = 0;
+  
+  // Fasting state: liver glucose production (~2 mg/dL per hour)
+  // Countered by basal glucose uptake (~1.5 mg/dL per hour)
+  const netGlucoseProduction = 0.5; // mg/dL per hour
+  naturalChange = hours * netGlucoseProduction;
+  
+  // Counter-regulatory hormones may increase glucose if going low
+  const projectedGlucose = currentGlucose - glucoseDrop + naturalChange;
+  if (projectedGlucose < 70) {
+    // Counter-regulatory response kicks in below 70 mg/dL
+    const counterRegulatoryEffect = (70 - projectedGlucose) * 0.3;
+    naturalChange += counterRegulatoryEffect;
+  }
+  
+  const predictedGlucose = Math.max(50, Math.round(currentGlucose - glucoseDrop + naturalChange));
+
+  // Display result
+  document.getElementById('predictedValue').textContent = predictedGlucose + ' mg/dL';
+  
+  let rangeText = '';
+  let advice = '';
+  if (predictedGlucose < 70) {
+    rangeText = 'Low - Risk of hypoglycemia';
+    advice = 'Consider having 15g of fast-acting carbohydrates (e.g., glucose tablets, juice) to prevent low blood sugar.';
+  } else if (predictedGlucose < 100) {
+    rangeText = 'Normal - Good control';
+    advice = 'Your glucose is predicted to be in a healthy range. Continue monitoring.';
+  } else if (predictedGlucose < 140) {
+    rangeText = 'Slightly elevated';
+    advice = 'Consider light physical activity (e.g., a 15-minute walk) to help lower glucose levels.';
+  } else if (predictedGlucose < 180) {
+    rangeText = 'Elevated - Needs attention';
+    advice = 'Monitor closely and consider contacting your healthcare provider if levels remain high.';
+  } else {
+    rangeText = 'High - Medical attention recommended';
+    advice = 'Contact your healthcare provider. Check for ketones if you have Type 1 diabetes.';
+  }
+  
+  // Calculate confidence based on time since last reading
+  let confidenceNote = '';
+  if (hoursElapsed > 4) {
+    confidenceNote = '<br><strong>Note:</strong> This prediction is based on a reading from ' + 
+                     hoursElapsed.toFixed(1) + ' hours ago. For better accuracy, consider taking a new glucose reading.';
+  }
+
+  document.getElementById('predictionDetails').innerHTML = `
+    <strong>${rangeText}</strong><br>
+    ${advice}<br><br>
+    <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. 
+    Insulin activity at prediction time: ${(insulinActivity * 100).toFixed(1)}%
+    ${confidenceNote}<br><br>
+    <em>⚠️ This is a mathematical estimate and should not replace blood glucose monitoring or medical advice. Individual responses vary.</em></small>
+  `;
+  
+  // Show the prediction result with animation
+  const resultDiv = document.getElementById('predictionResult');
+  resultDiv.style.display = 'block';
+  
+  // Reinitialize icons in the prediction result
+  lucide.createIcons();
+  
+  // Scroll to prediction result smoothly
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Update statistics
+function updateStats() {
+  const entries = loadEntries();
+  
+  document.getElementById('totalEntries').textContent = entries.length;
+  
+  if (entries.length > 0) {
+    // Calculate average glucose
+    const avg = entries.reduce((sum, e) => sum + parseFloat(e.currentGlucose), 0) / entries.length;
+    document.getElementById('avgGlucose').textContent = Math.round(avg);
+    
+    // Get last entry time
+    const sorted = entries.sort((a, b) => {
+      const dateA = new Date(a.date + 'T' + a.time);
+      const dateB = new Date(b.date + 'T' + b.time);
+      return dateB - dateA;
+    });
+    const lastDate = new Date(sorted[0].date + 'T' + sorted[0].time);
+    const now = new Date();
+    const diffMs = now - lastDate;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    let timeText;
+    if (diffMins < 1) {
+      timeText = 'Just now';
+    } else if (diffMins < 60) {
+      timeText = diffMins + 'm ago';
+    } else if (diffHours < 24) {
+      timeText = diffHours + 'h ago';
+    } else if (diffDays === 1) {
+      timeText = '1 day ago';
+    } else {
+      timeText = diffDays + ' days ago';
+    }
+    
+    document.getElementById('lastEntry').textContent = timeText;
+  } else {
+    document.getElementById('avgGlucose').textContent = '--';
+    document.getElementById('lastEntry').textContent = '--';
+  }
+}
+
+// Display log entries
+function displayLogs() {
+  const entries = loadEntries().sort((a, b) => {
+    const dateA = new Date(a.date + 'T' + a.time);
+    const dateB = new Date(b.date + 'T' + b.time);
+    return dateB - dateA;
+  });
+
+  const listDiv = document.getElementById('logList');
+  
+  if (entries.length === 0) {
+    listDiv.innerHTML = '<div class="empty-state">No entries logged yet. Add your first entry to get started!</div>';
+    return;
+  }
+
+  let html = '';
+  entries.forEach(entry => {
+    html += `
+      <div class="log-item">
+        <div class="log-info">
+          <div class="log-time">${formatDateTime(entry.date, entry.time)}</div>
+          <div class="log-details">
+            Glucose: ${entry.currentGlucose} mg/dL | 
+            Insulin: ${entry.insulinDose} units (${entry.insulinType})
+            ${entry.notes ? ' | ' + entry.notes : ''}
+          </div>
+        </div>
+        <div class="log-actions">
+          <button class="icon-btn delete" onclick="deleteEntry('${entry.id}')">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  listDiv.innerHTML = html;
+  lucide.createIcons();
+}
+
+// Delete entry
+async function deleteEntry(id) {
+  const confirmed = await showConfirm({
+    title: 'Delete Entry?',
+    message: 'Are you sure you want to delete this entry? This action cannot be undone.',
+    type: 'warning',
+    icon: '<i data-lucide="trash-2" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Delete',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) {
+    return;
+  }
+  
+  let entries = loadEntries();
+  const entryToDelete = entries.find(e => e.id === id);
+  
+  if (!entryToDelete) {
+    showAlert('Entry not found in the database.', 'error', 'Entry Not Found');
+    return;
+  }
+  
+  entries = entries.filter(e => e.id !== id);
+  saveEntries(entries);
+  
+  // Update all displays
+  displayLogs();
+  updateStats();
+  updateChart();
+  
+  // Notify other tabs
+  window.dispatchEvent(new Event('storage'));
+  
+  // Show success message
+  console.log('Entry deleted successfully');
+}
+
+// Form submission
+document.getElementById('glucoseForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  // Validate all required fields
+  const currentGlucose = document.getElementById('currentGlucose').value;
+  const insulinDose = document.getElementById('insulinDose').value;
+  const insulinType = document.getElementById('insulinType').value;
+  const logDate = document.getElementById('logDate').value;
+  const logTime = document.getElementById('logTime').value;
+  
+  if (!currentGlucose || !insulinDose || !insulinType || !logDate || !logTime) {
+    showAlert('Please fill in all required fields before saving.', 'warning', 'Missing Fields');
+    return;
+  }
+  
+  // Validate glucose value
+  const glucoseValue = parseFloat(currentGlucose);
+  if (isNaN(glucoseValue) || glucoseValue < 20 || glucoseValue > 600) {
+    showAlert('Please enter a valid glucose level between 20 and 600 mg/dL.', 'error', 'Invalid Glucose Value');
+    return;
+  }
+  
+  // Validate insulin dose
+  const doseValue = parseFloat(insulinDose);
+  if (isNaN(doseValue) || doseValue < 0 || doseValue > 100) {
+    showAlert('Please enter a valid insulin dose between 0 and 100 units.', 'error', 'Invalid Insulin Dose');
+    return;
+  }
+  
+  const entry = {
+    id: generateId(),
+    currentGlucose: currentGlucose,
+    insulinDose: insulinDose,
+    insulinType: insulinType,
+    date: logDate,
+    time: logTime,
+    notes: document.getElementById('notes').value.trim()
+  };
+  
+  const entries = loadEntries();
+  entries.push(entry);
+  saveEntries(entries);
+  
+  // Reset form
+  this.reset();
+  const now = new Date();
+  document.getElementById('logDate').valueAsDate = now;
+  document.getElementById('logTime').value = now.toTimeString().slice(0, 5);
+  
+  // Update all displays
+  displayLogs();
+  updateStats();
+  updateChart();
+  
+  // Notify other tabs
+  window.dispatchEvent(new Event('storage'));
+  
+  // Show success message
+  showAlert('Your glucose entry has been saved successfully!', 'success', 'Entry Saved');
+  
+  // Scroll to the logs section to show the new entry
+  document.getElementById('logList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// Chart
+let glucoseChart = null;
+
+function updateChart() {
+  const entries = loadEntries();
+  
+  // Get last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  const recentEntries = entries.filter(e => {
+    const entryDate = new Date(e.date + 'T' + e.time);
+    return entryDate >= sevenDaysAgo;
+  }).sort((a, b) => {
+    const dateA = new Date(a.date + 'T' + a.time);
+    const dateB = new Date(b.date + 'T' + b.time);
+    return dateA - dateB;
+  });
+  
+  const labels = recentEntries.map(e => {
+    const d = new Date(e.date + 'T' + e.time);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' });
+  });
+  
+  const data = recentEntries.map(e => parseFloat(e.currentGlucose));
+  
+  const ctx = document.getElementById('glucoseChart').getContext('2d');
+  
+  if (glucoseChart) {
+    glucoseChart.destroy();
+  }
+  
+  glucoseChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Blood Glucose (mg/dL)',
+        data: data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: {
+            size: 14,
+            weight: 'bold'
+          },
+          bodyFont: {
+            size: 13
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          min: 50,
+          max: 250,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: function(value) {
+              return value + ' mg/dL';
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
+// Export data as JSON
+function exportData() {
+  const entries = loadEntries();
+  
+  if (entries.length === 0) {
+    showAlert('No data available to export. Please add some glucose entries first.', 'warning', 'No Data');
+    return;
+  }
+  
+  const dataStr = JSON.stringify(entries, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `glucose-data-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  showAlert('Your glucose data has been exported successfully!', 'success', 'Export Complete');
+}
+
+// Clear all data
+async function clearAllData() {
+  const entries = loadEntries();
+  
+  if (entries.length === 0) {
+    showAlert('No data to clear. Your glucose tracker is already empty.', 'info', 'No Data');
+    return;
+  }
+  
+  const confirmed = await showConfirm({
+    title: '⚠️ Delete All Data?',
+    message: `This will permanently delete all ${entries.length} glucose entries. This action cannot be undone!`,
+    type: 'error',
+    icon: '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Yes, Delete All',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) {
+    return;
+  }
+  
+  // Double confirmation for safety
+  const doubleConfirm = await showConfirm({
+    title: 'Final Confirmation',
+    message: 'Are you absolutely sure? This is your last chance to cancel!',
+    type: 'error',
+    icon: '<i data-lucide="alert-octagon" style="width: 32px; height: 32px; color: #dc2626;"></i>',
+    confirmText: 'Yes, Delete All',
+    confirmType: 'danger',
+    cancelText: 'No, Go Back'
+  });
+  
+  if (!doubleConfirm) {
+    return;
+  }
+  
+  // Clear the data
+  localStorage.removeItem('glucoseEntries');
+  
+  // Update all displays
+  displayLogs();
+  updateStats();
+  updateChart();
+  
+  // Hide prediction result
+  document.getElementById('predictionResult').style.display = 'none';
+  
+  // Notify other tabs
+  window.dispatchEvent(new Event('storage'));
+  
+  showAlert('All glucose data has been cleared successfully.', 'success', 'Data Cleared');
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  displayLogs();
+  updateStats();
+  updateChart();
+  lucide.createIcons();
+});
+
+// Listen for storage events from other pages
+window.addEventListener('storage', () => {
+  displayLogs();
+  updateStats();
+  updateChart();
+});
+</script>
+
+{% endblock %}

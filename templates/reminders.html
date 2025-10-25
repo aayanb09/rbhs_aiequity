@@ -663,7 +663,7 @@ saveReminder.onclick = () => {
   const note = document.getElementById("reminderNote").value.trim();
 
   if (!title || !date) {
-    alert("Please enter a title and date!");
+    showAlert('Please enter both a title and date for your reminder.', 'warning', 'Missing Information');
     return;
   }
 
@@ -743,8 +743,18 @@ editReminderBtn.onclick = () => {
   popup.style.display = "flex";
 };
 
-deleteReminderBtn.onclick = () => {
-  if (!confirm("Are you sure you want to delete this reminder?")) return;
+deleteReminderBtn.onclick = async () => {
+  const confirmed = await showConfirm({
+    title: 'Delete Reminder?',
+    message: 'Are you sure you want to delete this reminder? This action cannot be undone.',
+    type: 'warning',
+    icon: '<i data-lucide="trash-2" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Delete',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) return;
   
   let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
   reminders = reminders.filter(r => r.id !== viewingReminderId);
@@ -754,6 +764,8 @@ deleteReminderBtn.onclick = () => {
   viewingReminderId = null;
   renderCalendar();
   window.dispatchEvent(new Event('storage'));
+  
+  showAlert('Reminder deleted successfully.', 'success', 'Reminder Deleted');
 };
 
 popup.onclick = (e) => {

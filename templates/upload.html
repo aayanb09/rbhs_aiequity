@@ -504,7 +504,7 @@ uploadBtn.addEventListener("click", () => {
         reader.readAsDataURL(converted);
       } catch (err) {
         console.error(err);
-        alert("Could not convert HEIC image. Try exporting it as JPEG or PNG.");
+        showAlert('Could not convert HEIC image. Try exporting it as JPEG or PNG.', 'error', 'Conversion Failed');
       }
     } else {
       const reader = new FileReader();
@@ -536,7 +536,7 @@ captureBtn.addEventListener("click", async () => {
       captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
       lucide.createIcons(); // Re-initialize icons
     } catch (err) {
-      alert("Camera access denied or not available.");
+      showAlert('Camera access denied or not available. Please enable camera permissions in your browser.', 'error', 'Camera Access Denied');
     }
   } else {
     const context = canvas.getContext("2d");
