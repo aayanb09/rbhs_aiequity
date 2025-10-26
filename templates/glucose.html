@@ -248,6 +248,38 @@
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
 }
 
+.warning-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+
+.warning-icon {
+  width: 24px;
+  height: 24px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warning-text {
+  color: #92400e;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.warning-text strong {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+}
+
 .prediction-result {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-left: 4px solid #3b82f6;
@@ -421,6 +453,43 @@
   grid-column: 1 / -1;
 }
 
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #475569;
+  font-weight: 600;
+  border: 2px solid transparent;
+}
+
+.checkbox-label:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.checkbox-label input[type="checkbox"]:checked ~ span {
+  color: #1e40af;
+}
+
 @media (max-width: 1024px) {
   .content-grid {
     grid-template-columns: 1fr;
@@ -457,6 +526,15 @@
 </style>
 
 <div class="glucose-container">
+  <!-- Medical Disclaimer -->
+  <div class="warning-banner">
+    <i data-lucide="alert-triangle" class="warning-icon"></i>
+    <div class="warning-text">
+      <strong>Medical Disclaimer</strong>
+      This tool is for educational and tracking purposes only. It is NOT a medical device and should NEVER be used to make treatment decisions. Always verify with a blood glucose meter and consult your healthcare provider before making any changes to your diabetes management.
+    </div>
+  </div>
+
   <div class="page-header">
     <div class="page-header-content">
       <i data-lucide="activity" class="page-header-icon"></i>
@@ -508,6 +586,47 @@
           </div>
         </div>
 
+        <!-- NEW: Meal/Carb Tracking -->
+        <div class="form-section">
+          <label class="form-label">Carbohydrates Consumed (grams)</label>
+          <input type="number" id="carbsConsumed" class="form-input" placeholder="e.g., 45" min="0" step="1">
+          <small style="color: #64748b; font-size: 0.875rem; display: block; margin-top: 6px;">Optional: Helps improve prediction accuracy</small>
+        </div>
+
+        <!-- NEW: Recent Activity -->
+        <div class="form-section">
+          <label class="form-label">Recent Physical Activity</label>
+          <select id="recentActivity" class="form-select">
+            <option value="none">None</option>
+            <option value="light">Light (walking, housework)</option>
+            <option value="moderate">Moderate (jogging, cycling)</option>
+            <option value="intense">Intense (running, sports)</option>
+          </select>
+        </div>
+
+        <!-- NEW: Factors Affecting Reading -->
+        <div class="form-section">
+          <label class="form-label">Current Factors (select all that apply)</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="factorStress" value="stress">
+              <span>Feeling stressed</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="factorIllness" value="illness">
+              <span>Sick or feeling unwell</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="factorMenstruation" value="menstruation">
+              <span>Menstruation (for women)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="factorAlcohol" value="alcohol">
+              <span>Had alcohol recently</span>
+            </label>
+          </div>
+        </div>
+
         <div class="form-section">
           <label class="form-label">Notes (optional)</label>
           <input type="text" id="notes" class="form-input" placeholder="e.g., After breakfast">
@@ -529,7 +648,8 @@
 
       <div class="form-section">
         <label class="form-label">Predict glucose level after (hours)</label>
-        <input type="number" id="predictionHours" class="form-input" placeholder="e.g., 2" min="0.5" max="12" step="0.5" value="2">
+        <input type="number" id="predictionHours" class="form-input" placeholder="e.g., 2" min="0.5" max="8" step="0.5" value="2">
+        <small style="color: #64748b; font-size: 0.875rem; display: block; margin-top: 6px;">Limited to 8 hours for accuracy</small>
       </div>
 
       <button type="button" class="btn" onclick="predictGlucose()">
@@ -635,50 +755,45 @@ function formatDateTime(date, time) {
   });
 }
 
-// Get insulin action parameters with improved pharmacokinetic profiles
+// Get insulin action parameters
 function getInsulinParams(type) {
   const params = {
     rapid: { 
-      onset: 0.17, // 10 minutes
-      peak: 1.0,   // 1 hour
-      duration: 5, // 5 hours
+      onset: 0.17,
+      peak: 1.0,
+      duration: 5,
       peakEffect: 1.0,
-      shape: 'biexponential' // Rapid rise and fall
+      shape: 'biexponential'
     },
     short: { 
-      onset: 0.5,  // 30 minutes
-      peak: 2.5,   // 2.5 hours
-      duration: 8, // 8 hours
+      onset: 0.5,
+      peak: 2.5,
+      duration: 8,
       peakEffect: 0.85,
-      shape: 'gaussian' // Bell curve
+      shape: 'gaussian'
     },
     intermediate: { 
-      onset: 1.5,  // 1.5 hours
-      peak: 6,     // 6 hours
-      duration: 18, // 18 hours
+      onset: 1.5,
+      peak: 6,
+      duration: 18,
       peakEffect: 0.6,
-      shape: 'plateau' // Sustained action
+      shape: 'plateau'
     },
     long: { 
-      onset: 2,    // 2 hours
-      peak: -1,    // No distinct peak (flat action)
-      duration: 24, // 24 hours
+      onset: 2,
+      peak: -1,
+      duration: 24,
       peakEffect: 0.25,
-      shape: 'flat' // Peakless
+      shape: 'flat'
     }
   };
   return params[type] || params.rapid;
 }
 
-// Calculate insulin activity using pharmacokinetic models
+// Calculate insulin activity
 function calculateInsulinActivity(hours, params) {
-  if (hours < params.onset) {
-    return 0;
-  }
-  
-  if (hours > params.duration) {
-    return 0;
-  }
+  if (hours < params.onset) return 0;
+  if (hours > params.duration) return 0;
   
   const effectiveTime = hours - params.onset;
   const effectiveDuration = params.duration - params.onset;
@@ -686,7 +801,6 @@ function calculateInsulinActivity(hours, params) {
   let activity = 0;
   
   if (params.shape === 'flat') {
-    // Long-acting insulin: flat profile with slight ramp up/down
     if (effectiveTime < 2) {
       activity = (effectiveTime / 2) * params.peakEffect;
     } else if (effectiveTime > effectiveDuration - 2) {
@@ -695,45 +809,295 @@ function calculateInsulinActivity(hours, params) {
       activity = params.peakEffect;
     }
   } else if (params.shape === 'plateau') {
-    // Intermediate-acting: plateau with gradual rise and fall
     const peakStart = params.peak - 2;
     const peakEnd = params.peak + 3;
     
     if (effectiveTime < peakStart) {
-      // Rising phase
       activity = (effectiveTime / peakStart) * params.peakEffect;
     } else if (effectiveTime <= peakEnd) {
-      // Plateau phase
       activity = params.peakEffect;
     } else {
-      // Falling phase
       const fallProgress = (effectiveTime - peakEnd) / (effectiveDuration - peakEnd);
       activity = params.peakEffect * (1 - fallProgress);
     }
   } else if (params.shape === 'gaussian') {
-    // Short-acting: bell curve (Gaussian distribution)
-    const sigma = effectiveDuration / 6; // Standard deviation
-    const mu = params.peak - params.onset; // Mean (peak time relative to onset)
+    const sigma = effectiveDuration / 6;
+    const mu = params.peak - params.onset;
     const gaussian = Math.exp(-Math.pow(effectiveTime - mu, 2) / (2 * Math.pow(sigma, 2)));
     activity = params.peakEffect * gaussian;
   } else {
-    // Biexponential for rapid-acting: fast rise, slower fall
     const peakTime = params.peak - params.onset;
     
     if (effectiveTime <= peakTime) {
-      // Rising phase: quadratic curve
       const progress = effectiveTime / peakTime;
       activity = params.peakEffect * (1 - Math.pow(1 - progress, 2));
     } else {
-      // Falling phase: exponential decay
       const decayTime = effectiveTime - peakTime;
       const decayDuration = effectiveDuration - peakTime;
-      const decayRate = 3 / decayDuration; // Decay constant
+      const decayRate = 3 / decayDuration;
       activity = params.peakEffect * Math.exp(-decayRate * decayTime);
     }
   }
   
   return activity;
+}
+
+// Get user profile
+function getUserProfile() {
+  return JSON.parse(localStorage.getItem('userProfile') || '{}');
+}
+
+// Calculate personalized ISF
+function calculatePersonalizedISF(profile, currentGlucose) {
+  let baseISF = 40;
+  
+  if (profile.weight) {
+    const estimatedTDD = parseFloat(profile.weight) * 0.5;
+    baseISF = 1800 / estimatedTDD;
+  }
+  
+  if (profile.age) {
+    const age = parseInt(profile.age);
+    if (age < 18) {
+      baseISF *= 1.2;
+    } else if (age > 65) {
+      baseISF *= 1.15;
+    }
+  }
+  
+  if (profile.exerciseLevel) {
+    const exerciseMultipliers = {
+      'Sedentary': 0.9,
+      'Lightly active': 1.0,
+      'Moderately active': 1.1,
+      'Very active': 1.2,
+      'Extremely active': 1.3
+    };
+    baseISF *= (exerciseMultipliers[profile.exerciseLevel] || 1.0);
+  }
+  
+  if (profile.bmi) {
+    const bmi = parseFloat(profile.bmi);
+    if (bmi > 30) {
+      baseISF *= 0.8;
+    } else if (bmi < 18.5) {
+      baseISF *= 1.1;
+    }
+  }
+  
+  if (currentGlucose > 250) {
+    baseISF *= 0.9;
+  }
+  
+  return Math.max(20, Math.min(80, baseISF));
+}
+
+// NEW: Calculate carbohydrate impact
+function calculateCarbImpact(carbsConsumed, hours, profile) {
+  if (!carbsConsumed || carbsConsumed <= 0) return 0;
+  
+  // Carb absorption curve (peaks at ~30-45 minutes, complete by 2-3 hours)
+  const peakTime = 0.75; // 45 minutes
+  const duration = 2.5; // 2.5 hours for most carbs
+  
+  if (hours < 0) return 0;
+  if (hours > duration) return 0;
+  
+  // Gaussian curve for carb absorption
+  const sigma = duration / 4;
+  const absorption = Math.exp(-Math.pow(hours - peakTime, 2) / (2 * Math.pow(sigma, 2)));
+  
+  // Calculate carb-to-glucose ratio (typically 1g carb = 3-5 mg/dL rise)
+  let carbRatio = 4; // Default 4 mg/dL per gram
+  
+  // Adjust based on insulin sensitivity
+  if (profile.bmi) {
+    const bmi = parseFloat(profile.bmi);
+    if (bmi > 30) {
+      carbRatio = 5; // Higher BMI = larger glucose rise per carb
+    } else if (bmi < 20) {
+      carbRatio = 3;
+    }
+  }
+  
+  // Total glucose rise from carbs
+  const maxRise = carbsConsumed * carbRatio;
+  return maxRise * absorption;
+}
+
+// NEW: Calculate activity impact
+function calculateActivityImpact(activityLevel, hours) {
+  if (!activityLevel || activityLevel === 'none') return 0;
+  
+  const impacts = {
+    'light': 15,      // Light activity reduces glucose by ~15 mg/dL
+    'moderate': 30,   // Moderate activity reduces by ~30 mg/dL
+    'intense': 50     // Intense activity reduces by ~50 mg/dL
+  };
+  
+  const maxReduction = impacts[activityLevel] || 0;
+  
+  // Activity effect diminishes over time (half-life ~2 hours)
+  const decay = Math.exp(-0.35 * hours);
+  return maxReduction * decay;
+}
+
+// NEW: Calculate stress/illness impact
+function calculateFactorImpacts(factors) {
+  let totalImpact = 0;
+  
+  if (!factors || factors.length === 0) return 0;
+  
+  // Each factor can raise glucose
+  if (factors.includes('stress')) totalImpact += 30; // Stress hormones raise glucose
+  if (factors.includes('illness')) totalImpact += 40; // Illness significantly raises glucose
+  if (factors.includes('menstruation')) totalImpact += 20; // Hormonal changes
+  if (factors.includes('alcohol')) totalImpact -= 15; // Alcohol can lower glucose (delayed)
+  
+  return totalImpact;
+}
+
+// Calculate basal glucose change
+function calculateBasalGlucoseChange(hours, profile, currentGlucose) {
+  let netChange = 0;
+  
+  let glucoseProduction = 2.0;
+  let glucoseUtilization = 1.5;
+  
+  if (profile.exerciseLevel) {
+    const activityMultipliers = {
+      'Sedentary': 0.8,
+      'Lightly active': 1.0,
+      'Moderately active': 1.2,
+      'Very active': 1.4,
+      'Extremely active': 1.6
+    };
+    glucoseUtilization *= (activityMultipliers[profile.exerciseLevel] || 1.0);
+  }
+  
+  if (profile.age) {
+    const age = parseInt(profile.age);
+    if (age > 60) {
+      glucoseUtilization *= 0.9;
+    }
+  }
+  
+  if (profile.conditions) {
+    if (profile.conditions.includes('Obesity')) {
+      glucoseProduction *= 1.2;
+      glucoseUtilization *= 0.8;
+    }
+    if (profile.conditions.includes('Kidney Disease')) {
+      glucoseUtilization *= 0.85;
+    }
+  }
+  
+  netChange = (glucoseProduction - glucoseUtilization) * hours;
+  
+  const projectedGlucose = currentGlucose + netChange;
+  if (projectedGlucose < 70) {
+    const hypoglycemiaResponse = (70 - projectedGlucose) * 0.4;
+    netChange += hypoglycemiaResponse;
+  }
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  const targetHour = (currentHour + hours) % 24;
+  if (targetHour >= 4 && targetHour <= 8) {
+    netChange += 10;
+  }
+  
+  return netChange;
+}
+
+// Generate personalized advice
+function generatePersonalizedAdvice(predictedGlucose, profile, entry) {
+  let advice = '';
+  
+  if (predictedGlucose < 70) {
+    advice = '⚠️ <strong>Risk of hypoglycemia detected.</strong> ';
+    advice += 'Consume 15g of fast-acting carbohydrates (4 glucose tablets, 4oz juice, or 1 tablespoon honey). ';
+    advice += 'Recheck in 15 minutes with your glucose meter.';
+    
+    if (profile.conditions && profile.conditions.includes('Heart Disease')) {
+      advice += '<br><br><strong>Important:</strong> Monitor closely due to heart condition - severe hypoglycemia can strain the heart.';
+    }
+    
+    if (entry && entry.recentActivity && entry.recentActivity !== 'none') {
+      advice += '<br><br><strong>Note:</strong> Recent physical activity increases hypoglycemia risk. Consider having a snack before further activity.';
+    }
+  } else if (predictedGlucose < 100) {
+    advice = '✓ Your glucose is predicted to be in a healthy range. Continue monitoring regularly.';
+    
+    if (profile.exerciseLevel === 'Very active' || profile.exerciseLevel === 'Extremely active') {
+      advice += '<br><br>As an active individual, consider a small snack if planning exercise.';
+    }
+  } else if (predictedGlucose < 140) {
+    advice = 'Slightly elevated glucose predicted.';
+    
+    if (profile.exerciseLevel !== 'Sedentary') {
+      advice += ' A 15-20 minute walk could help lower levels.';
+    } else {
+      advice += ' Consider light physical activity if possible.';
+    }
+    
+    if (profile.diet && (profile.diet.includes('Low-carb') || profile.diet.includes('Ketogenic'))) {
+      advice += '<br><br>Your low-carb diet should help manage this elevation.';
+    }
+  } else if (predictedGlucose < 180) {
+    advice = '⚠️ <strong>Elevated glucose - needs attention.</strong> Monitor closely with your glucose meter.';
+    
+    if (profile.medications && profile.medications.toLowerCase().includes('metformin')) {
+      advice += '<br><br>Ensure you\'ve taken your Metformin as prescribed.';
+    }
+    
+    advice += '<br><br>Stay hydrated and avoid additional carbohydrates. Contact your healthcare provider if levels remain elevated.';
+    
+    if (entry && entry.factors && entry.factors.includes('illness')) {
+      advice += '<br><br><strong>Note:</strong> Illness is affecting your glucose. Monitor more frequently and contact your doctor if needed.';
+    }
+  } else {
+    advice = '🚨 <strong>High glucose level predicted.</strong> Check with your glucose meter immediately.';
+    
+    if (profile.conditions && profile.conditions.includes('Diabetes')) {
+      advice += '<br><br>Check for ketones, especially if you have Type 1 diabetes.';
+    }
+    
+    advice += '<br><br>Stay hydrated, monitor frequently, and contact your healthcare provider for guidance.';
+  }
+  
+  return advice;
+}
+
+// Calculate confidence score
+function calculateConfidence(hoursElapsed, hours, profile, entries, entry) {
+  let confidence = 100;
+  
+  // Reduce confidence for stale readings
+  if (hoursElapsed > 2) confidence -= 10;
+  if (hoursElapsed > 4) confidence -= 15;
+  if (hoursElapsed > 6) confidence -= 20;
+  
+  // Reduce confidence for long predictions
+  if (hours > 4) confidence -= 10;
+  if (hours > 6) confidence -= 15;
+  
+  // Increase confidence if we have profile data
+  if (profile.weight) confidence += 5;
+  if (profile.exerciseLevel) confidence += 5;
+  if (profile.conditions && profile.conditions.length > 0) confidence += 5;
+  
+  // Increase confidence if we have carb data
+  if (entry && entry.carbsConsumed) confidence += 10;
+  
+  // Reduce confidence if factors are present
+  if (entry && entry.factors && entry.factors.length > 0) confidence -= 10;
+  
+  // Increase confidence if we have historical data
+  if (entries.length > 10) confidence += 10;
+  if (entries.length > 30) confidence += 10;
+  
+  return Math.max(20, Math.min(95, confidence));
 }
 
 // Predict glucose level
@@ -752,12 +1116,13 @@ function predictGlucose() {
     return;
   }
 
-  if (hours > 12) {
-    showAlert('Please enter a time period up to 12 hours for more accurate predictions.', 'warning', 'Time Period Too Long');
+  if (hours > 8) {
+    showAlert('Please enter a time period up to 8 hours for more accurate predictions. Longer predictions have too many unknown variables.', 'warning', 'Time Period Too Long');
     return;
   }
 
-  // Get most recent entry
+  const profile = getUserProfile();
+
   const sortedEntries = entries.sort((a, b) => {
     const dateA = new Date(a.date + 'T' + a.time);
     const dateB = new Date(b.date + 'T' + b.time);
@@ -774,83 +1139,108 @@ function predictGlucose() {
   const currentGlucose = parseFloat(latest.currentGlucose);
   const insulinDose = parseFloat(latest.insulinDose);
 
-  // Insulin sensitivity factor - varies by individual, 40 is average
-  // This represents how many mg/dL one unit of insulin will lower glucose
-  const isf = 40;
+  const isf = calculatePersonalizedISF(profile, currentGlucose);
 
-  // Calculate insulin activity at prediction time
   const insulinActivity = calculateInsulinActivity(totalHours, params);
-  
-  // Calculate total glucose reduction from insulin
-  // The maximum reduction is insulin dose * ISF, scaled by activity level
   const maxGlucoseReduction = insulinDose * isf;
   const glucoseDrop = maxGlucoseReduction * insulinActivity;
   
-  // Account for natural glucose dynamics
-  // Endogenous glucose production and cellular uptake
-  let naturalChange = 0;
+  const basalChange = calculateBasalGlucoseChange(hours, profile, currentGlucose);
   
-  // Fasting state: liver glucose production (~2 mg/dL per hour)
-  // Countered by basal glucose uptake (~1.5 mg/dL per hour)
-  const netGlucoseProduction = 0.5; // mg/dL per hour
-  naturalChange = hours * netGlucoseProduction;
+  // NEW: Add carb impact
+  const carbImpact = calculateCarbImpact(
+    latest.carbsConsumed ? parseFloat(latest.carbsConsumed) : 0,
+    hours,
+    profile
+  );
   
-  // Counter-regulatory hormones may increase glucose if going low
-  const projectedGlucose = currentGlucose - glucoseDrop + naturalChange;
-  if (projectedGlucose < 70) {
-    // Counter-regulatory response kicks in below 70 mg/dL
-    const counterRegulatoryEffect = (70 - projectedGlucose) * 0.3;
-    naturalChange += counterRegulatoryEffect;
-  }
+  // NEW: Add activity impact
+  const activityImpact = calculateActivityImpact(
+    latest.recentActivity || 'none',
+    hours
+  );
   
-  const predictedGlucose = Math.max(50, Math.round(currentGlucose - glucoseDrop + naturalChange));
+  // NEW: Add factor impacts
+  const factorImpact = calculateFactorImpacts(latest.factors || []);
+  
+  // Final prediction with all factors
+  let predictedGlucose = currentGlucose - glucoseDrop + basalChange + carbImpact - activityImpact + factorImpact;
+  predictedGlucose = Math.max(40, Math.round(predictedGlucose));
 
-  // Display result
+  const confidence = calculateConfidence(hoursElapsed, hours, profile, entries, latest);
+
   document.getElementById('predictedValue').textContent = predictedGlucose + ' mg/dL';
   
   let rangeText = '';
-  let advice = '';
   if (predictedGlucose < 70) {
-    rangeText = 'Low - Risk of hypoglycemia';
-    advice = 'Consider having 15g of fast-acting carbohydrates (e.g., glucose tablets, juice) to prevent low blood sugar.';
+    rangeText = '🔴 Low - Risk of hypoglycemia';
   } else if (predictedGlucose < 100) {
-    rangeText = 'Normal - Good control';
-    advice = 'Your glucose is predicted to be in a healthy range. Continue monitoring.';
+    rangeText = '🟢 Normal - Good control';
   } else if (predictedGlucose < 140) {
-    rangeText = 'Slightly elevated';
-    advice = 'Consider light physical activity (e.g., a 15-minute walk) to help lower glucose levels.';
+    rangeText = '🟡 Slightly elevated';
   } else if (predictedGlucose < 180) {
-    rangeText = 'Elevated - Needs attention';
-    advice = 'Monitor closely and consider contacting your healthcare provider if levels remain high.';
+    rangeText = '🟠 Elevated - Needs attention';
   } else {
-    rangeText = 'High - Medical attention recommended';
-    advice = 'Contact your healthcare provider. Check for ketones if you have Type 1 diabetes.';
+    rangeText = '🔴 High - Medical attention recommended';
   }
   
-  // Calculate confidence based on time since last reading
+  const advice = generatePersonalizedAdvice(predictedGlucose, profile, latest);
+  
+  let personalizationNotes = [];
+  if (profile.weight) personalizationNotes.push('weight');
+  if (profile.exerciseLevel) personalizationNotes.push('activity level');
+  if (profile.bmi) personalizationNotes.push('BMI');
+  if (profile.conditions && profile.conditions.length > 0) personalizationNotes.push('medical conditions');
+  
+  let personalizationText = '';
+  if (personalizationNotes.length > 0) {
+    personalizationText = `<br><br><strong>Personalized factors:</strong> This prediction considers your ${personalizationNotes.join(', ')}.`;
+  } else {
+    personalizationText = '<br><br><em>💡 Tip: Complete your profile in Settings for more accurate predictions!</em>';
+  }
+  
+  // Build factor breakdown
+  let factorBreakdown = '<br><br><strong>Prediction Breakdown:</strong><br>';
+  factorBreakdown += `• Starting glucose: ${currentGlucose} mg/dL<br>`;
+  factorBreakdown += `• Insulin effect: -${glucoseDrop.toFixed(0)} mg/dL<br>`;
+  factorBreakdown += `• Basal metabolic change: ${basalChange > 0 ? '+' : ''}${basalChange.toFixed(0)} mg/dL<br>`;
+  
+  if (carbImpact > 0) {
+    factorBreakdown += `• Carbohydrate impact: +${carbImpact.toFixed(0)} mg/dL (${latest.carbsConsumed}g consumed)<br>`;
+  }
+  
+  if (activityImpact > 0) {
+    factorBreakdown += `• Activity impact: -${activityImpact.toFixed(0)} mg/dL (${latest.recentActivity} activity)<br>`;
+  }
+  
+  if (factorImpact !== 0) {
+    factorBreakdown += `• Other factors: ${factorImpact > 0 ? '+' : ''}${factorImpact.toFixed(0)} mg/dL<br>`;
+    if (latest.factors && latest.factors.length > 0) {
+      factorBreakdown += `  (${latest.factors.join(', ')})<br>`;
+    }
+  }
+  
   let confidenceNote = '';
   if (hoursElapsed > 4) {
-    confidenceNote = '<br><strong>Note:</strong> This prediction is based on a reading from ' + 
-                     hoursElapsed.toFixed(1) + ' hours ago. For better accuracy, consider taking a new glucose reading.';
+    confidenceNote = '<br><br><strong>⚠️ Note:</strong> This prediction is based on a reading from ' + 
+                     hoursElapsed.toFixed(1) + ' hours ago. For better accuracy, take a new glucose reading with your meter.';
   }
 
   document.getElementById('predictionDetails').innerHTML = `
-    <strong>${rangeText}</strong><br>
-    ${advice}<br><br>
-    <small>Based on ${latest.insulinDose} units of ${latest.insulinType}-acting insulin taken at ${formatDateTime(latest.date, latest.time)}. 
-    Insulin activity at prediction time: ${(insulinActivity * 100).toFixed(1)}%
+    <strong>${rangeText}</strong><br><br>
+    ${advice}
+    ${personalizationText}
+    ${factorBreakdown}
+    <br><strong>Prediction Confidence:</strong> ${confidence}%
     ${confidenceNote}<br><br>
-    <em>⚠️ This is a mathematical estimate and should not replace blood glucose monitoring or medical advice. Individual responses vary.</em></small>
+    <em>⚠️ <strong>IMPORTANT:</strong> This is a mathematical estimate and should NOT replace blood glucose monitoring. Individual responses vary significantly. Always verify with your glucose meter and consult your healthcare provider before making any treatment decisions.</em>
   `;
   
-  // Show the prediction result with animation
   const resultDiv = document.getElementById('predictionResult');
   resultDiv.style.display = 'block';
   
-  // Reinitialize icons in the prediction result
   lucide.createIcons();
   
-  // Scroll to prediction result smoothly
   resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -861,11 +1251,9 @@ function updateStats() {
   document.getElementById('totalEntries').textContent = entries.length;
   
   if (entries.length > 0) {
-    // Calculate average glucose
     const avg = entries.reduce((sum, e) => sum + parseFloat(e.currentGlucose), 0) / entries.length;
     document.getElementById('avgGlucose').textContent = Math.round(avg);
     
-    // Get last entry time
     const sorted = entries.sort((a, b) => {
       const dateA = new Date(a.date + 'T' + a.time);
       const dateB = new Date(b.date + 'T' + b.time);
@@ -915,15 +1303,25 @@ function displayLogs() {
 
   let html = '';
   entries.forEach(entry => {
+    let details = `Glucose: ${entry.currentGlucose} mg/dL | Insulin: ${entry.insulinDose} units (${entry.insulinType})`;
+    
+    if (entry.carbsConsumed) {
+      details += ` | Carbs: ${entry.carbsConsumed}g`;
+    }
+    
+    if (entry.recentActivity && entry.recentActivity !== 'none') {
+      details += ` | Activity: ${entry.recentActivity}`;
+    }
+    
+    if (entry.notes) {
+      details += ` | ${entry.notes}`;
+    }
+    
     html += `
       <div class="log-item">
         <div class="log-info">
           <div class="log-time">${formatDateTime(entry.date, entry.time)}</div>
-          <div class="log-details">
-            Glucose: ${entry.currentGlucose} mg/dL | 
-            Insulin: ${entry.insulinDose} units (${entry.insulinType})
-            ${entry.notes ? ' | ' + entry.notes : ''}
-          </div>
+          <div class="log-details">${details}</div>
         </div>
         <div class="log-actions">
           <button class="icon-btn delete" onclick="deleteEntry('${entry.id}')">
@@ -950,38 +1348,23 @@ async function deleteEntry(id) {
     cancelText: 'Cancel'
   });
   
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
   
   let entries = loadEntries();
-  const entryToDelete = entries.find(e => e.id === id);
-  
-  if (!entryToDelete) {
-    showAlert('Entry not found in the database.', 'error', 'Entry Not Found');
-    return;
-  }
-  
   entries = entries.filter(e => e.id !== id);
   saveEntries(entries);
   
-  // Update all displays
   displayLogs();
   updateStats();
   updateChart();
   
-  // Notify other tabs
   window.dispatchEvent(new Event('storage'));
-  
-  // Show success message
-  console.log('Entry deleted successfully');
 }
 
 // Form submission
 document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   e.preventDefault();
   
-  // Validate all required fields
   const currentGlucose = document.getElementById('currentGlucose').value;
   const insulinDose = document.getElementById('insulinDose').value;
   const insulinType = document.getElementById('insulinType').value;
@@ -993,19 +1376,24 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
     return;
   }
   
-  // Validate glucose value
   const glucoseValue = parseFloat(currentGlucose);
   if (isNaN(glucoseValue) || glucoseValue < 20 || glucoseValue > 600) {
     showAlert('Please enter a valid glucose level between 20 and 600 mg/dL.', 'error', 'Invalid Glucose Value');
     return;
   }
   
-  // Validate insulin dose
   const doseValue = parseFloat(insulinDose);
   if (isNaN(doseValue) || doseValue < 0 || doseValue > 100) {
     showAlert('Please enter a valid insulin dose between 0 and 100 units.', 'error', 'Invalid Insulin Dose');
     return;
   }
+  
+  // Collect factors
+  const factors = [];
+  if (document.getElementById('factorStress').checked) factors.push('stress');
+  if (document.getElementById('factorIllness').checked) factors.push('illness');
+  if (document.getElementById('factorMenstruation').checked) factors.push('menstruation');
+  if (document.getElementById('factorAlcohol').checked) factors.push('alcohol');
   
   const entry = {
     id: generateId(),
@@ -1014,6 +1402,9 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
     insulinType: insulinType,
     date: logDate,
     time: logTime,
+    carbsConsumed: document.getElementById('carbsConsumed').value || null,
+    recentActivity: document.getElementById('recentActivity').value || 'none',
+    factors: factors,
     notes: document.getElementById('notes').value.trim()
   };
   
@@ -1027,18 +1418,14 @@ document.getElementById('glucoseForm').addEventListener('submit', function(e) {
   document.getElementById('logDate').valueAsDate = now;
   document.getElementById('logTime').value = now.toTimeString().slice(0, 5);
   
-  // Update all displays
   displayLogs();
   updateStats();
   updateChart();
   
-  // Notify other tabs
   window.dispatchEvent(new Event('storage'));
   
-  // Show success message
   showAlert('Your glucose entry has been saved successfully!', 'success', 'Entry Saved');
   
-  // Scroll to the logs section to show the new entry
   document.getElementById('logList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
@@ -1048,7 +1435,6 @@ let glucoseChart = null;
 function updateChart() {
   const entries = loadEntries();
   
-  // Get last 7 days
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
@@ -1176,11 +1562,8 @@ async function clearAllData() {
     cancelText: 'Cancel'
   });
   
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
   
-  // Double confirmation for safety
   const doubleConfirm = await showConfirm({
     title: 'Final Confirmation',
     message: 'Are you absolutely sure? This is your last chance to cancel!',
@@ -1191,22 +1574,16 @@ async function clearAllData() {
     cancelText: 'No, Go Back'
   });
   
-  if (!doubleConfirm) {
-    return;
-  }
+  if (!doubleConfirm) return;
   
-  // Clear the data
   localStorage.removeItem('glucoseEntries');
   
-  // Update all displays
   displayLogs();
   updateStats();
   updateChart();
   
-  // Hide prediction result
   document.getElementById('predictionResult').style.display = 'none';
   
-  // Notify other tabs
   window.dispatchEvent(new Event('storage'));
   
   showAlert('All glucose data has been cleared successfully.', 'success', 'Data Cleared');

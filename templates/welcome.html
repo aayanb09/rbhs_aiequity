@@ -226,7 +226,7 @@
       background: white;
       border-radius: 24px;
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
-      max-width: 600px;
+      max-width: 700px;
       width: 100%;
       animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border: 2px solid #e2e8f0;
@@ -257,6 +257,9 @@
       text-align: center;
       color: white;
       border-radius: 24px 24px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     
     .survey-icon {
@@ -310,7 +313,13 @@
       letter-spacing: -0.01em;
     }
     
-    .survey-input {
+    .required-star {
+      color: #dc2626;
+      margin-left: 4px;
+    }
+    
+    .survey-input,
+    .survey-select {
       width: 100%;
       padding: 14px 16px;
       border: 2px solid #e2e8f0;
@@ -320,9 +329,11 @@
       transition: all 0.2s ease;
       color: #0f172a;
       font-weight: 500;
+      background: white;
     }
     
-    .survey-input:focus {
+    .survey-input:focus,
+    .survey-select:focus {
       outline: none;
       border-color: #3b82f6;
       box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
@@ -355,10 +366,52 @@
       line-height: 1.5;
     }
     
+    .survey-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    
+    .survey-radio-option {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .survey-radio-option:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    
+    .survey-radio-option input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+    
+    .survey-radio-option label {
+      font-size: 0.9375rem;
+      color: #475569;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    .survey-radio-option input[type="radio"]:checked ~ label {
+      color: #1e40af;
+    }
+    
     .condition-checkboxes {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       margin-top: 12px;
     }
     
@@ -397,10 +450,21 @@
       color: #1e40af;
     }
     
+    .two-column-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
     .survey-buttons {
       display: flex;
       gap: 12px;
       margin-top: 32px;
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 20px 0 0;
+      border-top: 2px solid #f1f5f9;
     }
     
     .survey-btn {
@@ -442,6 +506,32 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
     
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-left: 4px solid #3b82f6;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-top: 12px;
+      display: flex;
+      align-items: start;
+      gap: 12px;
+    }
+    
+    .info-icon {
+      width: 20px;
+      height: 20px;
+      color: #1e40af;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .info-text {
+      font-size: 0.875rem;
+      color: #1e40af;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+    
     @media (max-width: 968px) {
       .welcome-container {
         grid-template-columns: 1fr;
@@ -466,6 +556,10 @@
       
       .welcome-heading {
         font-size: 1.75rem;
+      }
+      
+      .two-column-grid {
+        grid-template-columns: 1fr;
       }
     }
     
@@ -535,6 +629,10 @@
       .survey-buttons {
         flex-direction: column;
       }
+      
+      .two-column-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -547,13 +645,16 @@
           <i data-lucide="clipboard-list"></i>
         </div>
         <h2>Welcome! Tell Us About You</h2>
-        <p>This helps us personalize your experience</p>
+        <p>This helps us personalize your health experience</p>
       </div>
       
       <div class="survey-body">
         <form id="surveyForm">
+          <!-- Basic Information -->
           <div class="survey-section">
-            <label class="survey-label" for="surveyAge">Age *</label>
+            <label class="survey-label">
+              Age<span class="required-star">*</span>
+            </label>
             <input 
               type="number" 
               id="surveyAge" 
@@ -567,12 +668,71 @@
           </div>
           
           <div class="survey-section">
+            <label class="survey-label">
+              Gender
+            </label>
+            <div class="survey-radio-group">
+              <div class="survey-radio-option">
+                <input type="radio" id="genderMale" name="gender" value="Male">
+                <label for="genderMale">Male</label>
+              </div>
+              <div class="survey-radio-option">
+                <input type="radio" id="genderFemale" name="gender" value="Female">
+                <label for="genderFemale">Female</label>
+              </div>
+              <div class="survey-radio-option">
+                <input type="radio" id="genderOther" name="gender" value="Other">
+                <label for="genderOther">Other</label>
+              </div>
+              <div class="survey-radio-option">
+                <input type="radio" id="genderPreferNot" name="gender" value="Prefer not to say">
+                <label for="genderPreferNot">Prefer not to say</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Physical Measurements -->
+          <div class="survey-section">
+            <label class="survey-label">Physical Measurements (Optional)</label>
+            <div class="two-column-grid">
+              <div>
+                <input 
+                  type="number" 
+                  id="surveyHeight" 
+                  class="survey-input" 
+                  placeholder="Height (cm)"
+                  min="50"
+                  max="300"
+                  step="0.1"
+                >
+              </div>
+              <div>
+                <input 
+                  type="number" 
+                  id="surveyWeight" 
+                  class="survey-input" 
+                  placeholder="Weight (kg)"
+                  min="20"
+                  max="500"
+                  step="0.1"
+                >
+              </div>
+            </div>
+            <p class="survey-description">Helps calculate BMI and provide personalized health recommendations</p>
+          </div>
+          
+          <!-- Medical Conditions -->
+          <div class="survey-section">
             <label class="survey-label">Medical Conditions</label>
             <p class="survey-description" style="margin-bottom: 12px;">Select all that apply (optional)</p>
             <div class="condition-checkboxes">
               <div class="condition-checkbox">
                 <input type="checkbox" id="diabetes" name="condition" value="Diabetes">
-                <label for="diabetes">Diabetes</label>
+                <label for="diabetes">Diabetes (Type 1 or Type 2)</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="prediabetes" name="condition" value="Prediabetes">
+                <label for="prediabetes">Prediabetes</label>
               </div>
               <div class="condition-checkbox">
                 <input type="checkbox" id="hypertension" name="condition" value="Hypertension">
@@ -583,8 +743,12 @@
                 <label for="heartDisease">Heart Disease</label>
               </div>
               <div class="condition-checkbox">
+                <input type="checkbox" id="highCholesterol" name="condition" value="High Cholesterol">
+                <label for="highCholesterol">High Cholesterol</label>
+              </div>
+              <div class="condition-checkbox">
                 <input type="checkbox" id="asthma" name="condition" value="Asthma">
-                <label for="asthma">Asthma</label>
+                <label for="asthma">Asthma / COPD</label>
               </div>
               <div class="condition-checkbox">
                 <input type="checkbox" id="arthritis" name="condition" value="Arthritis">
@@ -594,17 +758,129 @@
                 <input type="checkbox" id="thyroid" name="condition" value="Thyroid Disorder">
                 <label for="thyroid">Thyroid Disorder</label>
               </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="kidneyDisease" name="condition" value="Kidney Disease">
+                <label for="kidneyDisease">Kidney Disease</label>
+              </div>
+              <div class="condition-checkbox">
+                <input type="checkbox" id="obesity" name="condition" value="Obesity">
+                <label for="obesity">Obesity</label>
+              </div>
             </div>
           </div>
-          
+
+          <!-- Medications -->
           <div class="survey-section">
-            <label class="survey-label" for="surveyOtherConditions">Other Medical Conditions</label>
+            <label class="survey-label">Current Medications</label>
+            <textarea 
+              id="surveyMedications" 
+              class="survey-textarea" 
+              placeholder="List any medications you're currently taking..."
+            ></textarea>
+            <p class="survey-description">Include dosages if known (e.g., "Metformin 500mg twice daily")</p>
+          </div>
+
+          <!-- Allergies -->
+          <div class="survey-section">
+            <label class="survey-label">Allergies</label>
+            <textarea 
+              id="surveyAllergies" 
+              class="survey-textarea" 
+              placeholder="List any food or medication allergies..."
+            ></textarea>
+            <p class="survey-description">Include both food and medication allergies</p>
+          </div>
+
+          <!-- Diet Type -->
+          <div class="survey-section">
+            <label class="survey-label">Dietary Preferences</label>
+            <select id="surveyDiet" class="survey-select">
+              <option value="">Select your diet type</option>
+              <option value="No restrictions">No restrictions</option>
+              <option value="Vegetarian">Vegetarian</option>
+              <option value="Vegan">Vegan</option>
+              <option value="Pescatarian">Pescatarian</option>
+              <option value="Ketogenic">Ketogenic</option>
+              <option value="Low-carb">Low-carb</option>
+              <option value="Mediterranean">Mediterranean</option>
+              <option value="Gluten-free">Gluten-free</option>
+              <option value="Dairy-free">Dairy-free</option>
+              <option value="Halal">Halal</option>
+              <option value="Kosher">Kosher</option>
+            </select>
+          </div>
+
+          <!-- Exercise Level -->
+          <div class="survey-section">
+            <label class="survey-label">Physical Activity Level</label>
+            <select id="surveyExercise" class="survey-select">
+              <option value="">Select your activity level</option>
+              <option value="Sedentary">Sedentary (little or no exercise)</option>
+              <option value="Lightly active">Lightly active (1-3 days/week)</option>
+              <option value="Moderately active">Moderately active (3-5 days/week)</option>
+              <option value="Very active">Very active (6-7 days/week)</option>
+              <option value="Extremely active">Extremely active (physical job + daily exercise)</option>
+            </select>
+            <p class="survey-description">Helps us understand your lifestyle and caloric needs</p>
+          </div>
+
+          <!-- Smoking Status -->
+          <div class="survey-section">
+            <label class="survey-label">Smoking Status</label>
+            <div class="survey-radio-group">
+              <div class="survey-radio-option">
+                <input type="radio" id="smokingNever" name="smoking" value="Never">
+                <label for="smokingNever">Never smoked</label>
+              </div>
+              <div class="survey-radio-option">
+                <input type="radio" id="smokingFormer" name="smoking" value="Former">
+                <label for="smokingFormer">Former smoker</label>
+              </div>
+              <div class="survey-radio-option">
+                <input type="radio" id="smokingCurrent" name="smoking" value="Current">
+                <label for="smokingCurrent">Current smoker</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Family History -->
+          <div class="survey-section">
+            <label class="survey-label">Family Medical History</label>
+            <textarea 
+              id="surveyFamilyHistory" 
+              class="survey-textarea" 
+              placeholder="List any relevant family medical history (e.g., diabetes, heart disease)..."
+            ></textarea>
+            <p class="survey-description">Knowing your family history helps assess risk factors</p>
+          </div>
+
+          <!-- Goals -->
+          <div class="survey-section">
+            <label class="survey-label">Health Goals</label>
+            <textarea 
+              id="surveyGoals" 
+              class="survey-textarea" 
+              placeholder="What are your health goals? (e.g., better blood sugar control, weight loss, improved fitness)..."
+            ></textarea>
+            <p class="survey-description">Share what you hope to achieve with GlycoGenie</p>
+          </div>
+
+          <!-- Other Conditions -->
+          <div class="survey-section">
+            <label class="survey-label">Additional Notes</label>
             <textarea 
               id="surveyOtherConditions" 
               class="survey-textarea" 
-              placeholder="List any other conditions or allergies..."
+              placeholder="Any other health information we should know..."
             ></textarea>
-            <p class="survey-description">Include allergies, chronic conditions, or anything else we should know</p>
+          </div>
+
+          <!-- Privacy Notice -->
+          <div class="info-box">
+            <i data-lucide="shield-check" class="info-icon"></i>
+            <div class="info-text">
+              <strong>Privacy Notice:</strong> All information is stored locally on your device and is never sent to external servers. Your data remains private and secure.
+            </div>
           </div>
           
           <div class="survey-buttons">
@@ -697,9 +973,46 @@
         return;
       }
       
+      // Get gender
+      const genderRadio = document.querySelector('input[name="gender"]:checked');
+      const gender = genderRadio ? genderRadio.value : null;
+      
+      // Get physical measurements
+      const height = document.getElementById('surveyHeight').value;
+      const weight = document.getElementById('surveyWeight').value;
+      
+      // Calculate BMI if both height and weight are provided
+      let bmi = null;
+      if (height && weight) {
+        const heightInMeters = parseFloat(height) / 100;
+        bmi = (parseFloat(weight) / (heightInMeters * heightInMeters)).toFixed(1);
+      }
+      
       // Get selected conditions
       const conditionCheckboxes = document.querySelectorAll('input[name="condition"]:checked');
       const selectedConditions = Array.from(conditionCheckboxes).map(cb => cb.value);
+      
+      // Get medications
+      const medications = document.getElementById('surveyMedications').value.trim();
+      
+      // Get allergies
+      const allergies = document.getElementById('surveyAllergies').value.trim();
+      
+      // Get diet type
+      const diet = document.getElementById('surveyDiet').value;
+      
+      // Get exercise level
+      const exerciseLevel = document.getElementById('surveyExercise').value;
+      
+      // Get smoking status
+      const smokingRadio = document.querySelector('input[name="smoking"]:checked');
+      const smokingStatus = smokingRadio ? smokingRadio.value : null;
+      
+      // Get family history
+      const familyHistory = document.getElementById('surveyFamilyHistory').value.trim();
+      
+      // Get goals
+      const goals = document.getElementById('surveyGoals').value.trim();
       
       // Get other conditions
       const otherConditions = document.getElementById('surveyOtherConditions').value.trim();
@@ -707,9 +1020,21 @@
       // Save to localStorage
       const userProfile = {
         age: age,
+        gender: gender,
+        height: height || null,
+        weight: weight || null,
+        bmi: bmi,
         conditions: selectedConditions,
+        medications: medications,
+        allergies: allergies,
+        diet: diet,
+        exerciseLevel: exerciseLevel,
+        smokingStatus: smokingStatus,
+        familyHistory: familyHistory,
+        goals: goals,
         otherConditions: otherConditions,
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        skipped: false
       };
       
       localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -723,7 +1048,18 @@
       // Save minimal profile to indicate survey was offered
       const userProfile = {
         age: null,
+        gender: null,
+        height: null,
+        weight: null,
+        bmi: null,
         conditions: [],
+        medications: '',
+        allergies: '',
+        diet: '',
+        exerciseLevel: '',
+        smokingStatus: null,
+        familyHistory: '',
+        goals: '',
         otherConditions: '',
         skipped: true,
         completedAt: new Date().toISOString()
