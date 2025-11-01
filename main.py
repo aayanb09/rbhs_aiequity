@@ -16,7 +16,7 @@ def welcome():
 
 @app.route("/home")
 def home():
-    return render_template("landing.html", test_value=test_value)
+    return render_template("landing.html")
 
 @app.route("/reminders")
 def reminder():
