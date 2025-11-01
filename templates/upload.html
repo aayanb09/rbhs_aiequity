@@ -484,78 +484,105 @@ const canvas = document.getElementById("snapshot");
 let stream = null;
 let capturing = false;
 
+// Sends image + goals to Flask for analysis
+async function sendForAnalysis(file) {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  // collect selected goals
+  document.querySelectorAll('#nutrition-form input[name="need"]:checked').forEach(el => {
+    formData.append("goals", el.value);
+  });
+
+  try {
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    // Display ingredients
+    const resultsList = document.querySelector(".results-list");
+    resultsList.innerHTML = "";
+    data.ingredients.forEach(ing => {
+      const li = document.createElement("li");
+      li.textContent = ing;
+      resultsList.appendChild(li);
+    });
+
+    // Display GPT analysis
+    document.querySelector(".info-banner").textContent = data.analysis;
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to analyze image. Try again.");
+  }
+}
+
+// Upload button
 uploadBtn.addEventListener("click", () => {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.tif,.tiff,.heic,.heif,image/*";
-  input.onchange = async e => {
+  input.accept = "image/*";
+  input.onchange = e => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.type === "image/heic" || file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
-      try {
-        const converted = await heic2any({
-          blob: file,
-          toType: "image/jpeg",
-          quality: 0.9
-        });
-        const reader = new FileReader();
-        reader.onload = ev => showUploadedImage(ev.target.result);
-        reader.readAsDataURL(converted);
-      } catch (err) {
-        console.error(err);
-        showAlert('Could not convert HEIC image. Try exporting it as JPEG or PNG.', 'error', 'Conversion Failed');
-      }
-    } else {
-      const reader = new FileReader();
-      reader.onload = ev => showUploadedImage(ev.target.result);
-      reader.readAsDataURL(file);
+    if (file) {
+      showUploadedImage(URL.createObjectURL(file));
+      sendForAnalysis(file); // <-- send to Flask
     }
   };
   input.click();
 });
 
-function showUploadedImage(dataUrl) {
-  img.src = dataUrl;
+// Capture button
+captureBtn.addEventListener("click", async () => {
+  if (!capturing) {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.style.display = "block";
+    img.style.display = "none";
+    canvas.style.display = "none";
+    placeholder.style.display = "none";
+    capturing = true;
+    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
+    lucide.createIcons();
+  } else {
+    const context = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Stop camera
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    video.style.display = "none";
+    canvas.style.display = "block";
+    capturing = false;
+    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Take Photo</span>';
+    lucide.createIcons();
+
+    // Convert canvas to file for sending
+    canvas.toBlob(blob => {
+      const file = new File([blob], "snapshot.png", { type: "image/png" });
+      sendForAnalysis(file); // <-- send to Flask
+    }, "image/png");
+  }
+});
+
+function showUploadedImage(src) {
+  img.src = src;
   img.style.display = "block";
   video.style.display = "none";
   canvas.style.display = "none";
   placeholder.style.display = "none";
 }
-
-captureBtn.addEventListener("click", async () => {
-  if (!capturing) {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-      video.style.display = "block";
-      img.style.display = "none";
-      canvas.style.display = "none";
-      placeholder.style.display = "none";
-      capturing = true;
-      captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
-      lucide.createIcons(); // Re-initialize icons
-    } catch (err) {
-      showAlert('Camera access denied or not available. Please enable camera permissions in your browser.', 'error', 'Camera Access Denied');
-    }
-  } else {
-    const context = canvas.getContext("2d");
-    const w = video.videoWidth;
-    const h = video.videoHeight;
-    canvas.width = w;
-    canvas.height = h;
-    context.drawImage(video, 0, 0, w, h);
-
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-
-    video.style.display = "none";
-    canvas.style.display = "block";
-    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Take Photo</span>';
-    lucide.createIcons(); // Re-initialize icons
-    capturing = false;
-  }
-});
 </script>
+
 
 {% endblock %}
