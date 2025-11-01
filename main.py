@@ -22,6 +22,62 @@ def home():
 def reminder():
     return render_template("reminders.html")
 
+#Route for recipe finder
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if request.method == "POST":
+        
+        #Show error message if image is not uploaded
+        if "image" not in request.files:
+            flash("No image file part")
+            return redirect(request.url)
+
+        file = request.files["image"]
+        
+        #Check if user uplaoded an empty file
+        if file.filename == "":
+            flash("No selected file")
+            return redirect(request.url)
+
+        if file:
+            # Build a safe path for the file
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            file.save(filepath)
+
+            # Preprocess image 
+            image = Image.open(filepath).convert("RGB")
+            input_tensor = transform(image).unsqueeze(0).to(device) 
+
+            # Run model
+            with torch.no_grad():
+                outputs = ingredient_model(input_tensor)
+                probs = torch.nn.functional.softmax(outputs[0], dim=0)
+                k = min(5, len(class_names))
+                top_probs, top_idxs = torch.topk(probs, k)
+             
+            # Store ingredient names and confidence scores, only keeping ingredients with more than 20% confidence
+            ingredient_data = [
+                {"name": class_names[idx], "confidence": round(prob.item() * 100, 2)}
+                for prob, idx in zip(top_probs, top_idxs)
+                if prob.item() * 100 >= 5
+            ]
+
+            # Send Gemini prompt
+            prompt = (
+                "I have these ingredients: " +
+                " ,".join([item["name"] for item in ingredient_data]) +
+                ". Tell me how they align with these nutrtional needs: " + ", ".join(nutritional_needs) + "."
+            )
+        
+            model = genai.GenerativeModel("models/gemini-2.5-flash")
+            response = model.generate_content(prompt)
+            suggestion = response.text
+
+            return render_template("upload.html", suggestion=suggestion)
+
+    return render_template("upload.html")
+    
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
