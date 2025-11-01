@@ -21,62 +21,7 @@ def home():
 @app.route("/reminders")
 def reminder():
     return render_template("reminders.html")
-
-#Route for recipe finder
-@app.route("/upload", methods=["GET", "POST"])
-def upload():
-    if request.method == "POST":
-        
-        #Show error message if image is not uploaded
-        if "image" not in request.files:
-            flash("No image file part")
-            return redirect(request.url)
-
-        file = request.files["image"]
-        
-        #Check if user uplaoded an empty file
-        if file.filename == "":
-            flash("No selected file")
-            return redirect(request.url)
-
-        if file:
-            # Build a safe path for the file
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            file.save(filepath)
-
-            # Preprocess image 
-            image = Image.open(filepath).convert("RGB")
-            input_tensor = transform(image).unsqueeze(0).to(device) 
-
-            # Run model
-            with torch.no_grad():
-                outputs = ingredient_model(input_tensor)
-                probs = torch.nn.functional.softmax(outputs[0], dim=0)
-                k = min(5, len(class_names))
-                top_probs, top_idxs = torch.topk(probs, k)
-             
-            # Store ingredient names and confidence scores, only keeping ingredients with more than 20% confidence
-            ingredient_data = [
-                {"name": class_names[idx], "confidence": round(prob.item() * 100, 2)}
-                for prob, idx in zip(top_probs, top_idxs)
-                if prob.item() * 100 >= 5
-            ]
-
-            # Send Gemini prompt
-            prompt = (
-                "I have these ingredients: " +
-                " ,".join([item["name"] for item in ingredient_data]) +
-                ". Tell me how they align with these nutrtional needs: " + ", ".join(nutritional_needs) + "."
-            )
-        
-            model = genai.GenerativeModel("models/gemini-2.5-flash")
-            response = model.generate_content(prompt)
-            suggestion = response.text
-
-            return render_template("upload.html", suggestion=suggestion)
-
-    return render_template("upload.html")
+    
     
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -113,33 +58,33 @@ def upload():
     return render_template("upload.html")
     
 def call_clarifai_api(image_base64):
-    """
-    Calls Clarifai's general model to recognize food ingredients.
-    """
-    url = "https://api.clarifai.com/v2/models/food-item-recognition/outputs"
-    headers = {
-        "Authorization": f"Key {CLARIFAI_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "inputs": [
-            {
-                "data": {
-                    "image": {
-                        "base64": image_base64
-                    }
-                }
-            }
-        ]
-    }
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    results = response.json()
-    # Extract ingredient names
-    ingredients = []
-    concepts = results["outputs"][0]["data"].get("concepts", [])
-    for concept in concepts:
-        ingredients.append(concept["name"])
+    clarifai_response = requests.post(
+        "https://api.clarifai.com/v2/models/food-item-recognition/outputs",
+        headers={
+            "Authorization": "Key 7fc72e8fbe9942998997137159e3ab21",
+            "Content-Type": "application/json"
+        },
+        json={
+            "user_app_id": {
+                "user_id": "9bxlnyx85kbs",
+                "app_id": "NutriLens"
+            },
+            "inputs": [
+                {"data": {"image": {"base64": image_base64}}}
+            ]
+        }
+    )
+
+    clarifai_response.raise_for_status()
+    data = clarifai_response.json()
+
+    # Extract ingredient data
+    concepts = data["outputs"][0]["data"]["concepts"]
+    ingredients = [
+        {"name": c["name"], "confidence": round(c["value"] * 100, 2)}
+        for c in concepts[:5]
+        if c["value"] * 100 >= 1
+    ]
     return ingredients
 
 def call_gemini_api(ingredients, goals):
