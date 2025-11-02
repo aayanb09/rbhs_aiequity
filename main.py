@@ -143,6 +143,16 @@ def identify_food():
             except Exception as gemini_error:
                 print("Gemini error:", gemini_error)
                 clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
+                
+        print("=" * 50)
+        return jsonify(clarifai_data), 200
+        
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route("/symptomTracker")
 def symptom():
