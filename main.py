@@ -2,13 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 import os
 import base64
 import requests
+import google.generativeai as genai
 
 app = Flask(__name__)
 app.secret_key = "password" 
 
-CLARIFAI_KEY = os.environ.get("CLARIFAI_KEY")
-GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY")
-GEMINI_MODEL = "gemini-2.5-flash"
+# Set up API keys
+CLARIFAI_PAT = os.environ.get("CLARIFAI_PAT")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
+# Configure Gemini
+genai.configure(api_key=GOOGLE_API_KEY)
 
 @app.route("/")
 def welcome():
@@ -23,105 +27,96 @@ def reminder():
     return render_template("reminders.html")
     
     
-@app.route("/upload", methods=["GET", "POST"])
-def upload():
-    if request.method == "POST":
-        # 1. Get the image
-        image_file = request.files.get("image")
-        if not image_file:
-            return jsonify({"error": "No image uploaded"}), 400
-        image_bytes = image_file.read()
-        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-
-        # 2. Get selected nutritional goals
-        goals = request.form.getlist("goals")  # JS sends goals[] via FormData
-
-        # 3. Call Clarifai API for ingredient recognition
-        try:
-            ingredients = call_clarifai_api(image_base64)
-        except Exception as e:
-            return jsonify({"error": f"Clarifai API error: {e}"}), 500
-
-        # 4. Call Gemini API for analysis
-        try:
-            analysis = call_gemini_api(ingredients, goals)
-        except Exception as e:
-            return jsonify({"error": f"Gemini API error: {e}"}), 500
-
-        # 5. Return JSON to JS
-        return jsonify({
-            "ingredients": ingredients,
-            "analysis": analysis
-        })
-
-    # GET → render the upload page
-    return render_template("upload.html")
-    
-def call_clarifai_api(image_base64):
-    clarifai_response = requests.post(
-        "https://api.clarifai.com/v2/models/food-item-recognition/outputs",
-        headers={
-            "Authorization": "Key 7fc72e8fbe9942998997137159e3ab21",
-            "Content-Type": "application/json"
-        },
-        json={
-            "user_app_id": {
-                "user_id": "9bxlnyx85kbs",
-                "app_id": "NutriLens"
+@app.route('/api/identify-food', methods=['POST'])
+def identify_food():
+    try:
+        data = request.json
+        base64_image = data.get('image')
+        
+        if not base64_image:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        print("=" * 50)
+        print("SENDING REQUEST TO CLARIFAI")
+        print(f"API Key (first 10 chars): {CLARIFAI_PAT[:10]}...")
+        print(f"Image data length: {len(base64_image)} chars")
+        print("=" * 50)
+        
+        # Call Clarifai API
+        clarifai_response = requests.post(
+            'https://api.clarifai.com/v2/models/food-item-v1-recognition/outputs',
+            headers={
+                'Accept': 'application/json',
+                'Authorization': f'Key {CLARIFAI_PAT}',
+                'Content-Type': 'application/json'
             },
-            "inputs": [
-                {"data": {"image": {"base64": image_base64}}}
-            ]
-        }
-    )
-
-    clarifai_response.raise_for_status()
-    data = clarifai_response.json()
-
-    # Extract ingredient data
-    concepts = data["outputs"][0]["data"]["concepts"]
-    ingredients = [
-        {"name": c["name"], "confidence": round(c["value"] * 100, 2)}
-        for c in concepts[:5]
-        if c["value"] * 100 >= 1
-    ]
-    return ingredients
-
-def call_gemini_api(ingredients, goals):
-    """
-    Calls Google Gemini API to generate analysis of how ingredients align
-    with the user's selected dietary goals.
-    """
-    prompt = (
-        f"You are a nutrition expert. The user has selected the following dietary goals: {', '.join(goals)}. "
-        f"The ingredients in the food they uploaded are: {', '.join(ingredients)}. "
-        "Provide a clear analysis of how well these ingredients align with the selected goals, "
-        "and give any helpful suggestions."
-    )
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-    headers = {
-        "x-goog-api-key": GEMINI_API_KEY,
-        "Content-Type": "application/json"
-    }
-    body = {
-        "contents": [
-            {
-                "parts": [
+            json={
+                "user_app_id": {
+                    "user_id": "clarifai",
+                    "app_id": "main"
+                },
+                "inputs": [
                     {
-                        "text": prompt
+                        "data": {
+                            "image": {
+                                "base64": base64_image
+                            }
+                        }
                     }
                 ]
             }
-        ]
-    }
+        )
+        
+        print(f"Clarifai Response status: {clarifai_response.status_code}")
+        
+        if clarifai_response.status_code != 200:
+            return jsonify(clarifai_response.json()), clarifai_response.status_code
+        
+        clarifai_data = clarifai_response.json()
+        
+        # Get concepts (predicted foods)
+        if (clarifai_data.get('outputs') and 
+            len(clarifai_data['outputs']) > 0 and 
+            clarifai_data['outputs'][0].get('data') and 
+            clarifai_data['outputs'][0]['data'].get('concepts') and
+            len(clarifai_data['outputs'][0]['data']['concepts']) > 0):
+            
+            concepts = clarifai_data['outputs'][0]['data']['concepts']
+            top_food = concepts[0]['name']
+            print(f"Top predicted food: {top_food}")
 
-    response = requests.post(url, headers=headers, json=body)
-    response.raise_for_status()
-    result = response.json()
+            # Use Gemini to generate nutrition + diabetes-safe guidance
+            model = genai.GenerativeModel("models/gemini-2.0-flash")
 
-    # The text is usually in outputs[0].content
-    return result["outputs"][0]["content"].strip()
+            prompt = f"""
+            You are a nutritionist focused on diabetes management.
+            The identified food is **{top_food}**.
+            
+            Please provide:
+            1. Estimated nutritional breakdown (calories, carbs, sugar, protein, fiber, fat).
+            2. Whether this food is diabetes-friendly or should be eaten in moderation.
+            3. A brief suggestion on how to make it more suitable for diabetics.
+            Keep the response concise and structured.
+            """
+
+            print("Sending prompt to Gemini...")
+            response = model.generate_content(prompt)
+            nutrition_text = response.text.strip()
+            
+            # Add Gemini response to Clarifai output
+            clarifai_data['nutrition_info'] = {
+                'food': top_food,
+                'gemini_analysis': nutrition_text
+            }
+
+        print("=" * 50)
+        return jsonify(clarifai_data), 200
+        
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route("/symptomTracker")
 def symptom():
