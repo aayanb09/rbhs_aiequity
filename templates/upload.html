@@ -753,7 +753,7 @@ async function identifyFood(imageDataUrl) {
     
     console.log('Sending request to Flask backend...');
     
-    const response = await fetch('/api/identify-food', {
+    const response = await fetch('/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
