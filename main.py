@@ -27,131 +27,134 @@ def reminder():
     return render_template("reminders.html")
     
     
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def identify_food():
-    try:
-        data = request.json
-        base64_image = data.get('image')
-        
-        if not base64_image:
-            return jsonify({'error': 'No image provided'}), 400
-        
-        print("=" * 50)
-        print("SENDING REQUEST TO CLARIFAI")
-        print(f"API Key (first 10 chars): {CLARIFAI_PAT[:10]}...")
-        print(f"Image data length: {len(base64_image)} chars")
-        print("=" * 50)
-        
-        # Call Clarifai API
-        clarifai_response = requests.post(
-            'https://api.clarifai.com/v2/models/food-item-v1-recognition/outputs',
-            headers={
-                'Accept': 'application/json',
-                'Authorization': f'Key {CLARIFAI_PAT}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                "user_app_id": {
-                    "user_id": "clarifai",
-                    "app_id": "main"
+    if request.method == "POST":
+        try:
+            data = request.json
+            base64_image = data.get('image')
+            
+            if not base64_image:
+                return jsonify({'error': 'No image provided'}), 400
+            
+            print("=" * 50)
+            print("SENDING REQUEST TO CLARIFAI")
+            print(f"API Key (first 10 chars): {CLARIFAI_PAT[:10]}...")
+            print(f"Image data length: {len(base64_image)} chars")
+            print("=" * 50)
+            
+            # Call Clarifai API
+            clarifai_response = requests.post(
+                'https://api.clarifai.com/v2/models/food-item-v1-recognition/outputs',
+                headers={
+                    'Accept': 'application/json',
+                    'Authorization': f'Key {CLARIFAI_PAT}',
+                    'Content-Type': 'application/json'
                 },
-                "inputs": [
-                    {
-                        "data": {
-                            "image": {
-                                "base64": base64_image
+                json={
+                    "user_app_id": {
+                        "user_id": "clarifai",
+                        "app_id": "main"
+                    },
+                    "inputs": [
+                        {
+                            "data": {
+                                "image": {
+                                    "base64": base64_image
+                                }
                             }
                         }
-                    }
-                ]
-            }
-        )
-        
-        print(f"Clarifai Response status: {clarifai_response.status_code}")
-        
-        if clarifai_response.status_code != 200:
-            return jsonify(clarifai_response.json()), clarifai_response.status_code
-        
-        clarifai_data = clarifai_response.json()
-        
-        # Get concepts
-        if (clarifai_data.get('outputs') and 
-            len(clarifai_data['outputs']) > 0 and 
-            clarifai_data['outputs'][0].get('data') and 
-            clarifai_data['outputs'][0]['data'].get('concepts') and
-            len(clarifai_data['outputs'][0]['data']['concepts']) > 0):
+                    ]
+                }
+            )
             
-            concepts = clarifai_data['outputs'][0]['data']['concepts']
+            print(f"Clarifai Response status: {clarifai_response.status_code}")
             
-            # Find the highest confidence
-            max_confidence = concepts[0]['value']
+            if clarifai_response.status_code != 200:
+                return jsonify(clarifai_response.json()), clarifai_response.status_code
             
-            # Get all items with the same top confidence (handle ties)
-            top_items = [c for c in concepts if abs(c['value'] - max_confidence) < 0.001]  # Float comparison tolerance
+            clarifai_data = clarifai_response.json()
             
-            print(f"Top confidence: {max_confidence}")
-            print(f"Items with top confidence: {[item['name'] for item in top_items]}")
-            
-            # Pick the best one from ties
-            # Priority: more specific names (longer, more descriptive)
-            # Avoid generic terms like "food", "dish", "meal"
-            generic_terms = ['food', 'dish', 'meal', 'plate', 'cuisine']
-            
-            best_item = None
-            for item in top_items:
-                name = item['name'].lower()
-                # Skip generic terms
-                if any(term in name for term in generic_terms):
-                    continue
-                # Prefer longer, more specific names
-                if best_item is None or len(name) > len(best_item['name']):
-                    best_item = item
-            
-            # If all were generic, just use the first one
-            if best_item is None:
-                best_item = top_items[0]
-            
-            top_food = best_item['name']
-            print(f"Selected top food: {top_food}")
-            
-            try:
-                # Extract nutrition info for Gemini
-                nutrition = best_item.get('nutrition', {})
-                if nutrition:
-                    calories = nutrition.get('calories', 'unknown')
-                    protein = nutrition.get('protein_g', 'unknown')
-                    fat = nutrition.get('fat_total_g', 'unknown')
-                    sugar = nutrition.get('sugar_g', 'unknown')
-            
-                    prompt = (
-                        f"The food identified is {top_food}. It contains {calories} calories, "
-                        f"{protein}g of protein, {fat}g of fat, and {sugar}g of sugar. "
-                        "Give one short paragraph of personalized healthy eating advice about this food."
-                    )
-            
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    gemini_response = model.generate_content(prompt)
-            
-                    advice = gemini_response.text.strip()
-                    print("Gemini advice:", advice)
-            
-                    # Add Gemini output into response
-                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
-                else:
-                    print("No nutrition data found for Gemini analysis.")
-            
-            except Exception as gemini_error:
-                print("Gemini error:", gemini_error)
-                clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
+            # Get concepts
+            if (clarifai_data.get('outputs') and 
+                len(clarifai_data['outputs']) > 0 and 
+                clarifai_data['outputs'][0].get('data') and 
+                clarifai_data['outputs'][0]['data'].get('concepts') and
+                len(clarifai_data['outputs'][0]['data']['concepts']) > 0):
                 
-        print("=" * 50)
-        return jsonify(clarifai_data), 200
-        
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+                concepts = clarifai_data['outputs'][0]['data']['concepts']
+                
+                # Find the highest confidence
+                max_confidence = concepts[0]['value']
+                
+                # Get all items with the same top confidence (handle ties)
+                top_items = [c for c in concepts if abs(c['value'] - max_confidence) < 0.001]  # Float comparison tolerance
+                
+                print(f"Top confidence: {max_confidence}")
+                print(f"Items with top confidence: {[item['name'] for item in top_items]}")
+                
+                # Pick the best one from ties
+                # Priority: more specific names (longer, more descriptive)
+                # Avoid generic terms like "food", "dish", "meal"
+                generic_terms = ['food', 'dish', 'meal', 'plate', 'cuisine']
+                
+                best_item = None
+                for item in top_items:
+                    name = item['name'].lower()
+                    # Skip generic terms
+                    if any(term in name for term in generic_terms):
+                        continue
+                    # Prefer longer, more specific names
+                    if best_item is None or len(name) > len(best_item['name']):
+                        best_item = item
+                
+                # If all were generic, just use the first one
+                if best_item is None:
+                    best_item = top_items[0]
+                
+                top_food = best_item['name']
+                print(f"Selected top food: {top_food}")
+                
+                try:
+                    # Extract nutrition info for Gemini
+                    nutrition = best_item.get('nutrition', {})
+                    if nutrition:
+                        calories = nutrition.get('calories', 'unknown')
+                        protein = nutrition.get('protein_g', 'unknown')
+                        fat = nutrition.get('fat_total_g', 'unknown')
+                        sugar = nutrition.get('sugar_g', 'unknown')
+                
+                        prompt = (
+                            f"The food identified is {top_food}. It contains {calories} calories, "
+                            f"{protein}g of protein, {fat}g of fat, and {sugar}g of sugar. "
+                            "Give one short paragraph of personalized healthy eating advice about this food."
+                        )
+                
+                        model = genai.GenerativeModel("gemini-1.5-flash")
+                        gemini_response = model.generate_content(prompt)
+                
+                        advice = gemini_response.text.strip()
+                        print("Gemini advice:", advice)
+                
+                        # Add Gemini output into response
+                        clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
+                    else:
+                        print("No nutrition data found for Gemini analysis.")
+                
+                except Exception as gemini_error:
+                    print("Gemini error:", gemini_error)
+                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
+                    
+            print("=" * 50)
+            return jsonify(clarifai_data), 200
+            
+        except Exception as e:
+            print(f"ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
+            
+    return render_template("upload.html")
 
 
 @app.route("/symptomTracker")
