@@ -74,7 +74,7 @@ def identify_food():
         
         clarifai_data = clarifai_response.json()
         
-        # Get concepts (predicted foods)
+        # Get concepts
         if (clarifai_data.get('outputs') and 
             len(clarifai_data['outputs']) > 0 and 
             clarifai_data['outputs'][0].get('data') and 
@@ -82,41 +82,67 @@ def identify_food():
             len(clarifai_data['outputs'][0]['data']['concepts']) > 0):
             
             concepts = clarifai_data['outputs'][0]['data']['concepts']
-            top_food = concepts[0]['name']
-            print(f"Top predicted food: {top_food}")
-
-            # Use Gemini to generate nutrition + diabetes-safe guidance
-            model = genai.GenerativeModel("models/gemini-2.0-flash")
-
-            prompt = f"""
-            You are a nutritionist focused on diabetes management.
-            The identified food is **{top_food}**.
             
-            Please provide:
-            1. Estimated nutritional breakdown (calories, carbs, sugar, protein, fiber, fat).
-            2. Whether this food is diabetes-friendly or should be eaten in moderation.
-            3. A brief suggestion on how to make it more suitable for diabetics.
-            Keep the response concise and structured.
-            """
-
-            print("Sending prompt to Gemini...")
-            response = model.generate_content(prompt)
-            nutrition_text = response.text.strip()
+            # Find the highest confidence
+            max_confidence = concepts[0]['value']
             
-            # Add Gemini response to Clarifai output
-            clarifai_data['nutrition_info'] = {
-                'food': top_food,
-                'gemini_analysis': nutrition_text
-            }
-
-        print("=" * 50)
-        return jsonify(clarifai_data), 200
-        
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+            # Get all items with the same top confidence (handle ties)
+            top_items = [c for c in concepts if abs(c['value'] - max_confidence) < 0.001]  # Float comparison tolerance
+            
+            print(f"Top confidence: {max_confidence}")
+            print(f"Items with top confidence: {[item['name'] for item in top_items]}")
+            
+            # Pick the best one from ties
+            # Priority: more specific names (longer, more descriptive)
+            # Avoid generic terms like "food", "dish", "meal"
+            generic_terms = ['food', 'dish', 'meal', 'plate', 'cuisine']
+            
+            best_item = None
+            for item in top_items:
+                name = item['name'].lower()
+                # Skip generic terms
+                if any(term in name for term in generic_terms):
+                    continue
+                # Prefer longer, more specific names
+                if best_item is None or len(name) > len(best_item['name']):
+                    best_item = item
+            
+            # If all were generic, just use the first one
+            if best_item is None:
+                best_item = top_items[0]
+            
+            top_food = best_item['name']
+            print(f"Selected top food: {top_food}")
+            
+            try:
+                # Extract nutrition info for Gemini
+                nutrition = best_item.get('nutrition', {})
+                if nutrition:
+                    calories = nutrition.get('calories', 'unknown')
+                    protein = nutrition.get('protein_g', 'unknown')
+                    fat = nutrition.get('fat_total_g', 'unknown')
+                    sugar = nutrition.get('sugar_g', 'unknown')
+            
+                    prompt = (
+                        f"The food identified is {top_food}. It contains {calories} calories, "
+                        f"{protein}g of protein, {fat}g of fat, and {sugar}g of sugar. "
+                        "Give one short paragraph of personalized healthy eating advice about this food."
+                    )
+            
+                    model = genai.GenerativeModel("gemini-1.5-flash")
+                    gemini_response = model.generate_content(prompt)
+            
+                    advice = gemini_response.text.strip()
+                    print("Gemini advice:", advice)
+            
+                    # Add Gemini output into response
+                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
+                else:
+                    print("No nutrition data found for Gemini analysis.")
+            
+            except Exception as gemini_error:
+                print("Gemini error:", gemini_error)
+                clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
 
 @app.route("/symptomTracker")
 def symptom():
