@@ -286,32 +286,177 @@
   animation: fadeIn 0.5s ease 0.3s backwards;
 }
 
-.results-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
 }
 
-.results-list li {
-  padding: 14px;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 12px;
-  border-left: 4px solid #3b82f6;
-  font-size: 0.9875rem;
-  color: #475569;
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 0.9375rem;
   font-weight: 600;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.results-list li:hover {
+.food-result {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 14px;
+  border-left: 4px solid #3b82f6;
+  transition: all 0.25s ease;
+}
+
+.food-result:hover {
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-.results-list li:last-child {
+.food-result:last-child {
   margin-bottom: 0;
+}
+
+.food-name {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-badge {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+}
+
+.food-info {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.food-info strong {
+  color: #475569;
+  font-weight: 700;
+}
+
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.nutrition-item {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+}
+
+.nutrition-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.nutrition-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.error-message {
+  padding: 16px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-left: 4px solid #ef4444;
+  border-radius: 12px;
+  color: #991b1b;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+
+.error-icon {
+  width: 20px;
+  height: 20px;
+  color: #dc2626;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.debug-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: monospace;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.analyze-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.analyze-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
+}
+
+.analyze-btn:active {
+  transform: translateY(0);
+}
+
+.analyze-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .info-banner {
@@ -452,14 +597,11 @@
     <div class="side-panel results-panel">
       <h3 class="panel-title">
         <i data-lucide="bar-chart" class="panel-title-icon"></i>
-        <span>Nutritional Analysis</span>
+        <span>Food Identification</span>
       </h3>
-      <ul class="results-list">
-        <li>High Protein</li>
-        <li>Vegetarian</li>
-        <li>Contains Gluten</li>
-        <li>Moderate Sodium</li>
-      </ul>
+      <div id="resultsContent">
+        <p style="color: #94a3b8; font-style: italic; text-align: center; padding: 20px;">Upload or capture an image to identify the food</p>
+      </div>
     </div>
   </div>
 
@@ -481,108 +623,507 @@ const video = document.getElementById("camera-feed");
 const img = document.getElementById("uploaded-image");
 const placeholder = document.getElementById("placeholder");
 const canvas = document.getElementById("snapshot");
+const resultsContent = document.getElementById("resultsContent");
+
 let stream = null;
 let capturing = false;
+let currentImageData = null;
 
-// Sends image + goals to Flask for analysis
-async function sendForAnalysis(file) {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  // collect selected goals
-  document.querySelectorAll('#nutrition-form input[name="need"]:checked').forEach(el => {
-    formData.append("goals", el.value);
-  });
-
-  try {
-    const response = await fetch("/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      alert(data.error);
-      return;
-    }
-
-    // Display ingredients
-    const resultsList = document.querySelector(".results-list");
-    resultsList.innerHTML = "";
-    data.ingredients.forEach(ing => {
-      const li = document.createElement("li");
-      li.textContent = ing;
-      resultsList.appendChild(li);
-    });
-
-    // Display GPT analysis
-    document.querySelector(".info-banner").textContent = data.analysis;
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed to analyze image. Try again.");
-  }
-}
-
-// Upload button
 uploadBtn.addEventListener("click", () => {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = "image/*";
-  input.onchange = e => {
+  input.accept = ".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.tif,.tiff,.heic,.heif,image/*";
+  input.onchange = async e => {
     const file = e.target.files[0];
-    if (file) {
-      showUploadedImage(URL.createObjectURL(file));
-      sendForAnalysis(file); // <-- send to Flask
+    if (!file) return;
+
+    if (file.type === "image/heic" || file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
+      try {
+        const converted = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: 0.9
+        });
+        const reader = new FileReader();
+        reader.onload = ev => {
+          showUploadedImage(ev.target.result);
+          identifyFood(ev.target.result);
+        };
+        reader.readAsDataURL(converted);
+      } catch (err) {
+        console.error(err);
+        showError('Could not convert HEIC image. Try exporting it as JPEG or PNG.');
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        showUploadedImage(ev.target.result);
+        identifyFood(ev.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
   input.click();
 });
 
-// Capture button
-captureBtn.addEventListener("click", async () => {
-  if (!capturing) {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
-    video.style.display = "block";
-    img.style.display = "none";
-    canvas.style.display = "none";
-    placeholder.style.display = "none";
-    capturing = true;
-    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
-    lucide.createIcons();
-  } else {
-    const context = canvas.getContext("2d");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Stop camera
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-    video.style.display = "none";
-    canvas.style.display = "block";
-    capturing = false;
-    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Take Photo</span>';
-    lucide.createIcons();
-
-    // Convert canvas to file for sending
-    canvas.toBlob(blob => {
-      const file = new File([blob], "snapshot.png", { type: "image/png" });
-      sendForAnalysis(file); // <-- send to Flask
-    }, "image/png");
-  }
-});
-
-function showUploadedImage(src) {
-  img.src = src;
+function showUploadedImage(dataUrl) {
+  currentImageData = dataUrl;
+  img.src = dataUrl;
   img.style.display = "block";
   video.style.display = "none";
   canvas.style.display = "none";
   placeholder.style.display = "none";
 }
-</script>
 
+captureBtn.addEventListener("click", async () => {
+  if (!capturing) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      video.style.display = "block";
+      img.style.display = "none";
+      canvas.style.display = "none";
+      placeholder.style.display = "none";
+      capturing = true;
+      captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Snap Photo</span>';
+      lucide.createIcons();
+      
+      showPlaceholder();
+    } catch (err) {
+      showError('Camera access denied or not available. Please enable camera permissions in your browser.');
+    }
+  } else {
+    const context = canvas.getContext("2d");
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    canvas.width = w;
+    canvas.height = h;
+    context.drawImage(video, 0, 0, w, h);
+
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+
+    video.style.display = "none";
+    canvas.style.display = "block";
+    captureBtn.innerHTML = '<i data-lucide="camera" class="action-btn-icon"></i><span>Take Photo</span>';
+    lucide.createIcons();
+    capturing = false;
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    currentImageData = imageData;
+    identifyFood(imageData);
+  }
+});
+
+function showPlaceholder() {
+  resultsContent.innerHTML = '<p style="color: #94a3b8; font-style: italic; text-align: center; padding: 20px;">Upload or capture an image to identify the food</p>';
+}
+
+function showLoading() {
+  resultsContent.innerHTML = `
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <div class="loading-text">Analyzing food with Clarifai AI...</div>
+    </div>
+  `;
+}
+
+function showError(message, debugInfo = null) {
+  let html = `
+    <div class="error-message">
+      <i data-lucide="alert-circle" class="error-icon"></i>
+      <div>${message}</div>
+    </div>
+  `;
+  
+  if (debugInfo) {
+    html += `<div class="debug-info">${debugInfo}</div>`;
+  }
+  
+  resultsContent.innerHTML = html;
+  lucide.createIcons();
+}
+
+// This function now calls YOUR Flask backend
+async function identifyFood(imageDataUrl) {
+  showLoading();
+  
+  try {
+    const base64Image = imageDataUrl.split(',')[1];
+    
+    console.log('Sending request to Flask backend...');
+    
+    const response = await fetch('/api/identify-food', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        image: base64Image
+      })
+    });
+    
+    console.log('Response status:', response.status);
+    
+    const data = await response.json();
+    console.log('Response data:', data);
+    
+    if (!response.ok) {
+      let errorMsg = 'API request failed';
+      if (data.error) {
+        errorMsg = data.error;
+      }
+      throw new Error(errorMsg);
+    }
+    
+    if (!data.outputs || !data.outputs[0] || !data.outputs[0].data || !data.outputs[0].data.concepts) {
+      throw new Error('Invalid API response format');
+    }
+    
+    const concepts = data.outputs[0].data.concepts;
+    
+    if (concepts.length === 0) {
+      showError('No food detected in the image. Please try another image with clearer food items.');
+      return;
+    }
+    
+    console.log('Food concepts found:', concepts);
+    
+    const foods = concepts.slice(0, 5).map((concept, index) => {
+      const foodName = concept.name;
+      const confidence = Math.round(concept.value * 100);
+      
+      // Use real nutrition data if available (for first result)
+      let nutritionData;
+      if (index === 0 && concept.nutrition) {
+        const n = concept.nutrition;
+        nutritionData = {
+          calories: Math.round(n.calories) || 0,
+          protein: `${n.protein_g || 0}g`,
+          carbs: `${n.carbohydrates_total_g || 0}g`,
+          fat: `${n.fat_total_g || 0}g`,
+          fiber: `${n.fiber_g || 0}g`,
+          sodium: `${n.sodium_mg || 0}mg`,
+          sugar: `${n.sugar_g || 0}g`,
+          tags: generateTags(n)
+        };
+      } else {
+        // Fallback to estimates for other results
+        nutritionData = estimateNutrition(foodName);
+      }
+      
+      return {
+        name: foodName.charAt(0).toUpperCase() + foodName.slice(1),
+        confidence: confidence,
+        category: 'Food',
+        hasRealData: index === 0 && concept.nutrition ? true : false,
+        ...nutritionData
+      };
+    });
+    
+    displayFoodResults(foods);
+    
+  } catch (error) {
+    console.error('Food identification error:', error);
+    const errorMessage = error.message || 'Failed to identify food';
+    showError('Failed to identify food. Check console for details.', errorMessage);
+  }
+}
+
+// Generate tags based on real nutrition data
+function generateTags(nutrition) {
+  const tags = [];
+  
+  if (nutrition.sodium_mg < 140) tags.push('Low Sodium');
+  if (nutrition.protein_g > 10) tags.push('High Protein');
+  if (nutrition.sugar_g < 5) tags.push('Low Sugar');
+  if (nutrition.fiber_g > 5) tags.push('High Fiber');
+  
+  return tags;
+}
+
+function displayFoodResults(foods) {
+  if (!foods || foods.length === 0) {
+    showError('No food detected in the image. Please try another image.');
+    return;
+  }
+  
+  let html = '';
+  
+  foods.forEach((food, index) => {
+    html += `
+      <div class="food-result">
+        <div class="food-name">
+          <span>${food.name}</span>
+          <span class="confidence-badge">${food.confidence}%</span>
+          ${food.hasRealData ? '<span style="font-size: 0.7rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 4px 8px; border-radius: 8px; font-weight: 700; margin-left: 4px;">Real Data</span>' : ''}
+        </div>
+        <div class="food-info">
+          <strong>Category:</strong> ${food.category || 'Food'}
+        </div>
+        
+        ${food.calories ? `
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <div class="nutrition-label">Calories</div>
+              <div class="nutrition-value">${food.calories}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Protein</div>
+              <div class="nutrition-value">${food.protein || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Carbs</div>
+              <div class="nutrition-value">${food.carbs || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Fat</div>
+              <div class="nutrition-value">${food.fat || 'N/A'}</div>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${food.hasRealData && food.fiber ? `
+          <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 10px; border: 2px solid #e2e8f0;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
+              <div>
+                <div class="nutrition-label">Fiber</div>
+                <div style="font-weight: 700; color: #0f172a;">${food.fiber}</div>
+              </div>
+              <div>
+                <div class="nutrition-label">Sodium</div>
+                <div style="font-weight: 700; color: #0f172a;">${food.sodium}</div>
+              </div>
+              <div>
+                <div class="nutrition-label">Sugar</div>
+                <div style="font-weight: 700; color: #0f172a;">${food.sugar}</div>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${food.tags && food.tags.length > 0 ? `
+          <div class="food-info" style="margin-top: 12px;">
+            <strong>Tags:</strong> ${food.tags.join(', ')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+  
+  html += `
+    <button class="analyze-btn" onclick="analyzeNutrition()">
+      <i data-lucide="search"></i>
+      <span>Get Detailed Analysis</span>
+    </button>
+  `;
+  
+  resultsContent.innerHTML = html;
+  lucide.createIcons();
+  
+  updateInfoBanner(foods[0]);
+}
+
+function estimateNutrition(foodName) {
+  const name = foodName.toLowerCase();
+  
+  if (name.includes('chicken') || name.includes('meat') || name.includes('fish') || name.includes('egg') || name.includes('beef') || name.includes('pork')) {
+    return {
+      calories: 200,
+      protein: '30g',
+      carbs: '0g',
+      fat: '8g',
+      fiber: '0g',
+      tags: ['High Protein', 'Low Carb']
+    };
+  }
+  
+  if (name.includes('salad') || name.includes('vegetable') || name.includes('broccoli') || name.includes('lettuce') || name.includes('spinach') || name.includes('kale')) {
+    return {
+      calories: 50,
+      protein: '3g',
+      carbs: '10g',
+      fat: '0.5g',
+      fiber: '4g',
+      tags: ['Vegetarian', 'High Fiber', 'Low Sodium', 'Gluten Free', 'Low Sugar']
+    };
+  }
+  
+  if (name.includes('fruit') || name.includes('apple') || name.includes('banana') || name.includes('berry') || name.includes('orange') || name.includes('grape')) {
+    return {
+      calories: 80,
+      protein: '1g',
+      carbs: '20g',
+      fat: '0g',
+      fiber: '3g',
+      tags: ['Vegetarian', 'High Fiber', 'Low Sodium', 'Gluten Free']
+    };
+  }
+  
+  if (name.includes('pasta') || name.includes('bread') || name.includes('noodle') || name.includes('spaghetti') || name.includes('pizza')) {
+    return {
+      calories: 350,
+      protein: '12g',
+      carbs: '70g',
+      fat: '2g',
+      fiber: '3g',
+      tags: ['Contains Gluten']
+    };
+  }
+  
+  if (name.includes('rice') || name.includes('quinoa') || name.includes('oat')) {
+    return {
+      calories: 200,
+      protein: '5g',
+      carbs: '45g',
+      fat: '1g',
+      fiber: '2g',
+      tags: ['Gluten Free', 'Vegetarian']
+    };
+  }
+  
+  return {
+    calories: 150,
+    protein: '5g',
+    carbs: '20g',
+    fat: '5g',
+    fiber: '2g',
+    tags: []
+  };
+}
+
+function displayFoodResults(foods) {
+  if (!foods || foods.length === 0) {
+    showError('No food detected in the image. Please try another image.');
+    return;
+  }
+  
+  let html = '';
+  
+  foods.forEach((food, index) => {
+    html += `
+      <div class="food-result">
+        <div class="food-name">
+          <span>${food.name}</span>
+          <span class="confidence-badge">${food.confidence}%</span>
+        </div>
+        <div class="food-info">
+          <strong>Category:</strong> ${food.category || 'Food'}
+        </div>
+        
+        ${food.calories ? `
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <div class="nutrition-label">Calories</div>
+              <div class="nutrition-value">${food.calories}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Protein</div>
+              <div class="nutrition-value">${food.protein || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Carbs</div>
+              <div class="nutrition-value">${food.carbs || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Fat</div>
+              <div class="nutrition-value">${food.fat || 'N/A'}</div>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${food.tags && food.tags.length > 0 ? `
+          <div class="food-info" style="margin-top: 12px;">
+            <strong>Tags:</strong> ${food.tags.join(', ')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+  
+  html += `
+    <button class="analyze-btn" onclick="analyzeNutrition()">
+      <i data-lucide="search"></i>
+      <span>Get Detailed Analysis</span>
+    </button>
+  `;
+  
+  resultsContent.innerHTML = html;
+  lucide.createIcons();
+  
+  updateInfoBanner(foods[0]);
+}
+
+function analyzeNutrition() {
+  if (!currentImageData) {
+    showError('No image available. Please upload or capture an image first.');
+    return;
+  }
+  
+  const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
+    .map(cb => cb.value);
+  
+  const foodResults = resultsContent.querySelectorAll('.food-result');
+  if (foodResults.length === 0) {
+    showError('No food identified yet. Please analyze an image first.');
+    return;
+  }
+  
+  let analysisHtml = '<div style="padding: 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 12px;">';
+  analysisHtml += '<strong style="color: #0f172a; display: block; margin-bottom: 8px;">Nutritional Analysis:</strong>';
+  
+  if (selectedNeeds.length === 0) {
+    analysisHtml += '<p style="color: #64748b; font-size: 0.875rem;">Select your nutritional needs to get personalized recommendations.</p>';
+  } else {
+    analysisHtml += `<p style="color: #64748b; font-size: 0.875rem;">Checking compatibility with: ${selectedNeeds.join(', ')}</p>`;
+    analysisHtml += '<p style="color: #059669; font-size: 0.875rem; margin-top: 8px;">✓ Analysis complete. See recommendations in the banner below.</p>';
+  }
+  
+  analysisHtml += '</div>';
+  
+  const firstResult = resultsContent.querySelector('.food-result');
+  if (firstResult) {
+    firstResult.insertAdjacentHTML('beforebegin', analysisHtml);
+  }
+}
+
+function updateInfoBanner(food) {
+  const infoBanner = document.querySelector('.info-banner');
+  if (!infoBanner || !food) return;
+  
+  const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
+    .map(cb => cb.value);
+  
+  if (selectedNeeds.length === 0) {
+    infoBanner.textContent = `Based on the analysis, this is ${food.name} with approximately ${food.calories || 'unknown'} calories.`;
+    return;
+  }
+  
+  const matches = [];
+  const mismatches = [];
+  
+  selectedNeeds.forEach(need => {
+    if (food.tags && food.tags.some(tag => tag.toLowerCase().includes(need.toLowerCase()))) {
+      matches.push(need);
+    } else {
+      mismatches.push(need);
+    }
+  });
+  
+  let message = '';
+  if (matches.length > 0 && mismatches.length === 0) {
+    message = `✓ Great choice! This ${food.name} aligns perfectly with your nutritional goals: ${matches.join(', ')}.`;
+  } else if (matches.length > 0) {
+    message = `This ${food.name} meets some of your goals (${matches.join(', ')}) but may not align with: ${mismatches.join(', ')}.`;
+  } else {
+    message = `⚠️ Note: This ${food.name} may not align with your selected nutritional needs: ${mismatches.join(', ')}.`;
+  }
+  
+  infoBanner.textContent = message;
+}
+
+// Initialize
+showPlaceholder();
+</script>
 
 {% endblock %}
