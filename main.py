@@ -27,7 +27,7 @@ def reminder():
     return render_template("reminders.html")
     
     
-@app.route('/api/identify-food', methods=['POST'])
+@app.route('upload', methods=['POST'])
 def identify_food():
     try:
         data = request.json
