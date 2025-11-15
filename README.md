@@ -4,29 +4,14 @@ You can access the website at [rbhs-aiep.onrender.com](https://rbhs-aiep.onrende
 
 ## 🚀 Deployment
 
-### ✅ NOW WORKS ON NETLIFY!
-
-**Want to deploy on Netlify?** We've made it work! 🎉
-
-#### Quick Start (5 minutes):
-```bash
-cd netlify-deploy
-bash deploy.sh
-```
-
-See [QUICK_START.md](QUICK_START.md) or [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) for full instructions.
+### ⚠️ About Netlify
+**Important:** This Flask application **cannot be deployed directly on Netlify** because Netlify is designed for static sites and serverless functions, not full Python web applications like Flask.
 
 ### Current Deployment: Render ✅
-This app is currently deployed on **Render**, which works great for Flask applications.
-
-### Netlify Deployment (NEW!)
-- **Option 1 (Hybrid):** Frontend on Netlify + Backend on Render
-- **Option 2 (Full):** Everything on Netlify with serverless functions
-- See `netlify-deploy/` folder for the Netlify-ready version
+This app is currently deployed on **Render**, which is the recommended platform for Flask applications.
 
 ### Alternative Deployment Options
 See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions on deploying to:
-- ✅ **Netlify** (static + hybrid - NEW!)
 - ✅ **Render** (current - recommended)
 - **Railway** (easy alternative)
 - **Fly.io** (production-ready)
