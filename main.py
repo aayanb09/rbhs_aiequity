@@ -1,18 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from flask_cors import CORS
 import os
 import base64
 import requests
 import google.generativeai as genai
 
 app = Flask(__name__)
-app.secret_key = "password"
-
-# Enable CORS for Netlify frontend
-CORS(app, resources={
-    r"/upload": {"origins": "*"},  # Allow all origins for now
-    r"/api/*": {"origins": "*"}
-}) 
+app.secret_key = "password" 
 
 # Set up API keys
 CLARIFAI_PAT = os.environ.get("CLARIFAI_PAT")
