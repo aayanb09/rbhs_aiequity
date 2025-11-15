@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: rbhs-aiep
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: CLARIFAI_PAT
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false

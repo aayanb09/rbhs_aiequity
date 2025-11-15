@@ -1,0 +1,17 @@
+{
+  "name": "rbhs-aiep-netlify",
+  "version": "1.0.0",
+  "description": "RBHS AIEP on Netlify - Static frontend with API backend",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'Build complete'",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.4.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

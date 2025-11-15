@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>GlycoGenie</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+ <!-- CRITICAL: Apply theme BEFORE anything else loads to prevent flash -->
+ <script>
+   (function() {
+     try {
+       var settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+       var isDark = settings.theme === 'dark' || (settings.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+       if (isDark) {
+         document.documentElement.classList.add('dark-theme');
+       }
+       if (settings.compactMode) {
+         document.documentElement.classList.add('compact-mode');
+       }
+     } catch(e) {}
+   })();
+ </script>
+ 
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+ <script src="https://unpkg.com/lucide@latest"></script>
+ <style>
+   :root {
+     --bg-primary: #f8fafc;
+     --bg-secondary: #ffffff;
+     --text-primary: #0f172a;
+     --text-secondary: #475569;
+     --border-color: #e2e8f0;
+   }
+   
+   * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+   }
+   
+   body { 
+     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+     color: #0f172a; 
+     margin: 0;
+     min-height: 100vh;
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+     transition: background-color 0.3s ease, color 0.3s ease;
+   }
+   
+   /* Menu Toggle Button */
+   .menu-toggle {
+     position: fixed;
+     left: 24px;
+     top: 24px;
+     width: 52px;
+     height: 52px;
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+     border: none;
+     border-radius: 14px;
+     cursor: pointer;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     gap: 5px;
+     z-index: 1001;
+     box-shadow: 0 8px 24px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .menu-toggle:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 12px 32px rgba(30, 64, 175, 0.35), 0 4px 12px rgba(0, 0, 0, 0.15);
+   }
+   
+   .menu-toggle:active {
+     transform: translateY(0);
+   }
+   
+   .menu-toggle span {
+     width: 26px;
+     height: 3px;
+     background: white;
+     border-radius: 3px;
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .menu-toggle.active span:nth-child(1) {
+     transform: rotate(45deg) translate(7px, 7px);
+   }
+   
+   .menu-toggle.active span:nth-child(2) {
+     opacity: 0;
+     transform: translateX(-10px);
+   }
+   
+   .menu-toggle.active span:nth-child(3) {
+     transform: rotate(-45deg) translate(7px, -7px);
+   }
+   
+   /* Sidebar Navigation */
+   .sidebar {
+     position: fixed;
+     left: -280px;
+     top: 0;
+     width: 280px;
+     height: 100vh;
+     background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+     padding: 28px 20px;
+     display: flex;
+     flex-direction: column;
+     box-shadow: 8px 0 32px rgba(30, 64, 175, 0.15);
+     z-index: 1000;
+     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+     overflow-y: auto;
+   }
+   
+   .sidebar.open {
+     left: 0;
+   }
+   
+   /* Overlay for mobile */
+   .sidebar-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0, 0, 0, 0.6);
+     z-index: 999;
+     opacity: 0;
+     visibility: hidden;
+     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+     backdrop-filter: blur(4px);
+   }
+   
+   .sidebar-overlay.active {
+     opacity: 1;
+     visibility: visible;
+   }
+   
+   .logo-container {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     margin-bottom: 36px;
+     padding-bottom: 28px;
+     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+   }
+   
+   .logo {
+     max-width: 88px;
+     height: auto;
+     border-radius: 18px;
+     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+     margin-bottom: 14px;
+     transition: transform 0.3s ease;
+   }
+   
+   .logo:hover {
+     transform: scale(1.05);
+   }
+   
+   .app-title {
+     color: white;
+     font-size: 1.625rem;
+     font-weight: 800;
+     text-align: center;
+     letter-spacing: -0.03em;
+   }
+   
+   .nav-links {
+     display: flex;
+     flex-direction: column;
+     gap: 8px;
+     flex: 1;
+   }
+   
+   .nav-links a {
+     color: rgba(255, 255, 255, 0.85);
+     text-decoration: none;
+     padding: 14px 18px;
+     border-radius: 12px;
+     font-weight: 500;
+     font-size: 0.9875rem;
+     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+     display: flex;
+     align-items: center;
+     gap: 14px;
+     background: transparent;
+     position: relative;
+     overflow: hidden;
+   }
+   
+   .nav-links a::before {
+     content: '';
+     position: absolute;
+     left: 0;
+     top: 50%;
+     transform: translateY(-50%);
+     width: 4px;
+     height: 0;
+     background: white;
+     border-radius: 0 3px 3px 0;
+     transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   .nav-links a::after {
+     content: '';
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+     opacity: 0;
+     transition: opacity 0.25s ease;
+   }
+   
+   .nav-links a:hover {
+     background: rgba(255, 255, 255, 0.12);
+     color: white;
+     transform: translateX(4px);
+   }
+   
+   .nav-links a:hover::before {
+     height: 28px;
+   }
+   
+   .nav-links a:hover::after {
+     opacity: 1;
+   }
+   
+   .nav-links a.active {
+     background: rgba(255, 255, 255, 0.18);
+     color: white;
+     font-weight: 600;
+   }
+   
+   .nav-links a.active::before {
+     height: 28px;
+   }
+   
+   .nav-icon {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     width: 22px;
+     height: 22px;
+     position: relative;
+     z-index: 1;
+   }
+   
+   /* Main Content Area */
+   .content { 
+     margin-left: 0;
+     padding: 0;
+     min-height: 100vh;
+     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   /* Compact Mode */
+   body.compact-mode .sidebar {
+     padding: 20px 16px;
+   }
+   
+   body.compact-mode .logo-container {
+     margin-bottom: 24px;
+     padding-bottom: 20px;
+   }
+   
+   body.compact-mode .logo {
+     max-width: 72px;
+   }
+   
+   body.compact-mode .app-title {
+     font-size: 1.375rem;
+   }
+   
+   body.compact-mode .nav-links {
+     gap: 6px;
+   }
+   
+   body.compact-mode .nav-links a {
+     padding: 11px 14px;
+     font-size: 0.9375rem;
+   }
+   
+   /* Mobile Responsive */
+   @media (max-width: 768px) {
+     .menu-toggle {
+       left: 20px;
+       top: 20px;
+       width: 48px;
+       height: 48px;
+     }
+     
+     .logo-container {
+       flex-direction: row;
+       padding-bottom: 0;
+       border-bottom: none;
+       margin-bottom: 20px;
+       gap: 12px;
+     }
+     
+     .logo {
+       max-width: 52px;
+       margin-bottom: 0;
+     }
+     
+     .app-title {
+       font-size: 1.375rem;
+     }
+   }
+   
+   /* ========== DARK THEME - HIGH PRIORITY OVERRIDES ========== */
+   html.dark-theme,
+   html.dark-theme body,
+   body.dark-theme {
+     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .sidebar,
+   body.dark-theme .sidebar {
+     background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+   }
+   
+   html.dark-theme .menu-toggle,
+   body.dark-theme .menu-toggle {
+     background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+   }
+   
+   /* Dark theme for page containers */
+   html.dark-theme .home-container,
+   html.dark-theme .symptom-container,
+   html.dark-theme .reminders-container,
+   html.dark-theme .upload-container,
+   html.dark-theme .glucose-container,
+   html.dark-theme .settings-container,
+   body.dark-theme .home-container,
+   body.dark-theme .symptom-container,
+   body.dark-theme .reminders-container,
+   body.dark-theme .upload-container,
+   body.dark-theme .glucose-container,
+   body.dark-theme .settings-container {
+     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+   }
+   
+   html.dark-theme .home-container::before,
+   html.dark-theme .symptom-container::before,
+   html.dark-theme .reminders-container::before,
+   html.dark-theme .upload-container::before,
+   html.dark-theme .glucose-container::before,
+   html.dark-theme .settings-container::before,
+   body.dark-theme .home-container::before,
+   body.dark-theme .symptom-container::before,
+   body.dark-theme .reminders-container::before,
+   body.dark-theme .upload-container::before,
+   body.dark-theme .glucose-container::before,
+   body.dark-theme .settings-container::before {
+     background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                 radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 50%) !important;
+   }
+   
+   /* Dark theme for cards and sections */
+   html.dark-theme .page-header,
+   html.dark-theme .symptom-form,
+   html.dark-theme .widget,
+   html.dark-theme .action-card,
+   html.dark-theme .card,
+   html.dark-theme .side-panel,
+   html.dark-theme .info-banner,
+   html.dark-theme .stat-card,
+   html.dark-theme .calendar,
+   html.dark-theme .settings-section,
+   body.dark-theme .page-header,
+   body.dark-theme .symptom-form,
+   body.dark-theme .widget,
+   body.dark-theme .action-card,
+   body.dark-theme .card,
+   body.dark-theme .side-panel,
+   body.dark-theme .info-banner,
+   body.dark-theme .stat-card,
+   body.dark-theme .calendar,
+   body.dark-theme .settings-section {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+     color: #f8fafc !important;
+   }
+   
+   /* Dark theme for SYMPTOM HISTORY - IMPROVED READABILITY */
+   html.dark-theme .history-item,
+   body.dark-theme .history-item {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     border-left-color: #60a5fa !important;
+   }
+   
+   html.dark-theme .history-date,
+   body.dark-theme .history-date {
+     color: #60a5fa !important;
+   }
+   
+   html.dark-theme .history-detail,
+   body.dark-theme .history-detail {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .history-detail strong,
+   body.dark-theme .history-detail strong {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .modal-content,
+   body.dark-theme .modal-content {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .modal-title,
+   body.dark-theme .modal-title {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .close-btn,
+   body.dark-theme .close-btn {
+     background: #334155 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .close-btn:hover,
+   body.dark-theme .close-btn:hover {
+     background: #475569 !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .empty-state,
+   body.dark-theme .empty-state {
+     color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for calendar */
+   html.dark-theme .calendar th,
+   body.dark-theme .calendar th {
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+   }
+   
+   html.dark-theme .calendar td,
+   body.dark-theme .calendar td {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .calendar td:hover,
+   body.dark-theme .calendar td:hover {
+     background: #334155 !important;
+   }
+   
+   /* Dark theme for text elements */
+   html.dark-theme .hero-title,
+   html.dark-theme .hero-subtitle,
+   html.dark-theme .page-header h1,
+   html.dark-theme .section-title,
+   html.dark-theme .card-title,
+   html.dark-theme .setting-label,
+   html.dark-theme .action-text,
+   html.dark-theme .widget-title,
+   html.dark-theme .item-label,
+   html.dark-theme .form-label,
+   html.dark-theme .stat-value,
+   html.dark-theme .panel-title,
+   body.dark-theme .hero-title,
+   body.dark-theme .hero-subtitle,
+   body.dark-theme .page-header h1,
+   body.dark-theme .section-title,
+   body.dark-theme .card-title,
+   body.dark-theme .setting-label,
+   body.dark-theme .action-text,
+   body.dark-theme .widget-title,
+   body.dark-theme .item-label,
+   body.dark-theme .form-label,
+   body.dark-theme .stat-value,
+   body.dark-theme .panel-title {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .hero-description,
+   html.dark-theme .setting-description,
+   html.dark-theme .widget-content,
+   html.dark-theme .item-value,
+   html.dark-theme .info-banner,
+   html.dark-theme .stat-label,
+   html.dark-theme .placeholder,
+   body.dark-theme .hero-description,
+   body.dark-theme .setting-description,
+   body.dark-theme .widget-content,
+   body.dark-theme .item-value,
+   body.dark-theme .info-banner,
+   body.dark-theme .stat-label,
+   body.dark-theme .placeholder {
+     color: #cbd5e1 !important;
+   }
+   
+   /* Dark theme for inputs */
+   html.dark-theme input,
+   html.dark-theme textarea,
+   html.dark-theme select,
+   html.dark-theme .form-textarea,
+   html.dark-theme .form-input,
+   html.dark-theme .form-select,
+   html.dark-theme .settings-input,
+   html.dark-theme .settings-select,
+   body.dark-theme input,
+   body.dark-theme textarea,
+   body.dark-theme select,
+   body.dark-theme .form-textarea,
+   body.dark-theme .form-input,
+   body.dark-theme .form-select,
+   body.dark-theme .settings-input,
+   body.dark-theme .settings-select {
+     background: #0f172a !important;
+     color: #f8fafc !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme input:focus,
+   html.dark-theme textarea:focus,
+   html.dark-theme select:focus,
+   body.dark-theme input:focus,
+   body.dark-theme textarea:focus,
+   body.dark-theme select:focus {
+     border-color: #3b82f6 !important;
+   }
+   
+   /* Dark theme for buttons */
+   html.dark-theme .emoji-btn,
+   html.dark-theme .yn-btn,
+   body.dark-theme .emoji-btn,
+   body.dark-theme .yn-btn {
+     background: #334155 !important;
+     border-color: #475569 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .emoji-btn:hover,
+   html.dark-theme .yn-btn:hover,
+   body.dark-theme .emoji-btn:hover,
+   body.dark-theme .yn-btn:hover {
+     background: #475569 !important;
+   }
+   
+   html.dark-theme .emoji-btn svg,
+   html.dark-theme .yn-btn svg,
+   html.dark-theme .emoji-btn-label,
+   body.dark-theme .emoji-btn svg,
+   body.dark-theme .yn-btn svg,
+   body.dark-theme .emoji-btn-label {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .emoji-btn.selected,
+   html.dark-theme .yn-btn.selected,
+   body.dark-theme .emoji-btn.selected,
+   body.dark-theme .yn-btn.selected {
+     background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%) !important;
+     border-color: #3b82f6 !important;
+     color: #dbeafe !important;
+   }
+   
+   html.dark-theme .emoji-btn.selected svg,
+   html.dark-theme .yn-btn.selected svg,
+   html.dark-theme .emoji-btn.selected .emoji-btn-label,
+   body.dark-theme .emoji-btn.selected svg,
+   body.dark-theme .yn-btn.selected svg,
+   body.dark-theme .emoji-btn.selected .emoji-btn-label {
+     color: #dbeafe !important;
+   }
+   
+   /* Dark theme for events and items */
+   html.dark-theme .event,
+   html.dark-theme .symptom-item,
+   html.dark-theme .reminder-item,
+   html.dark-theme .log-item,
+   html.dark-theme .stat-box,
+   html.dark-theme .prediction-result,
+   body.dark-theme .event,
+   body.dark-theme .symptom-item,
+   body.dark-theme .reminder-item,
+   body.dark-theme .log-item,
+   body.dark-theme .stat-box,
+   body.dark-theme .prediction-result {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     color: #dbeafe !important;
+   }
+   
+   html.dark-theme .log-time,
+   html.dark-theme .prediction-title,
+   html.dark-theme .prediction-value,
+   body.dark-theme .log-time,
+   body.dark-theme .prediction-title,
+   body.dark-theme .prediction-value {
+     color: #60a5fa !important;
+   }
+   
+   html.dark-theme .log-details,
+   html.dark-theme .prediction-details,
+   body.dark-theme .log-details,
+   body.dark-theme .prediction-details {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .widget-empty,
+   body.dark-theme .widget-empty {
+     background: #0f172a !important;
+     color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for checkbox labels */
+   html.dark-theme .checkbox-label,
+   body.dark-theme .checkbox-label {
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .checkbox-label:hover,
+   body.dark-theme .checkbox-label:hover {
+     background: #334155 !important;
+   }
+   
+   /* Dark theme for results */
+   html.dark-theme .results-list li,
+   body.dark-theme .results-list li {
+     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+     color: #cbd5e1 !important;
+   }
+   
+   /* Dark theme for month tabs */
+   html.dark-theme .month-tabs,
+   body.dark-theme .month-tabs {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme .month-tabs button,
+   body.dark-theme .month-tabs button {
+     background: #334155 !important;
+     color: #cbd5e1 !important;
+   }
+   
+   html.dark-theme .month-tabs button.active,
+   html.dark-theme .month-tabs button:hover,
+   body.dark-theme .month-tabs button.active,
+   body.dark-theme .month-tabs button:hover {
+     background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%) !important;
+     color: #dbeafe !important;
+   }
+   
+   /* Dark theme for display area */
+   html.dark-theme .display-area,
+   body.dark-theme .display-area {
+     background: linear-gradient(135deg, #0f172a 0%, #000000 100%) !important;
+     border-color: #334155 !important;
+   }
+   
+   /* Dark theme for date elements */
+   html.dark-theme .date,
+   body.dark-theme .date {
+     color: #94a3b8 !important;
+   }
+   
+   /* Dark theme for action buttons */
+   html.dark-theme .action-btn,
+   body.dark-theme .action-btn {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme .action-btn:hover,
+   body.dark-theme .action-btn:hover {
+     border-color: #3b82f6 !important;
+   }
+ </style>
+  <script src="/config.js"></script>
+</head>
+<body>
+ <!-- Menu Toggle Button -->
+ <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+   <span></span>
+   <span></span>
+   <span></span>
+ </button>
+
+ <!-- Overlay -->
+ <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+ <div class="sidebar" id="sidebar">
+   <div class="logo-container">
+     <a href="/home">
+       <img src="" alt="Logo" class="logo">
+     </a>
+     <div class="app-title">GlycoGenie</div>
+   </div>
+   
+   <div class="nav-links">
+     <a href="/home" class="active">
+       <span class="nav-icon"><i data-lucide="home"></i></span>
+       <span>Home</span>
+     </a>
+     <a href="/glucose" class="active">
+       <span class="nav-icon"><i data-lucide="activity"></i></span>
+       <span>Glucose Tracker</span>
+     </a>
+     <a href="/symptomTracker" class="active">
+       <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
+       <span>Track Symptoms</span>
+     </a>
+     <a href="/reminders" class="active">
+       <span class="nav-icon"><i data-lucide="bell"></i></span>
+       <span>Reminders</span>
+     </a>
+     <a href="/upload" class="active">
+       <span class="nav-icon"><i data-lucide="upload"></i></span>
+       <span>Upload Food</span>
+     </a>
+     <a href="/settings" class="active">
+       <span class="nav-icon"><i data-lucide="settings"></i></span>
+       <span>Settings</span>
+     </a>
+   </div>
+ </div>
+ 
+ <div class="content">
+   
+
+<style>
+.reminders-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  padding: 48px;
+  position: relative;
+}
+
+.reminders-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.page-header {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #0f172a;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInDown 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 36px;
+  height: 36px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.25);
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-btn:hover {
+  transform: translateY(-3px) rotate(90deg);
+  box-shadow: 0 12px 28px rgba(30, 64, 175, 0.35);
+}
+
+.add-btn:active {
+  transform: translateY(-1px) rotate(90deg);
+}
+
+.add-btn-icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.5;
+}
+
+.month-tabs {
+  display: flex;
+  justify-content: center;
+  background: white;
+  padding: 14px;
+  border-radius: 16px;
+  margin: 0 auto 40px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  gap: 10px;
+  max-width: 1400px;
+  border: 2px solid #e2e8f0;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease 0.1s backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.month-tabs button {
+  background: #f8fafc;
+  border: 2px solid transparent;
+  margin: 0;
+  padding: 11px 22px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.month-tabs button.active,
+.month-tabs button:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.calendar-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 0 48px 0;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.5s ease 0.2s backwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+table.calendar {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  background-color: white;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+
+.calendar th,
+.calendar td {
+  border: 1px solid #e2e8f0;
+  width: 14.28%;
+  height: 140px;
+  vertical-align: top;
+  padding: 14px;
+  position: relative;
+}
+
+.calendar th {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  text-align: center;
+  font-size: 1rem;
+  color: white;
+  font-weight: 700;
+  padding: 18px;
+  border: none;
+  letter-spacing: 0.02em;
+}
+
+.calendar td {
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.calendar td:hover {
+  background: #f8fafc;
+}
+
+.date {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.today-marker {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.event {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  margin-top: 7px;
+  display: block;
+  text-align: left;
+  border-left: 4px solid #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.event:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 520px;
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #e2e8f0;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-content h3 {
+  color: #0f172a;
+  margin-bottom: 28px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.modal-content label {
+  display: block;
+  font-weight: 700;
+  color: #475569;
+  margin-top: 18px;
+  margin-bottom: 10px;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  margin: 0 0 14px 0;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.modal-content textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+  letter-spacing: -0.01em;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+}
+
+.reminder-detail {
+  margin: 18px 0;
+}
+
+.reminder-detail strong {
+  color: #475569;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.reminder-detail-value {
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border-left: 4px solid #3b82f6;
+  color: #0f172a;
+  font-size: 0.9875rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .reminders-container {
+    padding: 32px 24px;
+  }
+
+  .page-header {
+    padding: 28px 24px;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .calendar th,
+  .calendar td {
+    height: 100px;
+    padding: 10px;
+    font-size: 0.875rem;
+  }
+
+  .event {
+    font-size: 0.75rem;
+    padding: 6px 8px;
+  }
+
+  .month-tabs {
+    padding: 10px;
+  }
+
+  .month-tabs button {
+    padding: 10px 16px;
+    font-size: 0.875rem;
+  }
+
+  .modal-content {
+    padding: 32px 24px;
+  }
+}
+</style>
+
+<div class="reminders-container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <i data-lucide="calendar" class="page-header-icon"></i>
+      <h1>Calendar & Reminders</h1>
+    </div>
+    <button class="add-btn" id="addReminderBtn">
+      <i data-lucide="plus" class="add-btn-icon"></i>
+    </button>
+  </div>
+
+  <div class="month-tabs" id="monthTabs"></div>
+
+  <div class="calendar-wrapper">
+    <table class="calendar">
+      <thead>
+        <tr>
+          <th>Sunday</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+        </tr>
+      </thead>
+      <tbody id="calendarBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Add/Edit Reminder Modal -->
+  <div class="modal" id="popupForm">
+    <div class="modal-content">
+      <h3 id="popupTitle">Create Reminder</h3>
+      <label for="reminderTitle">Title *</label>
+      <input type="text" id="reminderTitle" placeholder="e.g., Take medication">
+      
+      <label for="reminderDate">Date *</label>
+      <input type="date" id="reminderDate">
+      
+      <label for="reminderTime">Time</label>
+      <input type="time" id="reminderTime">
+      
+      <label for="reminderNote">Notes</label>
+      <textarea id="reminderNote" placeholder="Add any additional notes..."></textarea>
+      
+      <div class="button-group">
+        <button class="btn" id="saveReminder">Save</button>
+        <button class="btn btn-secondary" id="closePopup">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Reminder Modal -->
+  <div class="modal" id="viewReminderPopup">
+    <div class="modal-content">
+      <h3>Reminder Details</h3>
+      <div id="reminderDetails"></div>
+      <div class="button-group">
+        <button class="btn" id="editReminderBtn">Edit</button>
+        <button class="btn btn-danger" id="deleteReminderBtn">Delete</button>
+        <button class="btn btn-secondary" id="closeViewPopup">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let editingReminderId = null;
+let viewingReminderId = null;
+
+const monthTabs = document.getElementById("monthTabs");
+const calendarBody = document.getElementById("calendarBody");
+const popup = document.getElementById("popupForm");
+const viewPopup = document.getElementById("viewReminderPopup");
+const addBtn = document.getElementById("addReminderBtn");
+const closePopup = document.getElementById("closePopup");
+const closeViewPopup = document.getElementById("closeViewPopup");
+const saveReminder = document.getElementById("saveReminder");
+const editReminderBtn = document.getElementById("editReminderBtn");
+const deleteReminderBtn = document.getElementById("deleteReminderBtn");
+
+function generateId() {
+  return 'reminder_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function getTodayDate() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function formatTime(time24) {
+  if (!time24) return '';
+  const [hourStr, minStr] = time24.split(':');
+  let hour = parseInt(hourStr);
+  const min = minStr;
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  if (hour === 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  return `${hour}:${min} ${ampm}`;
+}
+
+addBtn.onclick = () => {
+  editingReminderId = null;
+  document.getElementById("popupTitle").textContent = "Create Reminder";
+  document.getElementById("reminderTitle").value = "";
+  document.getElementById("reminderDate").value = "";
+  document.getElementById("reminderTime").value = "";
+  document.getElementById("reminderNote").value = "";
+  popup.style.display = "flex";
+};
+
+closePopup.onclick = () => {
+  popup.style.display = "none";
+  editingReminderId = null;
+};
+
+closeViewPopup.onclick = () => {
+  viewPopup.style.display = "none";
+  viewingReminderId = null;
+};
+
+monthNames.forEach((month, index) => {
+  const btn = document.createElement("button");
+  btn.textContent = month;
+  btn.classList.toggle("active", index === currentMonth);
+  btn.onclick = () => {
+    currentMonth = index;
+    renderCalendar();
+    document.querySelectorAll(".month-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  };
+  monthTabs.appendChild(btn);
+});
+
+function renderCalendar() {
+  calendarBody.innerHTML = "";
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  const startDay = firstDay.getDay();
+  const totalDays = lastDay.getDate();
+  const today = getTodayDate();
+
+  let date = 1;
+  for (let i = 0; i < 6; i++) {
+    const row = document.createElement("tr");
+    for (let j = 0; j < 7; j++) {
+      const cell = document.createElement("td");
+      if (i === 0 && j < startDay) {
+        cell.innerHTML = "";
+      } else if (date > totalDays) {
+        break;
+      } else {
+        const fullDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+        
+        if (fullDate === today) {
+          cell.innerHTML = `<div class="today-marker">${date}</div>`;
+        } else {
+          cell.innerHTML = `<div class="date">${date}</div>`;
+        }
+
+        const reminders = JSON.parse(localStorage.getItem("reminders") || "[]").filter(r => r.date === fullDate);
+        
+        reminders.forEach(reminder => {
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event";
+          let eventText = reminder.title;
+          if (reminder.time) {
+            eventText += ` (${formatTime(reminder.time)})`;
+          }
+          eventDiv.textContent = eventText;
+          eventDiv.onclick = () => viewReminder(reminder.id);
+          cell.appendChild(eventDiv);
+        });
+        
+        date++;
+      }
+      row.appendChild(cell);
+    }
+    calendarBody.appendChild(row);
+    if (date > totalDays) break;
+  }
+}
+
+saveReminder.onclick = () => {
+  const title = document.getElementById("reminderTitle").value.trim();
+  const date = document.getElementById("reminderDate").value;
+  const time = document.getElementById("reminderTime").value;
+  const note = document.getElementById("reminderNote").value.trim();
+
+  if (!title || !date) {
+    showAlert('Please enter both a title and date for your reminder.', 'warning', 'Missing Information');
+    return;
+  }
+
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  
+  if (editingReminderId) {
+    const index = reminders.findIndex(r => r.id === editingReminderId);
+    if (index !== -1) {
+      reminders[index] = { id: editingReminderId, title, date, time, note };
+    }
+  } else {
+    reminders.push({ id: generateId(), title, date, time, note });
+  }
+  
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+  popup.style.display = "none";
+  editingReminderId = null;
+  renderCalendar();
+  window.dispatchEvent(new Event('storage'));
+};
+
+function viewReminder(reminderId) {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminder = reminders.find(r => r.id === reminderId);
+  
+  if (!reminder) return;
+  
+  viewingReminderId = reminderId;
+  
+  let detailsHTML = `
+    <div class="reminder-detail">
+      <strong>Title</strong>
+      <div class="reminder-detail-value">${reminder.title}</div>
+    </div>
+    <div class="reminder-detail">
+      <strong>Date</strong>
+      <div class="reminder-detail-value">${new Date(reminder.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    </div>
+  `;
+  
+  if (reminder.time) {
+    detailsHTML += `
+      <div class="reminder-detail">
+        <strong>Time</strong>
+        <div class="reminder-detail-value">${formatTime(reminder.time)}</div>
+      </div>
+    `;
+  }
+  
+  if (reminder.note) {
+    detailsHTML += `
+      <div class="reminder-detail">
+        <strong>Notes</strong>
+        <div class="reminder-detail-value">${reminder.note}</div>
+      </div>
+    `;
+  }
+  
+  document.getElementById("reminderDetails").innerHTML = detailsHTML;
+  viewPopup.style.display = "flex";
+}
+
+editReminderBtn.onclick = () => {
+  const reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  const reminder = reminders.find(r => r.id === viewingReminderId);
+  
+  if (!reminder) return;
+  
+  editingReminderId = viewingReminderId;
+  document.getElementById("popupTitle").textContent = "Edit Reminder";
+  document.getElementById("reminderTitle").value = reminder.title;
+  document.getElementById("reminderDate").value = reminder.date;
+  document.getElementById("reminderTime").value = reminder.time || "";
+  document.getElementById("reminderNote").value = reminder.note || "";
+  
+  viewPopup.style.display = "none";
+  popup.style.display = "flex";
+};
+
+deleteReminderBtn.onclick = async () => {
+  const confirmed = await showConfirm({
+    title: 'Delete Reminder?',
+    message: 'Are you sure you want to delete this reminder? This action cannot be undone.',
+    type: 'warning',
+    icon: '<i data-lucide="trash-2" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+    confirmText: 'Delete',
+    confirmType: 'danger',
+    cancelText: 'Cancel'
+  });
+  
+  if (!confirmed) return;
+  
+  let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+  reminders = reminders.filter(r => r.id !== viewingReminderId);
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+  
+  viewPopup.style.display = "none";
+  viewingReminderId = null;
+  renderCalendar();
+  window.dispatchEvent(new Event('storage'));
+  
+  showAlert('Reminder deleted successfully.', 'success', 'Reminder Deleted');
+};
+
+popup.onclick = (e) => {
+  if (e.target === popup) {
+    popup.style.display = "none";
+    editingReminderId = null;
+  }
+};
+
+viewPopup.onclick = (e) => {
+  if (e.target === viewPopup) {
+    viewPopup.style.display = "none";
+    viewingReminderId = null;
+  }
+};
+
+renderCalendar();
+</script>
+
+
+ </div>
+
+ <!-- Custom Notification Modal -->
+ <div id="customNotificationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;">
+   <div id="customNotificationContent" style="background: white; padding: 40px; border-radius: 24px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%; animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #e2e8f0; text-align: center;">
+     <div id="customNotificationIcon" style="margin: 0 auto 20px; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"></div>
+     <h3 id="customNotificationTitle" style="color: #0f172a; margin-bottom: 16px; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;"></h3>
+     <p id="customNotificationMessage" style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 28px; font-weight: 500;"></p>
+     <div id="customNotificationButtons" style="display: flex; gap: 12px; justify-content: center;"></div>
+   </div>
+ </div>
+
+ <style>
+   @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+   }
+   
+   @keyframes scaleIn {
+     from {
+       opacity: 0;
+       transform: scale(0.9);
+     }
+     to {
+       opacity: 1;
+       transform: scale(1);
+     }
+   }
+   
+   .notification-btn {
+     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+     color: white;
+     border: none;
+     padding: 14px 32px;
+     border-radius: 12px;
+     cursor: pointer;
+     font-weight: 700;
+     font-size: 0.9375rem;
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+     letter-spacing: -0.01em;
+     font-family: 'Inter', sans-serif;
+   }
+   
+   .notification-btn:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 8px 20px rgba(30, 64, 175, 0.35);
+   }
+   
+   .notification-btn:active {
+     transform: translateY(0);
+   }
+   
+   .notification-btn-secondary {
+     background: #f1f5f9;
+     color: #475569;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+   }
+   
+   .notification-btn-secondary:hover {
+     background: #e2e8f0;
+     color: #1e293b;
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+   }
+   
+   .notification-btn-danger {
+     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+     color: white;
+     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+   }
+   
+   .notification-btn-danger:hover {
+     box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+   }
+   
+   /* Dark theme support */
+   html.dark-theme #customNotificationContent,
+   body.dark-theme #customNotificationContent {
+     background: #1e293b !important;
+     border-color: #334155 !important;
+   }
+   
+   html.dark-theme #customNotificationTitle,
+   body.dark-theme #customNotificationTitle {
+     color: #f8fafc !important;
+   }
+   
+   html.dark-theme #customNotificationMessage,
+   body.dark-theme #customNotificationMessage {
+     color: #cbd5e1 !important;
+   }
+ </style>
+
+ <script>
+   // Initialize Lucide icons once
+   lucide.createIcons();
+   
+   // Custom notification system
+   window.showNotification = function(options) {
+     const modal = document.getElementById('customNotificationModal');
+     const content = document.getElementById('customNotificationContent');
+     const icon = document.getElementById('customNotificationIcon');
+     const title = document.getElementById('customNotificationTitle');
+     const message = document.getElementById('customNotificationMessage');
+     const buttons = document.getElementById('customNotificationButtons');
+     
+     // Set content
+     title.textContent = options.title || 'Notification';
+     message.textContent = options.message || '';
+     
+     // Set icon
+     icon.innerHTML = '';
+     const iconElement = document.createElement('div');
+     iconElement.innerHTML = options.icon || '<i data-lucide="info" style="width: 32px; height: 32px;"></i>';
+     icon.appendChild(iconElement);
+     
+     // Set icon background color
+     const iconColors = {
+       success: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+       error: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+       warning: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+       info: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+     };
+     icon.style.background = iconColors[options.type] || iconColors.info;
+     
+     // Create buttons
+     buttons.innerHTML = '';
+     if (options.buttons && options.buttons.length > 0) {
+       options.buttons.forEach(btn => {
+         const button = document.createElement('button');
+         button.textContent = btn.text;
+         button.className = 'notification-btn';
+         if (btn.type === 'secondary') button.classList.add('notification-btn-secondary');
+         if (btn.type === 'danger') button.classList.add('notification-btn-danger');
+         button.onclick = () => {
+           modal.style.display = 'none';
+           if (btn.onClick) btn.onClick();
+         };
+         buttons.appendChild(button);
+       });
+     } else {
+       const okButton = document.createElement('button');
+       okButton.textContent = 'OK';
+       okButton.className = 'notification-btn';
+       okButton.onclick = () => {
+         modal.style.display = 'none';
+         if (options.onClose) options.onClose();
+       };
+       buttons.appendChild(okButton);
+     }
+     
+     // Show modal
+     modal.style.display = 'flex';
+     
+     // Reinitialize Lucide icons
+     lucide.createIcons();
+   };
+   
+   // Custom confirm dialog
+   window.showConfirm = function(options) {
+     return new Promise((resolve) => {
+       window.showNotification({
+         title: options.title || 'Confirm',
+         message: options.message || 'Are you sure?',
+         type: options.type || 'warning',
+         icon: options.icon || '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #f59e0b;"></i>',
+         buttons: [
+           {
+             text: options.confirmText || 'Confirm',
+             type: options.confirmType || 'primary',
+             onClick: () => resolve(true)
+           },
+           {
+             text: options.cancelText || 'Cancel',
+             type: 'secondary',
+             onClick: () => resolve(false)
+           }
+         ]
+       });
+     });
+   };
+   
+   // Custom alert (for simple messages)
+   window.showAlert = function(message, type = 'info', title = null) {
+     const icons = {
+       success: '<i data-lucide="check-circle" style="width: 32px; height: 32px; color: #22c55e;"></i>',
+       error: '<i data-lucide="x-circle" style="width: 32px; height: 32px; color: #ef4444;"></i>',
+       warning: '<i data-lucide="alert-triangle" style="width: 32px; height: 32px; color: #f59e0b;"></i>',
+       info: '<i data-lucide="info" style="width: 32px; height: 32px; color: #3b82f6;"></i>'
+     };
+     
+     const titles = {
+       success: 'Success',
+       error: 'Error',
+       warning: 'Warning',
+       info: 'Information'
+     };
+     
+     window.showNotification({
+       title: title || titles[type] || 'Notification',
+       message: message,
+       type: type,
+       icon: icons[type] || icons.info
+     });
+   };
+   
+   const menuToggle = document.getElementById('menuToggle');
+   const sidebar = document.getElementById('sidebar');
+   const overlay = document.getElementById('sidebarOverlay');
+   const navLinks = document.querySelectorAll('.nav-links a');
+
+   function toggleSidebar() {
+     sidebar.classList.toggle('open');
+     overlay.classList.toggle('active');
+     menuToggle.classList.toggle('active');
+   }
+
+   function closeSidebar() {
+     sidebar.classList.remove('open');
+     overlay.classList.remove('active');
+     menuToggle.classList.remove('active');
+   }
+
+   menuToggle.addEventListener('click', toggleSidebar);
+   overlay.addEventListener('click', closeSidebar);
+   
+   navLinks.forEach(link => {
+     link.addEventListener('click', closeSidebar);
+   });
+
+   document.addEventListener('keydown', (e) => {
+     if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+       closeSidebar();
+     }
+   });
+ </script>
+</body>
+</html>
