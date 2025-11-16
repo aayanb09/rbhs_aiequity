@@ -1,2 +1,2 @@
-You can access the website at [glycogenie.org
-](url)
+You can access the website at https://glycogenie.org/
+
