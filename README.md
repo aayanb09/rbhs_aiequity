@@ -1,1 +1,1 @@
-You can access the website at [rbhs-aiep.onrender.com](https://rbhs-aiep.onrender.com) (actually type the link into your browser, it won't work if you just click on it here). When you commit a change on GitHub, it will take a minute or so for it to update on the website (but it will do it automatically).
+You can access the website at glycogenie.org
