@@ -793,6 +793,12 @@ async function identifyFood(imageDataUrl) {
       const foodName = concept.name;
       const confidence = Math.round(concept.value * 100);
       
+      console.log(`Processing concept ${index}:`, concept.name);
+      console.log(`Has gemini_advice:`, !!concept.gemini_advice);
+      if (concept.gemini_advice) {
+        console.log(`Gemini advice: ${concept.gemini_advice.substring(0, 50)}...`);
+      }
+      
       // Use real nutrition data if available (for first result)
       let nutritionData;
       if (index === 0 && concept.nutrition) {
@@ -812,7 +818,7 @@ async function identifyFood(imageDataUrl) {
         nutritionData = estimateNutrition(foodName);
       }
       
-      return {
+      const foodObject = {
         name: foodName.charAt(0).toUpperCase() + foodName.slice(1),
         confidence: confidence,
         category: 'Food',
@@ -820,6 +826,9 @@ async function identifyFood(imageDataUrl) {
         geminiAdvice: concept.gemini_advice || null,
         ...nutritionData
       };
+      
+      console.log('Final food object:', foodObject);
+      return foodObject;
     });
     
     displayFoodResults(foods);
@@ -849,9 +858,13 @@ function displayFoodResults(foods) {
     return;
   }
   
+  console.log('Displaying food results:', foods);
+  console.log('First food has geminiAdvice:', !!foods[0].geminiAdvice);
+  
   let html = '';
   
   foods.forEach((food, index) => {
+    console.log(`Rendering food ${index}: ${food.name}, has advice: ${!!food.geminiAdvice}`);
     html += `
       <div class="food-result">
         <div class="food-name">
