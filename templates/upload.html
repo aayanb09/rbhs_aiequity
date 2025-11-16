@@ -339,6 +339,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .confidence-badge {
@@ -423,40 +424,6 @@
   font-family: monospace;
   max-height: 200px;
   overflow-y: auto;
-}
-
-.analyze-btn {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: white;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-  width: 100%;
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.analyze-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
-}
-
-.analyze-btn:active {
-  transform: translateY(0);
-}
-
-.analyze-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .info-banner {
@@ -723,7 +690,7 @@ function showLoading() {
   resultsContent.innerHTML = `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <div class="loading-text">Analyzing food with Clarifai AI...</div>
+      <div class="loading-text">Analyzing food with AI...</div>
     </div>
   `;
 }
@@ -744,14 +711,18 @@ function showError(message, debugInfo = null) {
   lucide.createIcons();
 }
 
-// This function now calls YOUR Flask backend
 async function identifyFood(imageDataUrl) {
   showLoading();
   
   try {
     const base64Image = imageDataUrl.split(',')[1];
     
+    // Get selected nutritional needs
+    const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
+      .map(cb => cb.value);
+    
     console.log('Sending request to Flask backend...');
+    console.log('Selected nutritional needs:', selectedNeeds);
     
     const response = await fetch('/upload', {
       method: 'POST',
@@ -759,14 +730,17 @@ async function identifyFood(imageDataUrl) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        image: base64Image
+        image: base64Image,
+        nutritional_needs: selectedNeeds
       })
     });
     
     console.log('Response status:', response.status);
     
     const data = await response.json();
-    console.log('Response data:', data);
+    console.log('==================== FULL API RESPONSE ====================');
+    console.log('Full response:', JSON.stringify(data, null, 2));
+    console.log('===========================================================');
     
     if (!response.ok) {
       let errorMsg = 'API request failed';
@@ -782,6 +756,16 @@ async function identifyFood(imageDataUrl) {
     
     const concepts = data.outputs[0].data.concepts;
     
+    console.log('==================== CONCEPTS CHECK ====================');
+    console.log('Number of concepts:', concepts.length);
+    concepts.forEach((c, i) => {
+      console.log(`Concept ${i}: ${c.name}`);
+      console.log(`  - Has gemini_advice property:`, 'gemini_advice' in c);
+      console.log(`  - gemini_advice value:`, c.gemini_advice);
+      console.log(`  - gemini_advice type:`, typeof c.gemini_advice);
+    });
+    console.log('=======================================================');
+    
     if (concepts.length === 0) {
       showError('No food detected in the image. Please try another image with clearer food items.');
       return;
@@ -789,39 +773,50 @@ async function identifyFood(imageDataUrl) {
     
     console.log('Food concepts found:', concepts);
     
-    const foods = concepts.slice(0, 5).map((concept, index) => {
-      const foodName = concept.name;
-      const confidence = Math.round(concept.value * 100);
-      
-      // Use real nutrition data if available (for first result)
-      let nutritionData;
-      if (index === 0 && concept.nutrition) {
-        const n = concept.nutrition;
-        nutritionData = {
-          calories: Math.round(n.calories) || 0,
-          protein: `${n.protein_g || 0}g`,
-          carbs: `${n.carbohydrates_total_g || 0}g`,
-          fat: `${n.fat_total_g || 0}g`,
-          fiber: `${n.fiber_g || 0}g`,
-          sodium: `${n.sodium_mg || 0}mg`,
-          sugar: `${n.sugar_g || 0}g`,
-          tags: generateTags(n)
-        };
-      } else {
-        // Fallback to estimates for other results
-        nutritionData = estimateNutrition(foodName);
-      }
-      
-      return {
-        name: foodName.charAt(0).toUpperCase() + foodName.slice(1),
-        confidence: confidence,
-        category: 'Food',
-        hasRealData: index === 0 && concept.nutrition ? true : false,
-        ...nutritionData
-      };
-    });
+    // Only show the TOP result (index 0)
+    const topConcept = concepts[0];
+    const foodName = topConcept.name;
+    const confidence = Math.round(topConcept.value * 100);
     
-    displayFoodResults(foods);
+    console.log(`Processing top concept: ${foodName}`);
+    console.log(`Has gemini_advice:`, !!topConcept.gemini_advice);
+    if (topConcept.gemini_advice) {
+      console.log(`Gemini advice: ${topConcept.gemini_advice.substring(0, 50)}...`);
+    }
+    
+    // Use real nutrition data if available
+    let nutritionData;
+    if (topConcept.nutrition && typeof topConcept.nutrition === 'object') {
+      const n = topConcept.nutrition;
+      nutritionData = {
+        calories: Math.round(n.calories || 0),
+        protein: `${Math.round(n.protein_g || 0)}g`,
+        carbs: `${Math.round(n.carbohydrates_total_g || 0)}g`,
+        fat: `${Math.round(n.fat_total_g || 0)}g`,
+        fiber: `${Math.round(n.fiber_g || 0)}g`,
+        sodium: `${Math.round(n.sodium_mg || 0)}mg`,
+        sugar: `${Math.round(n.sugar_g || 0)}g`,
+        servingSize: `${Math.round(n.serving_size_g || 100)}g`,
+        tags: generateTags(n),
+        hasRealData: true
+      };
+    } else {
+      // Fallback to estimates
+      nutritionData = estimateNutrition(foodName);
+      nutritionData.hasRealData = false;
+    }
+    
+    const food = {
+      name: foodName.charAt(0).toUpperCase() + foodName.slice(1),
+      confidence: confidence,
+      category: 'Food',
+      geminiAdvice: topConcept.gemini_advice || null,
+      ...nutritionData
+    };
+    
+    console.log('Final food object:', food);
+    
+    displayFoodResult(food);
     
   } catch (error) {
     console.error('Food identification error:', error);
@@ -830,98 +825,105 @@ async function identifyFood(imageDataUrl) {
   }
 }
 
-// Generate tags based on real nutrition data
 function generateTags(nutrition) {
   const tags = [];
   
-  if (nutrition.sodium_mg < 140) tags.push('Low Sodium');
-  if (nutrition.protein_g > 10) tags.push('High Protein');
-  if (nutrition.sugar_g < 5) tags.push('Low Sugar');
-  if (nutrition.fiber_g > 5) tags.push('High Fiber');
+  if (!nutrition || typeof nutrition !== 'object') {
+    return tags;
+  }
+  
+  const sodium = parseFloat(nutrition.sodium_mg) || 0;
+  const protein = parseFloat(nutrition.protein_g) || 0;
+  const sugar = parseFloat(nutrition.sugar_g) || 0;
+  const fiber = parseFloat(nutrition.fiber_g) || 0;
+  
+  if (sodium < 140) tags.push('Low Sodium');
+  if (protein > 10) tags.push('High Protein');
+  if (sugar < 5) tags.push('Low Sugar');
+  if (fiber > 5) tags.push('High Fiber');
   
   return tags;
 }
 
-function displayFoodResults(foods) {
-  if (!foods || foods.length === 0) {
+function displayFoodResult(food) {
+  if (!food) {
     showError('No food detected in the image. Please try another image.');
     return;
   }
   
-  let html = '';
+  console.log('Displaying food result:', food);
+  console.log('Food has geminiAdvice:', !!food.geminiAdvice);
   
-  foods.forEach((food, index) => {
-    html += `
-      <div class="food-result">
-        <div class="food-name">
-          <span>${food.name}</span>
-          <span class="confidence-badge">${food.confidence}%</span>
-          ${food.hasRealData ? '<span style="font-size: 0.7rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 4px 8px; border-radius: 8px; font-weight: 700; margin-left: 4px;">Real Data</span>' : ''}
-        </div>
-        <div class="food-info">
-          <strong>Category:</strong> ${food.category || 'Food'}
-        </div>
-        
-        ${food.calories ? `
-          <div class="nutrition-grid">
-            <div class="nutrition-item">
-              <div class="nutrition-label">Calories</div>
-              <div class="nutrition-value">${food.calories}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Protein</div>
-              <div class="nutrition-value">${food.protein || 'N/A'}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Carbs</div>
-              <div class="nutrition-value">${food.carbs || 'N/A'}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Fat</div>
-              <div class="nutrition-value">${food.fat || 'N/A'}</div>
-            </div>
-          </div>
-        ` : ''}
-        
-        ${food.hasRealData && food.fiber ? `
-          <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 10px; border: 2px solid #e2e8f0;">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
-              <div>
-                <div class="nutrition-label">Fiber</div>
-                <div style="font-weight: 700; color: #0f172a;">${food.fiber}</div>
-              </div>
-              <div>
-                <div class="nutrition-label">Sodium</div>
-                <div style="font-weight: 700; color: #0f172a;">${food.sodium}</div>
-              </div>
-              <div>
-                <div class="nutrition-label">Sugar</div>
-                <div style="font-weight: 700; color: #0f172a;">${food.sugar}</div>
-              </div>
-            </div>
-          </div>
-        ` : ''}
-        
-        ${food.tags && food.tags.length > 0 ? `
-          <div class="food-info" style="margin-top: 12px;">
-            <strong>Tags:</strong> ${food.tags.join(', ')}
-          </div>
-        ` : ''}
+  let html = `
+    <div class="food-result">
+      <div class="food-name">
+        <span>${food.name}</span>
+        <span class="confidence-badge">${food.confidence}%</span>
+        ${food.hasRealData ? '<span style="font-size: 0.7rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 4px 8px; border-radius: 8px; font-weight: 700; margin-left: 4px;">Verified Data</span>' : ''}
       </div>
-    `;
-  });
-  
-  html += `
-    <button class="analyze-btn" onclick="analyzeNutrition()">
-      <i data-lucide="search"></i>
-      <span>Get Detailed Analysis</span>
-    </button>
+      <div class="food-info">
+        <strong>Category:</strong> ${food.category || 'Food'}
+      </div>
+      
+      ${food.servingSize ? `
+        <div class="food-info" style="margin-top: 8px;">
+          <strong>Serving Size:</strong> ${food.servingSize}
+        </div>
+      ` : ''}
+      
+      ${food.calories ? `
+        <div class="nutrition-grid">
+          <div class="nutrition-item">
+            <div class="nutrition-label">Calories</div>
+            <div class="nutrition-value">${food.calories}</div>
+          </div>
+          <div class="nutrition-item">
+            <div class="nutrition-label">Protein</div>
+            <div class="nutrition-value">${food.protein || 'N/A'}</div>
+          </div>
+          <div class="nutrition-item">
+            <div class="nutrition-label">Carbs</div>
+            <div class="nutrition-value">${food.carbs || 'N/A'}</div>
+          </div>
+          <div class="nutrition-item">
+            <div class="nutrition-label">Fat</div>
+            <div class="nutrition-value">${food.fat || 'N/A'}</div>
+          </div>
+        </div>
+      ` : ''}
+      
+      ${food.fiber ? `
+        <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 10px; border: 2px solid #e2e8f0;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
+            <div>
+              <div class="nutrition-label">Fiber</div>
+              <div style="font-weight: 700; color: #0f172a;">${food.fiber}</div>
+            </div>
+            <div>
+              <div class="nutrition-label">Sodium</div>
+              <div style="font-weight: 700; color: #0f172a;">${food.sodium}</div>
+            </div>
+            <div>
+              <div class="nutrition-label">Sugar</div>
+              <div style="font-weight: 700; color: #0f172a;">${food.sugar}</div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      
+      ${food.tags && food.tags.length > 0 ? `
+        <div class="food-info" style="margin-top: 12px;">
+          <strong>Tags:</strong> ${food.tags.join(', ')}
+        </div>
+      ` : ''}
+    </div>
   `;
   
   resultsContent.innerHTML = html;
   lucide.createIcons();
   
-  updateInfoBanner(foods[0]);
+  // Update banner with AI advice
+  updateInfoBanner(food);
 }
 
 function estimateNutrition(foodName) {
@@ -934,6 +936,8 @@ function estimateNutrition(foodName) {
       carbs: '0g',
       fat: '8g',
       fiber: '0g',
+      sodium: '70mg',
+      sugar: '0g',
       tags: ['High Protein', 'Low Carb']
     };
   }
@@ -945,6 +949,8 @@ function estimateNutrition(foodName) {
       carbs: '10g',
       fat: '0.5g',
       fiber: '4g',
+      sodium: '25mg',
+      sugar: '2g',
       tags: ['Vegetarian', 'High Fiber', 'Low Sodium', 'Gluten Free', 'Low Sugar']
     };
   }
@@ -956,6 +962,8 @@ function estimateNutrition(foodName) {
       carbs: '20g',
       fat: '0g',
       fiber: '3g',
+      sodium: '0mg',
+      sugar: '15g',
       tags: ['Vegetarian', 'High Fiber', 'Low Sodium', 'Gluten Free']
     };
   }
@@ -967,6 +975,8 @@ function estimateNutrition(foodName) {
       carbs: '70g',
       fat: '2g',
       fiber: '3g',
+      sodium: '400mg',
+      sugar: '5g',
       tags: ['Contains Gluten']
     };
   }
@@ -978,6 +988,8 @@ function estimateNutrition(foodName) {
       carbs: '45g',
       fat: '1g',
       fiber: '2g',
+      sodium: '5mg',
+      sugar: '0g',
       tags: ['Gluten Free', 'Vegetarian']
     };
   }
@@ -988,109 +1000,38 @@ function estimateNutrition(foodName) {
     carbs: '20g',
     fat: '5g',
     fiber: '2g',
+    sodium: '100mg',
+    sugar: '3g',
     tags: []
   };
-}
-
-function displayFoodResults(foods) {
-  if (!foods || foods.length === 0) {
-    showError('No food detected in the image. Please try another image.');
-    return;
-  }
-  
-  let html = '';
-  
-  foods.forEach((food, index) => {
-    html += `
-      <div class="food-result">
-        <div class="food-name">
-          <span>${food.name}</span>
-          <span class="confidence-badge">${food.confidence}%</span>
-        </div>
-        <div class="food-info">
-          <strong>Category:</strong> ${food.category || 'Food'}
-        </div>
-        
-        ${food.calories ? `
-          <div class="nutrition-grid">
-            <div class="nutrition-item">
-              <div class="nutrition-label">Calories</div>
-              <div class="nutrition-value">${food.calories}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Protein</div>
-              <div class="nutrition-value">${food.protein || 'N/A'}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Carbs</div>
-              <div class="nutrition-value">${food.carbs || 'N/A'}</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-label">Fat</div>
-              <div class="nutrition-value">${food.fat || 'N/A'}</div>
-            </div>
-          </div>
-        ` : ''}
-        
-        ${food.tags && food.tags.length > 0 ? `
-          <div class="food-info" style="margin-top: 12px;">
-            <strong>Tags:</strong> ${food.tags.join(', ')}
-          </div>
-        ` : ''}
-      </div>
-    `;
-  });
-  
-  html += `
-    <button class="analyze-btn" onclick="analyzeNutrition()">
-      <i data-lucide="search"></i>
-      <span>Get Detailed Analysis</span>
-    </button>
-  `;
-  
-  resultsContent.innerHTML = html;
-  lucide.createIcons();
-  
-  updateInfoBanner(foods[0]);
-}
-
-function analyzeNutrition() {
-  if (!currentImageData) {
-    showError('No image available. Please upload or capture an image first.');
-    return;
-  }
-  
-  const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
-    .map(cb => cb.value);
-  
-  const foodResults = resultsContent.querySelectorAll('.food-result');
-  if (foodResults.length === 0) {
-    showError('No food identified yet. Please analyze an image first.');
-    return;
-  }
-  
-  let analysisHtml = '<div style="padding: 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 12px;">';
-  analysisHtml += '<strong style="color: #0f172a; display: block; margin-bottom: 8px;">Nutritional Analysis:</strong>';
-  
-  if (selectedNeeds.length === 0) {
-    analysisHtml += '<p style="color: #64748b; font-size: 0.875rem;">Select your nutritional needs to get personalized recommendations.</p>';
-  } else {
-    analysisHtml += `<p style="color: #64748b; font-size: 0.875rem;">Checking compatibility with: ${selectedNeeds.join(', ')}</p>`;
-    analysisHtml += '<p style="color: #059669; font-size: 0.875rem; margin-top: 8px;">✓ Analysis complete. See recommendations in the banner below.</p>';
-  }
-  
-  analysisHtml += '</div>';
-  
-  const firstResult = resultsContent.querySelector('.food-result');
-  if (firstResult) {
-    firstResult.insertAdjacentHTML('beforebegin', analysisHtml);
-  }
 }
 
 function updateInfoBanner(food) {
   const infoBanner = document.querySelector('.info-banner');
   if (!infoBanner || !food) return;
   
+  // Display AI advice in the banner if available
+  if (food.geminiAdvice) {
+    infoBanner.innerHTML = `
+      <div style="display: flex; align-items: start; gap: 16px; text-align: left;">
+        <div style="flex-shrink: 0; width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <i data-lucide="sparkles" style="width: 24px; height: 24px; color: white;"></i>
+        </div>
+        <div style="flex: 1;">
+          <h3 style="color: #065f46; font-size: 1.125rem; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.02em;">
+            AI Health Insight for ${food.name}
+          </h3>
+          <p style="color: #064e3b; font-size: 1rem; line-height: 1.7; margin: 0;">
+            ${food.geminiAdvice}
+          </p>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+  
+  // Fallback to nutritional compatibility message
   const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
     .map(cb => cb.value);
   
