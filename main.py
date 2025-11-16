@@ -115,17 +115,10 @@ def identify_food():
                 top_food = best_item['name']
                 print(f"Selected top food: {top_food}")
                 
-                # ALWAYS try to generate Gemini advice
                 try:
-                    print("=" * 50)
-                    print("ATTEMPTING GEMINI API CALL")
-                    print(f"Food name: {top_food}")
-                    
                     # Extract nutrition info for Gemini
                     nutrition = best_item.get('nutrition', {})
-                    print(f"Nutrition data available: {bool(nutrition)}")
                     if nutrition:
-                        print("Using nutrition data for Gemini prompt")
                         calories = nutrition.get('calories', 'unknown')
                         protein = nutrition.get('protein_g', 'unknown')
                         fat = nutrition.get('fat_total_g', 'unknown')
@@ -143,47 +136,39 @@ def identify_food():
                             f"(2) any specific health benefits or concerns, and (3) a simple tip for healthy consumption. "
                             f"Keep it conversational and supportive."
                         )
-                        
-                        print(f"Prompt: {prompt[:100]}...")
-                        print("Calling Gemini API...")
                 
                         model = genai.GenerativeModel("gemini-1.5-flash")
                         gemini_response = model.generate_content(prompt)
                 
                         advice = gemini_response.text.strip()
-                        print(f"Gemini advice received: {advice}")
-                        print("=" * 50)
+                        print("Gemini advice:", advice)
                 
-                        # Add Gemini output to the top food concept
-                        for i, concept in enumerate(clarifai_data['outputs'][0]['data']['concepts']):
+                        # Add Gemini output to ALL concepts for consistency
+                        for concept in clarifai_data['outputs'][0]['data']['concepts']:
                             if concept['name'] == top_food:
                                 concept['gemini_advice'] = advice
-                                print(f"Added gemini_advice to concept at index {i}")
                                 break
                     else:
-                        print("No nutrition data - using food name only for Gemini prompt")
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"In 2-3 sentences, provide practical health advice about this food for someone "
-                            f"managing their diet and blood sugar. Focus on general nutritional benefits and any tips. "
-                            f"Keep it conversational and supportive."
-                        )
-                        
-                        print(f"Prompt: {prompt[:100]}...")
-                        print("Calling Gemini API...")
-                        
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        gemini_response = model.generate_content(prompt)
-                        advice = gemini_response.text.strip()
-                        
-                        print(f"Gemini advice received: {advice}")
-                        print("=" * 50)
-                        
-                        for i, concept in enumerate(clarifai_data['outputs'][0]['data']['concepts']):
-                            if concept['name'] == top_food:
-                                concept['gemini_advice'] = advice
-                                print(f"Added gemini_advice to concept at index {i}")
-                                break
+                        print("No nutrition data found for Gemini analysis.")
+                        # Try to generate advice based on food name alone
+                        try:
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"In 2-3 sentences, provide practical health advice about this food for someone "
+                                f"managing their diet and blood sugar. Focus on general nutritional benefits and any tips. "
+                                f"Keep it conversational and supportive."
+                            )
+                            
+                            model = genai.GenerativeModel("gemini-1.5-flash")
+                            gemini_response = model.generate_content(prompt)
+                            advice = gemini_response.text.strip()
+                            
+                            for concept in clarifai_data['outputs'][0]['data']['concepts']:
+                                if concept['name'] == top_food:
+                                    concept['gemini_advice'] = advice
+                                    break
+                        except Exception as fallback_error:
+                            print("Fallback Gemini error:", fallback_error)
                 
                 except Exception as gemini_error:
                     print("Gemini error:", gemini_error)
