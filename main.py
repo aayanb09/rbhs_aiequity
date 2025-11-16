@@ -165,6 +165,7 @@ def identify_food():
                     nutrition_data = best_item.get('nutrition', {})
                 
                 # Generate Gemini advice
+                # Generate Gemini advice
                 gemini_advice = None
                 try:
                     print("=" * 50)
@@ -179,7 +180,11 @@ def identify_food():
                     nutrition = nutrition_data
                     print(f"Nutrition data available: {bool(nutrition)}")
                     
-                    # Build prompt
+                    # Get nutritional needs from request data
+                    nutritional_needs = data.get('nutritional_needs', [])
+                    print(f"Nutritional needs: {nutritional_needs}")
+                    
+                    # Build prompt based on nutritional needs
                     if nutrition and isinstance(nutrition, dict) and nutrition:
                         print("Using nutrition data for Gemini prompt")
                         calories = nutrition.get('calories', 'unknown')
@@ -190,23 +195,46 @@ def identify_food():
                         sodium = nutrition.get('sodium_mg', 'unknown')
                         carbs = nutrition.get('carbohydrates_total_g', 'unknown')
                 
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"In 2-3 sentences, provide practical, actionable health advice about this food. "
-                            f"Focus on: (1) whether it's a good choice for someone managing blood sugar, "
-                            f"(2) any specific health benefits or concerns, and (3) a simple tip for healthy consumption. "
-                            f"Keep it conversational and supportive."
-                        )
+                        if nutritional_needs and len(nutritional_needs) > 0:
+                            # Personalized prompt based on selected nutritional needs
+                            needs_str = ", ".join(nutritional_needs)
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"Nutritional information: {calories} calories, {protein}g protein, "
+                                f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                                f"The person has the following nutritional needs/preferences: {needs_str}. "
+                                f"In 2-3 sentences, provide practical, actionable advice about whether this food is a good choice for their needs. "
+                                f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
+                                f"Keep it conversational and supportive."
+                            )
+                        else:
+                            # Generic prompt when no needs are selected
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"Nutritional information: {calories} calories, {protein}g protein, "
+                                f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                                f"In 2-3 sentences, provide practical, actionable health advice about this food. "
+                                f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
+                                f"Keep it conversational and supportive."
+                            )
                     else:
                         print("No nutrition data - using food name only for Gemini prompt")
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"In 2-3 sentences, provide practical health advice about this food for someone "
-                            f"managing their diet and blood sugar. Focus on general nutritional benefits and any tips. "
-                            f"Keep it conversational and supportive."
-                        )
+                        if nutritional_needs and len(nutritional_needs) > 0:
+                            needs_str = ", ".join(nutritional_needs)
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"The person has the following nutritional needs/preferences: {needs_str}. "
+                                f"In 2-3 sentences, provide practical advice about whether this food is generally a good choice for their needs. "
+                                f"Focus on general nutritional characteristics of {top_food}. "
+                                f"Keep it conversational and supportive."
+                            )
+                        else:
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"In 2-3 sentences, provide practical health advice about this food. "
+                                f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
+                                f"Keep it conversational and supportive."
+                            )
                     
                     print(f"Prompt (first 100 chars): {prompt[:100]}...")
                     print("Calling Gemini API NOW...")
@@ -226,7 +254,6 @@ def identify_food():
                     import traceback
                     traceback.print_exc()
                     print("=" * 50)
-                
                 # Add Gemini advice to the top concept
                 if gemini_advice:
                     print(f"Adding gemini_advice to concepts...")
