@@ -116,39 +116,34 @@ def identify_food():
                 print(f"Selected top food: {top_food}")
                 
                 try:
-                    # Use Gemini to analyze the image directly with vision capabilities
-                    print("Sending image to Gemini for nutritional analysis...")
-                    
-                    # Decode base64 image for Gemini
-                    import io
-                    from PIL import Image
-                    image_bytes = base64.b64decode(base64_image)
-                    image = Image.open(io.BytesIO(image_bytes))
-                    
-                    # Create prompt for comprehensive nutritional analysis
-                    prompt = (
-                        f"This image shows {top_food}. Please provide a detailed nutritional analysis including:\n"
-                        "1. Estimated calories, protein, carbs, fat, fiber, sodium, and sugar\n"
-                        "2. Health benefits and potential concerns\n"
-                        "3. Brief personalized healthy eating advice\n"
-                        "Format your response as a short, informative paragraph."
-                    )
-                    
-                    # Use Gemini with image understanding
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    gemini_response = model.generate_content([prompt, image])
-                    
-                    advice = gemini_response.text.strip()
-                    print("Gemini analysis:", advice)
-                    
-                    # Add Gemini output into response
-                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
+                    # Extract nutrition info for Gemini
+                    nutrition = best_item.get('nutrition', {})
+                    if nutrition:
+                        calories = nutrition.get('calories', 'unknown')
+                        protein = nutrition.get('protein_g', 'unknown')
+                        fat = nutrition.get('fat_total_g', 'unknown')
+                        sugar = nutrition.get('sugar_g', 'unknown')
+                
+                        prompt = (
+                            f"The food identified is {top_food}. It contains {calories} calories, "
+                            f"{protein}g of protein, {fat}g of fat, and {sugar}g of sugar. "
+                            "Give one short paragraph of personalized healthy eating advice about this food."
+                        )
+                
+                        model = genai.GenerativeModel("gemini-1.5-flash")
+                        gemini_response = model.generate_content(prompt)
+                
+                        advice = gemini_response.text.strip()
+                        print("Gemini advice:", advice)
+                
+                        # Add Gemini output into response
+                        clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
+                    else:
+                        print("No nutrition data found for Gemini analysis.")
                 
                 except Exception as gemini_error:
                     print("Gemini error:", gemini_error)
-                    import traceback
-                    traceback.print_exc()
-                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating analysis. Please check your Gemini API key."
+                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
                     
             print("=" * 50)
             return jsonify(clarifai_data), 200

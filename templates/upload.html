@@ -817,7 +817,6 @@ async function identifyFood(imageDataUrl) {
         confidence: confidence,
         category: 'Food',
         hasRealData: index === 0 && concept.nutrition ? true : false,
-        geminiAdvice: index === 0 ? concept.gemini_advice : null,
         ...nutritionData
       };
     });
@@ -906,16 +905,6 @@ function displayFoodResults(foods) {
         ${food.tags && food.tags.length > 0 ? `
           <div class="food-info" style="margin-top: 12px;">
             <strong>Tags:</strong> ${food.tags.join(', ')}
-          </div>
-        ` : ''}
-        
-        ${food.geminiAdvice ? `
-          <div style="margin-top: 14px; padding: 14px; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border-radius: 12px; border-left: 4px solid #3b82f6;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <i data-lucide="sparkles" style="width: 18px; height: 18px; color: #1e40af;"></i>
-              <strong style="color: #1e40af; font-size: 0.875rem;">AI Nutritional Analysis</strong>
-            </div>
-            <div style="color: #1e40af; font-size: 0.875rem; line-height: 1.6;">${food.geminiAdvice}</div>
           </div>
         ` : ''}
       </div>
