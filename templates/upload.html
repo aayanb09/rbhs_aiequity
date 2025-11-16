@@ -426,40 +426,6 @@
   overflow-y: auto;
 }
 
-.analyze-btn {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: white;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-  width: 100%;
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.analyze-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
-}
-
-.analyze-btn:active {
-  transform: translateY(0);
-}
-
-.analyze-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
 .info-banner {
   margin-top: 40px;
   background: white;
@@ -751,7 +717,12 @@ async function identifyFood(imageDataUrl) {
   try {
     const base64Image = imageDataUrl.split(',')[1];
     
+    // Get selected nutritional needs
+    const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
+      .map(cb => cb.value);
+    
     console.log('Sending request to Flask backend...');
+    console.log('Selected nutritional needs:', selectedNeeds);
     
     const response = await fetch('/upload', {
       method: 'POST',
@@ -759,7 +730,8 @@ async function identifyFood(imageDataUrl) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        image: base64Image
+        image: base64Image,
+        nutritional_needs: selectedNeeds
       })
     });
     
@@ -902,6 +874,18 @@ function displayFoodResult(food) {
       ${food.calories ? `
         <div class="nutrition-grid">
           <div class="nutrition-item">
+            <div class="nutrition-label">Calories</div>
+            <div class="nutrition-value">${food.calories}</div>
+          </div>
+          <div class="nutrition-item">
+            <div class="nutrition-label">Protein</div>
+            <div class="nutrition-value">${food.protein || 'N/A'}</div>
+          </div>
+          <div class="nutrition-item">
+            <div class="nutrition-label">Carbs</div>
+            <div class="nutrition-value">${food.carbs || 'N/A'}</div>
+          </div>
+          <div class="nutrition-item">
             <div class="nutrition-label">Fat</div>
             <div class="nutrition-value">${food.fat || 'N/A'}</div>
           </div>
@@ -933,13 +917,6 @@ function displayFoodResult(food) {
         </div>
       ` : ''}
     </div>
-  `;
-  
-  html += `
-    <button class="analyze-btn" onclick="analyzeNutrition()">
-      <i data-lucide="search"></i>
-      <span>Get Detailed Analysis</span>
-    </button>
   `;
   
   resultsContent.innerHTML = html;
@@ -1029,39 +1006,6 @@ function estimateNutrition(foodName) {
   };
 }
 
-function analyzeNutrition() {
-  if (!currentImageData) {
-    showError('No image available. Please upload or capture an image first.');
-    return;
-  }
-  
-  const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
-    .map(cb => cb.value);
-  
-  const foodResults = resultsContent.querySelectorAll('.food-result');
-  if (foodResults.length === 0) {
-    showError('No food identified yet. Please analyze an image first.');
-    return;
-  }
-  
-  let analysisHtml = '<div style="padding: 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 12px;">';
-  analysisHtml += '<strong style="color: #0f172a; display: block; margin-bottom: 8px;">Nutritional Analysis:</strong>';
-  
-  if (selectedNeeds.length === 0) {
-    analysisHtml += '<p style="color: #64748b; font-size: 0.875rem;">Select your nutritional needs to get personalized recommendations.</p>';
-  } else {
-    analysisHtml += `<p style="color: #64748b; font-size: 0.875rem;">Checking compatibility with: ${selectedNeeds.join(', ')}</p>`;
-    analysisHtml += '<p style="color: #059669; font-size: 0.875rem; margin-top: 8px;">✓ Analysis complete. See recommendations in the banner below.</p>';
-  }
-  
-  analysisHtml += '</div>';
-  
-  const firstResult = resultsContent.querySelector('.food-result');
-  if (firstResult) {
-    firstResult.insertAdjacentHTML('beforebegin', analysisHtml);
-  }
-}
-
 function updateInfoBanner(food) {
   const infoBanner = document.querySelector('.info-banner');
   if (!infoBanner || !food) return;
@@ -1123,16 +1067,4 @@ function updateInfoBanner(food) {
 showPlaceholder();
 </script>
 
-{% endblock %}nutrition-label">Calories</div>
-            <div class="nutrition-value">${food.calories}</div>
-          </div>
-          <div class="nutrition-item">
-            <div class="nutrition-label">Protein</div>
-            <div class="nutrition-value">${food.protein || 'N/A'}</div>
-          </div>
-          <div class="nutrition-item">
-            <div class="nutrition-label">Carbs</div>
-            <div class="nutrition-value">${food.carbs || 'N/A'}</div>
-          </div>
-          <div class="nutrition-item">
-            <div class="
+{% endblock %}
