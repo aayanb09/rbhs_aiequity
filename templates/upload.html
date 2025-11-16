@@ -723,7 +723,7 @@ function showLoading() {
   resultsContent.innerHTML = `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <div class="loading-text">Analyzing food with AI...</div>
+      <div class="loading-text">Analyzing food with Clarifai AI...</div>
     </div>
   `;
 }
@@ -817,7 +817,6 @@ async function identifyFood(imageDataUrl) {
         confidence: confidence,
         category: 'Food',
         hasRealData: index === 0 && concept.nutrition ? true : false,
-        geminiAdvice: concept.gemini_advice || null,
         ...nutritionData
       };
     });
@@ -908,16 +907,6 @@ function displayFoodResults(foods) {
             <strong>Tags:</strong> ${food.tags.join(', ')}
           </div>
         ` : ''}
-        
-        ${food.geminiAdvice ? `
-          <div style="margin-top: 16px; padding: 14px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981; border-radius: 10px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <i data-lucide="sparkles" style="width: 18px; height: 18px; color: #059669;"></i>
-              <strong style="color: #065f46; font-size: 0.875rem;">AI Health Insight</strong>
-            </div>
-            <p style="color: #065f46; font-size: 0.875rem; line-height: 1.6; margin: 0;">${food.geminiAdvice}</p>
-          </div>
-        ` : ''}
       </div>
     `;
   });
@@ -1001,6 +990,68 @@ function estimateNutrition(foodName) {
     fiber: '2g',
     tags: []
   };
+}
+
+function displayFoodResults(foods) {
+  if (!foods || foods.length === 0) {
+    showError('No food detected in the image. Please try another image.');
+    return;
+  }
+  
+  let html = '';
+  
+  foods.forEach((food, index) => {
+    html += `
+      <div class="food-result">
+        <div class="food-name">
+          <span>${food.name}</span>
+          <span class="confidence-badge">${food.confidence}%</span>
+        </div>
+        <div class="food-info">
+          <strong>Category:</strong> ${food.category || 'Food'}
+        </div>
+        
+        ${food.calories ? `
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <div class="nutrition-label">Calories</div>
+              <div class="nutrition-value">${food.calories}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Protein</div>
+              <div class="nutrition-value">${food.protein || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Carbs</div>
+              <div class="nutrition-value">${food.carbs || 'N/A'}</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-label">Fat</div>
+              <div class="nutrition-value">${food.fat || 'N/A'}</div>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${food.tags && food.tags.length > 0 ? `
+          <div class="food-info" style="margin-top: 12px;">
+            <strong>Tags:</strong> ${food.tags.join(', ')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+  
+  html += `
+    <button class="analyze-btn" onclick="analyzeNutrition()">
+      <i data-lucide="search"></i>
+      <span>Get Detailed Analysis</span>
+    </button>
+  `;
+  
+  resultsContent.innerHTML = html;
+  lucide.createIcons();
+  
+  updateInfoBanner(foods[0]);
 }
 
 function analyzeNutrition() {
