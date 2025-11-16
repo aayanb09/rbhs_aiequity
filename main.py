@@ -123,18 +123,11 @@ def identify_food():
                         protein = nutrition.get('protein_g', 'unknown')
                         fat = nutrition.get('fat_total_g', 'unknown')
                         sugar = nutrition.get('sugar_g', 'unknown')
-                        fiber = nutrition.get('fiber_g', 'unknown')
-                        sodium = nutrition.get('sodium_mg', 'unknown')
-                        carbs = nutrition.get('carbohydrates_total_g', 'unknown')
                 
                         prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"In 2-3 sentences, provide practical, actionable health advice about this food. "
-                            f"Focus on: (1) whether it's a good choice for someone managing blood sugar, "
-                            f"(2) any specific health benefits or concerns, and (3) a simple tip for healthy consumption. "
-                            f"Keep it conversational and supportive."
+                            f"The food identified is {top_food}. It contains {calories} calories, "
+                            f"{protein}g of protein, {fat}g of fat, and {sugar}g of sugar. "
+                            "Give one short paragraph of personalized healthy eating advice about this food."
                         )
                 
                         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -143,38 +136,14 @@ def identify_food():
                         advice = gemini_response.text.strip()
                         print("Gemini advice:", advice)
                 
-                        # Add Gemini output to ALL concepts for consistency
-                        for concept in clarifai_data['outputs'][0]['data']['concepts']:
-                            if concept['name'] == top_food:
-                                concept['gemini_advice'] = advice
-                                break
+                        # Add Gemini output into response
+                        clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = advice
                     else:
                         print("No nutrition data found for Gemini analysis.")
-                        # Try to generate advice based on food name alone
-                        try:
-                            prompt = (
-                                f"You are a nutrition expert. The food identified is {top_food}. "
-                                f"In 2-3 sentences, provide practical health advice about this food for someone "
-                                f"managing their diet and blood sugar. Focus on general nutritional benefits and any tips. "
-                                f"Keep it conversational and supportive."
-                            )
-                            
-                            model = genai.GenerativeModel("gemini-1.5-flash")
-                            gemini_response = model.generate_content(prompt)
-                            advice = gemini_response.text.strip()
-                            
-                            for concept in clarifai_data['outputs'][0]['data']['concepts']:
-                                if concept['name'] == top_food:
-                                    concept['gemini_advice'] = advice
-                                    break
-                        except Exception as fallback_error:
-                            print("Fallback Gemini error:", fallback_error)
                 
                 except Exception as gemini_error:
                     print("Gemini error:", gemini_error)
-                    import traceback
-                    traceback.print_exc()
-                    # Don't add advice if there was an error
+                    clarifai_data['outputs'][0]['data']['concepts'][0]['gemini_advice'] = "Error generating advice."
                     
             print("=" * 50)
             return jsonify(clarifai_data), 200
