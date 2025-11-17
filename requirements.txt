@@ -6,5 +6,4 @@ torch
 torchvision
 Pillow
 numpy
-onnxruntime
-onnx
+
