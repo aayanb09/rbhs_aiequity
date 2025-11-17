@@ -2,8 +2,5 @@ Flask
 gunicorn
 requests
 google-generativeai
-torch
-torchvision
 Pillow
-numpy
-
+gradio-client
