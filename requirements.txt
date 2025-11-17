@@ -5,3 +5,6 @@ google-generativeai
 torch
 torchvision
 Pillow
+numpy
+onnxruntime
+onnx
