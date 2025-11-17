@@ -4,10 +4,9 @@ import base64
 import io
 import requests
 import google.generativeai as genai
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
 from PIL import Image
+from gradio_client import Client, handle_file
+import tempfile
 
 app = Flask(__name__)
 app.secret_key = "password" 
@@ -19,35 +18,21 @@ CALORIENINJA_API_KEY = os.environ.get("CALORIENINJA_API_KEY")
 # Configure Gemini
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# ============== PYTORCH MODEL SETUP ==============
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+# Initialize Gradio client
+GRADIO_CLIENT = None
 
-# Define class names
-class_names = ['acorn_squash', 'almond', 'almonds', 'anchovy_(fish)', 'apple', 'apricot', 'artichoke', 'arugula', 'asparagus', 'avocado', 'baguette', 'banana', 'barley', 'barley_(grain)', 'beef_(meat)', 'beet', 'black_beans', 'black_pepper_(spice)', 'blackberry', 'bok_choy', 'bread_(loaf)', 'breadcrumbs', 'broccoli', 'brussels_sprouts', 'butter_(dairy)', 'butternut_squash', 'cabbage', 'canola_oil', 'cantaloupe', 'carrot', 'cashews', 'cauliflower', 'celery', 'cheddar_cheese', 'cherry', 'chicken_(meat)', 'chickpeas', 'chive', 'chocolate_chips', 'clams', 'clams_(seafood)', 'cocoa_powder', 'coconut', 'cod_(fish)', 'condensed_milk', 'confectioners_sugar', 'corn', 'corn_syrup', 'cornflakes', 'cornmeal', 'cottage_cheese', 'crab_(seafood)', 'crackers', 'cranberry', 'cream_(dairy)', 'cream_cheese', 'cucumber', 'date_(fruit)', 'dragonfruit', 'duck_(meat)', 'egg', 'eggplant', 'evaporated_milk', 'feta', 'feta_cheese', 'fig', 'fish_sauce', 'garlic', 'goat_cheese', 'grape', 'ground_beef', 'ground_pork', 'ground_turkey', 'guava', 'honeydew', 'jackfruit', 'kale', 'ketchup', 'kidney_beans', 'kiwi_(fruit)', 'lamb_(meat)', 'leek', 'lemon_(fruit)', 'lentils', 'lettuce', 'lime_(fruit)', 'lobster_(seafood)', 'lychee', 'mango', 'mayonnaise', 'meatballs', 'milk_(dairy)', 'molasses', 'mozzarella_cheese', 'mulberry', 'mushroom', 'mussels_(seafood)', 'mustard_(condiment)', 'mustard_greens', 'navy_beans', 'nectarine', 'noodles_(cooked)', 'oats', 'oats_(grain)', 'octopus_(seafood)', 'okra', 'olive', 'olive_oil', 'onion', 'orange_(fruit)', 'oyster_sauce', 'papaya', 'parmesan_cheese', 'parsnip', 'passionfruit', 'pasta_(cooked)', 'peach', 'peanut', 'peanut_butter', 'pear', 'pecans', 'pepper', 'persimmon', 'pineapple', 'pinto_beans', 'pita_bread', 'plum', 'pomegranate', 'pork_(meat)', 'potato', 'powdered_milk', 'powdered_sugar', 'pumpkin_seeds', 'quinoa', 'quinoa_(grain)', 'radish', 'raspberry', 'rice_(brown,_grain)', 'rice_(white,_grain)', 'ricotta', 'ricotta_cheese', 'rolled_oats', 'salmon', 'salmon_(fish)', 'salt', 'sardine_(fish)', 'scallion', 'scallops_(seafood)', 'seitan', 'sesame_oil', 'sesame_seeds', 'shallot', 'shrimp_(seafood)', 'sour_cream', 'soy_sauce', 'spinach', 'split_peas', 'squid_(seafood)', 'starfruit', 'strawberry', 'sunflower_oil', 'sunflower_seeds', 'sweet_potato', 'swiss_chard', 'tangerine', 'tempeh', 'tofu', 'tomato', 'tortilla_(flatbread)', 'tortillas', 'tuna', 'tuna_(fish)', 'turkey_(meat)', 'turnip', 'vegetable_oil', 'walnut', 'walnuts', 'watermelon', 'wheat_flour', 'whipping_cream', 'yam', 'yogurt_(dairy)', 'zucchini']
-
-# Initialize model
-ingredient_model = models.mobilenet_v2(pretrained=False)
-num_ftrs = ingredient_model.classifier[1].in_features
-ingredient_model.classifier[1] = nn.Linear(num_ftrs, len(class_names))
-
-# Load trained weights
-model_path = "ingredientRecognitionModel.pth"
-if os.path.exists(model_path):
-    ingredient_model.load_state_dict(torch.load(model_path, map_location=device))
-    print(f"Model loaded successfully from {model_path}")
-else:
-    print(f"WARNING: Model file {model_path} not found!")
-
-ingredient_model = ingredient_model.to(device)
-ingredient_model.eval()
-
-# Image transformation pipeline
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-])
+def get_gradio_client():
+    """Lazy initialization of Gradio client"""
+    global GRADIO_CLIENT
+    if GRADIO_CLIENT is None:
+        try:
+            print("Initializing Gradio client for fredsok/ingredientsmodel...")
+            GRADIO_CLIENT = Client("fredsok/ingredientsmodel")
+            print("✓ Gradio client initialized successfully")
+        except Exception as e:
+            print(f"Error initializing Gradio client: {e}")
+            raise
+    return GRADIO_CLIENT
 
 # ============== HELPER FUNCTIONS ==============
 
@@ -58,40 +43,91 @@ def clean_ingredient_name(name):
     name = name.replace('_', ' ')
     return name.title()
 
-def predict_ingredients(base64_image):
-    """Predict ingredients from base64 image using PyTorch model"""
+def predict_ingredients_gradio(base64_image):
+    """Predict ingredients from base64 image using Gradio model"""
+    temp_file = None
     try:
-        # Decode base64 image
+        print("=" * 50)
+        print("CALLING GRADIO MODEL API")
+        print(f"Image data length: {len(base64_image)} chars")
+        
+        # Decode base64 image and save to temporary file
         image_data = base64.b64decode(base64_image)
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
         
-        # Transform image
-        input_tensor = transform(image).unsqueeze(0).to(device)
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+            temp_file.write(image_data)
+            temp_file_path = temp_file.name
         
-        # Run model
-        with torch.no_grad():
-            outputs = ingredient_model(input_tensor)
-            probs = torch.nn.functional.softmax(outputs[0], dim=0)
-            
-            # Get top 5 predictions
-            k = min(5, len(class_names))
-            top_probs, top_idxs = torch.topk(probs, k)
+        print(f"Temporary file created: {temp_file_path}")
         
-        # Build result list
+        # Get Gradio client
+        client = get_gradio_client()
+        
+        # Call the prediction API
+        print("Calling Gradio predict API...")
+        result = client.predict(
+            image=handle_file(temp_file_path),
+            api_name="/predict"
+        )
+        
+        print(f"Gradio API Result: {result}")
+        
+        # Process results
         predictions = []
-        for prob, idx in zip(top_probs, top_idxs):
-            raw_name = class_names[idx]
-            clean_name = clean_ingredient_name(raw_name)
-            confidence = prob.item()
-            
+        
+        # The result format depends on the model output
+        # Common formats: dict with 'label' and 'confidences', or list of tuples
+        if isinstance(result, dict):
+            # Format: {'label': 'apple', 'confidences': [{'label': 'apple', 'confidence': 0.95}, ...]}
+            if 'confidences' in result:
+                for item in result['confidences'][:5]:  # Top 5
+                    clean_name = clean_ingredient_name(item.get('label', ''))
+                    predictions.append({
+                        'name': clean_name,
+                        'value': item.get('confidence', 0),
+                        'raw_name': item.get('label', '')
+                    })
+            elif 'label' in result:
+                # Single prediction format
+                clean_name = clean_ingredient_name(result['label'])
+                predictions.append({
+                    'name': clean_name,
+                    'value': result.get('confidence', 0.9),  # Default confidence if not provided
+                    'raw_name': result['label']
+                })
+        elif isinstance(result, list):
+            # Format: [('apple', 0.95), ('banana', 0.03), ...]
+            for item in result[:5]:  # Top 5
+                if isinstance(item, tuple) and len(item) >= 2:
+                    label, confidence = item[0], item[1]
+                    clean_name = clean_ingredient_name(label)
+                    predictions.append({
+                        'name': clean_name,
+                        'value': float(confidence),
+                        'raw_name': label
+                    })
+                elif isinstance(item, dict):
+                    clean_name = clean_ingredient_name(item.get('label', ''))
+                    predictions.append({
+                        'name': clean_name,
+                        'value': item.get('score', 0) or item.get('confidence', 0),
+                        'raw_name': item.get('label', '')
+                    })
+        elif isinstance(result, str):
+            # Single string result
+            clean_name = clean_ingredient_name(result)
             predictions.append({
                 'name': clean_name,
-                'value': confidence,
-                'raw_name': raw_name
+                'value': 0.9,  # Default confidence
+                'raw_name': result
             })
         
+        if not predictions:
+            raise Exception(f"No predictions returned from Gradio API. Raw result: {result}")
+        
         print("=" * 50)
-        print("PYTORCH MODEL PREDICTIONS:")
+        print("GRADIO MODEL PREDICTIONS:")
         for i, pred in enumerate(predictions, 1):
             print(f"{i}. {pred['name']}: {pred['value']*100:.2f}%")
         print("=" * 50)
@@ -99,10 +135,18 @@ def predict_ingredients(base64_image):
         return predictions
         
     except Exception as e:
-        print(f"Error in predict_ingredients: {str(e)}")
+        print(f"Error in predict_ingredients_gradio: {str(e)}")
         import traceback
         traceback.print_exc()
         raise
+    finally:
+        # Clean up temporary file
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+                print(f"Temporary file deleted: {temp_file_path}")
+            except Exception as e:
+                print(f"Error deleting temporary file: {e}")
 
 @app.route("/")
 def welcome():
@@ -128,12 +172,12 @@ def identify_food():
                 return jsonify({'error': 'No image provided'}), 400
             
             print("=" * 50)
-            print("PROCESSING IMAGE WITH PYTORCH MODEL")
+            print("PROCESSING IMAGE WITH GRADIO MODEL API")
             print(f"Image data length: {len(base64_image)} chars")
             print("=" * 50)
             
-            # Get predictions from PyTorch model
-            predictions = predict_ingredients(base64_image)
+            # Get predictions from Gradio API
+            predictions = predict_ingredients_gradio(base64_image)
             
             if not predictions or len(predictions) == 0:
                 return jsonify({'error': 'No ingredients detected in the image'}), 400
@@ -336,6 +380,23 @@ def test_gemini():
             'success': True,
             'message': 'Gemini is working!',
             'response': response.text
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route("/test-gradio")
+def test_gradio():
+    """Test endpoint to verify Gradio API is working"""
+    try:
+        client = get_gradio_client()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Gradio client initialized successfully',
+            'model': 'fredsok/ingredientsmodel'
         })
     except Exception as e:
         return jsonify({
