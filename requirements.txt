@@ -2,3 +2,5 @@ Flask
 gunicorn
 requests
 google-generativeai
+Pillow
+gradio-client
