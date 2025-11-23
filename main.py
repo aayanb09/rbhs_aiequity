@@ -36,7 +36,8 @@ def predict_ingredients_huggingface(base64_image):
     url = "https://router.huggingface.co/hf-inference/models/rbhsaiep/foodanalyzer"
 
     headers = {
-        "Authorization": f"Bearer {HF_API_KEY}"
+        "Authorization": f"Bearer {HF_API_KEY}",
+        "Content-Type": "application/json"
     }
 
     # Decode base64 to bytes for the API
@@ -45,7 +46,7 @@ def predict_ingredients_huggingface(base64_image):
     except Exception as e:
         raise Exception(f"Failed to decode base64 image: {str(e)}")
 
-    # Send the image bytes as binary data (not JSON)
+    # Send the image bytes directly
     response = requests.post(url, headers=headers, data=image_bytes, timeout=30)
 
     if response.status_code != 200:
