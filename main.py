@@ -42,55 +42,111 @@ def clean_ingredient_name(name):
     name = name.split('_(')[0]  # Remove (meat), (fish), etc.
     name = name.replace('_', ' ')
     return name.title()
-def predict_ingredients_inference_api(base64_image):
-    """Predict ingredients using Hugging Face Inference API (production stable)."""
-    HF_API_KEY = os.environ.get("HF_API_KEY")
-    if not HF_API_KEY:
-        raise Exception("HF_API_KEY not set in environment variables")
 
-    # API endpoint for your model
-    url = "https://api-inference.huggingface.co/models/fredsok/ingredientsmodel"
-
-    headers = {
-        "Authorization": f"Bearer {HF_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    # Send image as base64 string
-    payload = {
-        "inputs": base64_image
-    }
-
-    response = requests.post(url, headers=headers, json=payload, timeout=20)
-
-    if response.status_code != 200:
-        raise Exception(f"Hugging Face API Error {response.status_code}: {response.text}")
-
-    result = response.json()
-
-    # Normalize prediction outputs
-    predictions = []
-    if isinstance(result, list):
-        # Format example: [{"label": "apple", "score": 0.97}, ...]
-        for item in result[:5]:
+def predict_ingredients_gradio(base64_image):
+    """Predict ingredients from base64 image using Gradio model"""
+    temp_file = None
+    try:
+        print("=" * 50)
+        print("CALLING GRADIO MODEL API")
+        print(f"Image data length: {len(base64_image)} chars")
+        
+        # Decode base64 image and save to temporary file
+        image_data = base64.b64decode(base64_image)
+        
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+            temp_file.write(image_data)
+            temp_file_path = temp_file.name
+        
+        print(f"Temporary file created: {temp_file_path}")
+        
+        # Get Gradio client
+        client = get_gradio_client()
+        
+        # Call the prediction API
+        print("Calling Gradio predict API...")
+        result = client.predict(
+            image=handle_file(temp_file_path),
+            api_name="/predict"
+        )
+        
+        print(f"Gradio API Result: {result}")
+        
+        # Process results
+        predictions = []
+        
+        # The result format depends on the model output
+        # Common formats: dict with 'label' and 'confidences', or list of tuples
+        if isinstance(result, dict):
+            # Format: {'label': 'apple', 'confidences': [{'label': 'apple', 'confidence': 0.95}, ...]}
+            if 'confidences' in result:
+                for item in result['confidences'][:5]:  # Top 5
+                    clean_name = clean_ingredient_name(item.get('label', ''))
+                    predictions.append({
+                        'name': clean_name,
+                        'value': item.get('confidence', 0),
+                        'raw_name': item.get('label', '')
+                    })
+            elif 'label' in result:
+                # Single prediction format
+                clean_name = clean_ingredient_name(result['label'])
+                predictions.append({
+                    'name': clean_name,
+                    'value': result.get('confidence', 0.9),  # Default confidence if not provided
+                    'raw_name': result['label']
+                })
+        elif isinstance(result, list):
+            # Format: [('apple', 0.95), ('banana', 0.03), ...]
+            for item in result[:5]:  # Top 5
+                if isinstance(item, tuple) and len(item) >= 2:
+                    label, confidence = item[0], item[1]
+                    clean_name = clean_ingredient_name(label)
+                    predictions.append({
+                        'name': clean_name,
+                        'value': float(confidence),
+                        'raw_name': label
+                    })
+                elif isinstance(item, dict):
+                    clean_name = clean_ingredient_name(item.get('label', ''))
+                    predictions.append({
+                        'name': clean_name,
+                        'value': item.get('score', 0) or item.get('confidence', 0),
+                        'raw_name': item.get('label', '')
+                    })
+        elif isinstance(result, str):
+            # Single string result
+            clean_name = clean_ingredient_name(result)
             predictions.append({
-                "name": clean_ingredient_name(item["label"]),
-                "value": float(item["score"]),
-                "raw_name": item["label"]
+                'name': clean_name,
+                'value': 0.9,  # Default confidence
+                'raw_name': result
             })
-
-    elif isinstance(result, dict) and "label" in result:
-        predictions.append({
-            "name": clean_ingredient_name(result["label"]),
-            "value": result.get("score", 0.9),
-            "raw_name": result["label"]
-        })
-
-    if not predictions:
-        raise Exception(f"No predictions returned from HF API. Raw response: {result}")
-
-    return predictions
-
+        
+        if not predictions:
+            raise Exception(f"No predictions returned from Gradio API. Raw result: {result}")
+        
+        print("=" * 50)
+        print("GRADIO MODEL PREDICTIONS:")
+        for i, pred in enumerate(predictions, 1):
+            print(f"{i}. {pred['name']}: {pred['value']*100:.2f}%")
+        print("=" * 50)
+        
+        return predictions
+        
+    except Exception as e:
+        print(f"Error in predict_ingredients_gradio: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
+    finally:
+        # Clean up temporary file
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+                print(f"Temporary file deleted: {temp_file_path}")
+            except Exception as e:
+                print(f"Error deleting temporary file: {e}")
 
 @app.route("/")
 def welcome():
@@ -121,7 +177,7 @@ def identify_food():
             print("=" * 50)
             
             # Get predictions from Gradio API
-            predictions = predict_ingredients_inference_api(base64_image)
+            predictions = predict_ingredients_gradio(base64_image)
             
             if not predictions or len(predictions) == 0:
                 return jsonify({'error': 'No ingredients detected in the image'}), 400
