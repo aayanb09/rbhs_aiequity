@@ -28,7 +28,7 @@ def clean_ingredient_name(name):
     return name.title()
 
 def predict_ingredients_huggingface(base64_image):
-    """Predict ingredients using Hugging Face Inference API."""
+    """Predict ingredients using Hugging Face Inference API with your specific model."""
     if not HF_API_KEY:
         raise Exception("HF_API_KEY not set in environment variables")
 
@@ -38,12 +38,8 @@ def predict_ingredients_huggingface(base64_image):
         
         print(f"Image bytes length: {len(image_bytes)}")
         
-        # Use a reliable public food classification model
-        # This model is specifically trained for food recognition
-        model_name = "nateraw/food"
-        
-        # Use the Hugging Face serverless inference API
-        url = f"https://api-inference.huggingface.co/models/{model_name}"
+        # Use the old API endpoint which still works for most models
+        url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
         
         headers = {
             "Authorization": f"Bearer {HF_API_KEY}"
@@ -70,7 +66,16 @@ def predict_ingredients_huggingface(base64_image):
         if response.status_code != 200:
             error_text = response.text
             print(f"Error response: {error_text}")
-            raise Exception(f"Hugging Face API Error {response.status_code}: {error_text[:200]}")
+            
+            # Try to parse error message
+            try:
+                error_json = response.json()
+                if "error" in error_json:
+                    raise Exception(f"Hugging Face API Error: {error_json['error']}")
+            except:
+                pass
+            
+            raise Exception(f"Hugging Face API Error {response.status_code}: {error_text}")
         
         # Parse successful response
         result = response.json()
