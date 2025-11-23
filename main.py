@@ -32,8 +32,8 @@ def predict_ingredients_huggingface(base64_image):
     if not HF_API_KEY:
         raise Exception("HF_API_KEY not set in environment variables")
 
-    # Use the new router endpoint
-    url = "https://router.huggingface.co/models/rbhsaiep/foodanalyzer"
+    # Use the standard Inference API endpoint for model repositories
+    url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
 
     headers = {
         "Authorization": f"Bearer {HF_API_KEY}",
@@ -349,8 +349,8 @@ def test_huggingface():
         if not HF_API_KEY:
             return jsonify({'error': 'HF_API_KEY not set'}), 500
         
-        # Test with the new router endpoint
-        url = "https://router.huggingface.co/models/rbhsaiep/foodanalyzer"
+        # Test with a simple request
+        url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
         headers = {"Authorization": f"Bearer {HF_API_KEY}"}
         
         # Try to get model info
