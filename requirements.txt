@@ -3,4 +3,4 @@ gunicorn
 requests
 google-generativeai
 Pillow
-huggingface-hub
+gradio-client
