@@ -5,7 +5,6 @@ import io
 import requests
 import google.generativeai as genai
 from PIL import Image
-from gradio_client import Client, handle_file
 import tempfile
 
 app = Flask(__name__)
@@ -14,25 +13,10 @@ app.secret_key = "password"
 # Set up API keys
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 CALORIENINJA_API_KEY = os.environ.get("CALORIENINJA_API_KEY")
+HF_API_KEY = os.environ.get("HF_API_KEY")
 
 # Configure Gemini
 genai.configure(api_key=GOOGLE_API_KEY)
-
-# Initialize Gradio client
-GRADIO_CLIENT = None
-
-def get_gradio_client():
-    """Lazy initialization of Gradio client"""
-    global GRADIO_CLIENT
-    if GRADIO_CLIENT is None:
-        try:
-            print("Initializing Gradio client for fredsok/ingredientsmodel...")
-            GRADIO_CLIENT = Client("fredsok/ingredientsmodel")
-            print("✓ Gradio client initialized successfully")
-        except Exception as e:
-            print(f"Error initializing Gradio client: {e}")
-            raise
-    return GRADIO_CLIENT
 
 # ============== HELPER FUNCTIONS ==============
 
@@ -42,46 +26,60 @@ def clean_ingredient_name(name):
     name = name.split('_(')[0]  # Remove (meat), (fish), etc.
     name = name.replace('_', ' ')
     return name.title()
-def predict_ingredients_inference_api(base64_image):
-    """Predict ingredients using Hugging Face Inference API (router endpoint)."""
-    HF_API_KEY = os.environ.get("HF_API_KEY")
+
+def predict_ingredients_huggingface(base64_image):
+    """Predict ingredients using Hugging Face Inference API with your specific model."""
     if not HF_API_KEY:
         raise Exception("HF_API_KEY not set in environment variables")
 
-    # NEW updated endpoint:
-    url = "https://router.huggingface.co/hf-inference/models/fredsok/ingredientsmodel"
+    # Your model endpoint
+    url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
 
     headers = {
         "Authorization": f"Bearer {HF_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    payload = {
-        "inputs": base64_image
-    }
+    # Decode base64 to bytes for the API
+    try:
+        image_bytes = base64.b64decode(base64_image)
+    except Exception as e:
+        raise Exception(f"Failed to decode base64 image: {str(e)}")
 
-    response = requests.post(url, headers=headers, json=payload, timeout=20)
+    # Send the image bytes directly
+    response = requests.post(url, headers=headers, data=image_bytes, timeout=30)
 
     if response.status_code != 200:
-        raise Exception(f"Hugging Face API Error {response.status_code}: {response.text}")
+        error_msg = f"Hugging Face API Error {response.status_code}: {response.text}"
+        print(error_msg)
+        raise Exception(error_msg)
 
     result = response.json()
+    print(f"Raw HF API Response: {result}")
 
     predictions = []
+    
+    # Handle different response formats
     if isinstance(result, list):
-        for item in result[:5]:
+        # Standard classification format: [{"label": "...", "score": ...}, ...]
+        for item in result[:5]:  # Top 5 predictions
+            if isinstance(item, dict) and "label" in item and "score" in item:
+                predictions.append({
+                    "name": clean_ingredient_name(item["label"]),
+                    "value": float(item["score"]),
+                    "raw_name": item["label"]
+                })
+    elif isinstance(result, dict):
+        # Single prediction format
+        if "label" in result and "score" in result:
             predictions.append({
-                "name": clean_ingredient_name(item["label"]),
-                "value": float(item["score"]),
-                "raw_name": item["label"]
+                "name": clean_ingredient_name(result["label"]),
+                "value": float(result.get("score", 0.9)),
+                "raw_name": result["label"]
             })
-
-    elif isinstance(result, dict) and "label" in result:
-        predictions.append({
-            "name": clean_ingredient_name(result["label"]),
-            "value": result.get("score", 0.9),
-            "raw_name": result["label"]
-        })
+        # Handle error in response
+        elif "error" in result:
+            raise Exception(f"HF API returned error: {result['error']}")
 
     if not predictions:
         raise Exception(f"No predictions returned from HF API. Raw response: {result}")
@@ -112,12 +110,13 @@ def identify_food():
                 return jsonify({'error': 'No image provided'}), 400
             
             print("=" * 50)
-            print("PROCESSING IMAGE WITH GRADIO MODEL API")
+            print("PROCESSING IMAGE WITH HUGGING FACE MODEL")
+            print(f"Model: rbhsaiep/foodanalyzer")
             print(f"Image data length: {len(base64_image)} chars")
             print("=" * 50)
             
-            # Get predictions from Gradio API
-            predictions = predict_ingredients_inference_api(base64_image)
+            # Get predictions from Hugging Face model
+            predictions = predict_ingredients_huggingface(base64_image)
             
             if not predictions or len(predictions) == 0:
                 return jsonify({'error': 'No ingredients detected in the image'}), 400
@@ -240,7 +239,7 @@ def identify_food():
                 print(f"Prompt (first 100 chars): {prompt[:100]}...")
                 print("Calling Gemini API NOW...")
                 
-                model = genai.GenerativeModel("gemini-2.5-flash")
+                model = genai.GenerativeModel("gemini-2.0-flash-exp")
                 gemini_response = model.generate_content(prompt)
                 
                 gemini_advice = gemini_response.text.strip()
@@ -313,7 +312,7 @@ def test_gemini():
         if not GOOGLE_API_KEY:
             return jsonify({'error': 'GOOGLE_API_KEY not set'}), 500
         
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
         response = model.generate_content("Say hello in one sentence")
         
         return jsonify({
@@ -327,16 +326,24 @@ def test_gemini():
             'error': str(e)
         }), 500
 
-@app.route("/test-gradio")
-def test_gradio():
-    """Test endpoint to verify Gradio API is working"""
+@app.route("/test-huggingface")
+def test_huggingface():
+    """Test endpoint to verify Hugging Face model is working"""
     try:
-        client = get_gradio_client()
+        if not HF_API_KEY:
+            return jsonify({'error': 'HF_API_KEY not set'}), 500
+        
+        # Test with a simple request
+        url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
+        headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+        
+        response = requests.get(url, headers=headers)
         
         return jsonify({
             'success': True,
-            'message': 'Gradio client initialized successfully',
-            'model': 'fredsok/ingredientsmodel'
+            'message': 'Hugging Face model is accessible!',
+            'model': 'rbhsaiep/foodanalyzer',
+            'status': response.status_code
         })
     except Exception as e:
         return jsonify({
