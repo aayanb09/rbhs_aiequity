@@ -5,7 +5,6 @@ import io
 import requests
 import google.generativeai as genai
 from PIL import Image
-from huggingface_hub import InferenceClient
 import tempfile
 
 app = Flask(__name__)
@@ -37,41 +36,60 @@ def predict_ingredients_huggingface(base64_image):
         # Decode base64 to bytes
         image_bytes = base64.b64decode(base64_image)
         
-        # Create PIL Image from bytes
-        image = Image.open(io.BytesIO(image_bytes))
+        print(f"Image bytes length: {len(image_bytes)}")
         
-        print(f"Image size: {image.size}, Mode: {image.mode}")
+        # Use the old API endpoint which still works for most models
+        url = "https://api-inference.huggingface.co/models/rbhsaiep/foodanalyzer"
         
-        # Initialize Hugging Face Inference Client
-        client = InferenceClient(token=HF_API_KEY)
+        headers = {
+            "Authorization": f"Bearer {HF_API_KEY}"
+        }
         
-        print("Calling Hugging Face model: rbhsaiep/foodanalyzer")
+        print(f"Sending request to: {url}")
         
-        # Call the model for image classification
-        result = client.image_classification(
-            image=image,
-            model="rbhsaiep/foodanalyzer"
-        )
+        response = requests.post(url, headers=headers, data=image_bytes, timeout=60)
         
-        print(f"Raw HF API Response: {result}")
+        print(f"Response status: {response.status_code}")
+        
+        # Handle model loading state
+        if response.status_code == 503:
+            try:
+                error_data = response.json()
+                if "estimated_time" in error_data:
+                    wait_time = error_data["estimated_time"]
+                    raise Exception(f"Model is loading. Please wait {wait_time:.0f} seconds and try again.")
+            except:
+                pass
+            raise Exception("Model is currently loading. Please wait 20-30 seconds and try again.")
+        
+        # Handle other errors
+        if response.status_code != 200:
+            error_text = response.text
+            print(f"Error response: {error_text}")
+            
+            # Try to parse error message
+            try:
+                error_json = response.json()
+                if "error" in error_json:
+                    raise Exception(f"Hugging Face API Error: {error_json['error']}")
+            except:
+                pass
+            
+            raise Exception(f"Hugging Face API Error {response.status_code}: {error_text}")
+        
+        # Parse successful response
+        result = response.json()
+        print(f"✓ Success! Raw response: {result}")
         
         predictions = []
         
-        # The result should be a list of classification results
         if isinstance(result, list):
-            for item in result[:5]:  # Top 5 predictions
+            for item in result[:5]:
                 if isinstance(item, dict) and "label" in item and "score" in item:
                     predictions.append({
                         "name": clean_ingredient_name(item["label"]),
                         "value": float(item["score"]),
                         "raw_name": item["label"]
-                    })
-                elif hasattr(item, 'label') and hasattr(item, 'score'):
-                    # Handle objects with attributes
-                    predictions.append({
-                        "name": clean_ingredient_name(item.label),
-                        "value": float(item.score),
-                        "raw_name": item.label
                     })
         
         if not predictions:
@@ -83,7 +101,7 @@ def predict_ingredients_huggingface(base64_image):
         print(f"Hugging Face error: {str(e)}")
         import traceback
         traceback.print_exc()
-        raise Exception(f"Failed to get predictions from Hugging Face: {str(e)}")
+        raise
 
 @app.route("/")
 def welcome():
