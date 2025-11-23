@@ -43,19 +43,20 @@ def clean_ingredient_name(name):
     name = name.replace('_', ' ')
     return name.title()
 def predict_ingredients_inference_api(base64_image):
-    """Predict ingredients using Hugging Face Inference API (router endpoint)."""
+    """Predict ingredients using Hugging Face Inference API (production stable)."""
     HF_API_KEY = os.environ.get("HF_API_KEY")
     if not HF_API_KEY:
         raise Exception("HF_API_KEY not set in environment variables")
 
-    # NEW updated endpoint:
-    url = "https://router.huggingface.co/hf-inference/models/fredsok/ingredientsmodel"
+    # API endpoint for your model
+    url = "https://api-inference.huggingface.co/models/fredsok/ingredientsmodel"
 
     headers = {
         "Authorization": f"Bearer {HF_API_KEY}",
         "Content-Type": "application/json"
     }
 
+    # Send image as base64 string
     payload = {
         "inputs": base64_image
     }
@@ -67,8 +68,10 @@ def predict_ingredients_inference_api(base64_image):
 
     result = response.json()
 
+    # Normalize prediction outputs
     predictions = []
     if isinstance(result, list):
+        # Format example: [{"label": "apple", "score": 0.97}, ...]
         for item in result[:5]:
             predictions.append({
                 "name": clean_ingredient_name(item["label"]),
@@ -87,6 +90,7 @@ def predict_ingredients_inference_api(base64_image):
         raise Exception(f"No predictions returned from HF API. Raw response: {result}")
 
     return predictions
+
 
 @app.route("/")
 def welcome():
