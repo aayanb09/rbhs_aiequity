@@ -5,7 +5,6 @@ import io
 import requests
 import google.generativeai as genai
 from PIL import Image
-from huggingface_hub import InferenceClient
 import tempfile
 
 app = Flask(__name__)
@@ -33,57 +32,75 @@ def predict_ingredients_huggingface(base64_image):
     if not HF_API_KEY:
         raise Exception("HF_API_KEY not set in environment variables")
 
+    # Use the new router endpoint
+    url = "https://router.huggingface.co/models/rbhsaiep/foodanalyzer"
+
+    headers = {
+        "Authorization": f"Bearer {HF_API_KEY}",
+    }
+
+    # Decode base64 to bytes for the API
     try:
-        # Decode base64 to bytes
         image_bytes = base64.b64decode(base64_image)
-        
-        # Create PIL Image from bytes
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        print(f"Image size: {image.size}, Mode: {image.mode}")
-        
-        # Initialize Hugging Face Inference Client
-        client = InferenceClient(token=HF_API_KEY)
-        
-        print("Calling Hugging Face model: rbhsaiep/foodanalyzer")
-        
-        # Call the model for image classification
-        result = client.image_classification(
-            image=image,
-            model="rbhsaiep/foodanalyzer"
-        )
-        
-        print(f"Raw HF API Response: {result}")
-        
-        predictions = []
-        
-        # The result should be a list of classification results
-        if isinstance(result, list):
-            for item in result[:5]:  # Top 5 predictions
-                if isinstance(item, dict) and "label" in item and "score" in item:
-                    predictions.append({
-                        "name": clean_ingredient_name(item["label"]),
-                        "value": float(item["score"]),
-                        "raw_name": item["label"]
-                    })
-                elif hasattr(item, 'label') and hasattr(item, 'score'):
-                    # Handle objects with attributes
-                    predictions.append({
-                        "name": clean_ingredient_name(item.label),
-                        "value": float(item.score),
-                        "raw_name": item.label
-                    })
-        
-        if not predictions:
-            raise Exception(f"No predictions returned. Raw response: {result}")
-        
-        return predictions
-        
     except Exception as e:
-        print(f"Hugging Face error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise Exception(f"Failed to get predictions from Hugging Face: {str(e)}")
+        raise Exception(f"Failed to decode base64 image: {str(e)}")
+
+    print(f"Sending request to: {url}")
+    print(f"Image size: {len(image_bytes)} bytes")
+    
+    # Send the image bytes as binary data
+    response = requests.post(url, headers=headers, data=image_bytes, timeout=60)
+
+    print(f"Response status: {response.status_code}")
+    print(f"Response headers: {response.headers}")
+    
+    if response.status_code == 503:
+        # Model is loading
+        try:
+            error_data = response.json()
+            if "estimated_time" in error_data:
+                raise Exception(f"Model is loading. Please wait about {error_data['estimated_time']} seconds and try again.")
+            else:
+                raise Exception("Model is loading. Please wait a moment and try again.")
+        except:
+            raise Exception("Model is loading. Please wait a moment and try again.")
+    
+    if response.status_code != 200:
+        error_msg = f"Hugging Face API Error {response.status_code}: {response.text}"
+        print(error_msg)
+        raise Exception(error_msg)
+
+    result = response.json()
+    print(f"Raw HF API Response: {result}")
+
+    predictions = []
+    
+    # Handle different response formats
+    if isinstance(result, list):
+        # Standard classification format: [{"label": "...", "score": ...}, ...]
+        for item in result[:5]:  # Top 5 predictions
+            if isinstance(item, dict) and "label" in item and "score" in item:
+                predictions.append({
+                    "name": clean_ingredient_name(item["label"]),
+                    "value": float(item["score"]),
+                    "raw_name": item["label"]
+                })
+    elif isinstance(result, dict):
+        # Single prediction format
+        if "label" in result and "score" in result:
+            predictions.append({
+                "name": clean_ingredient_name(result["label"]),
+                "value": float(result.get("score", 0.9)),
+                "raw_name": result["label"]
+            })
+        # Handle error in response
+        elif "error" in result:
+            raise Exception(f"HF API returned error: {result['error']}")
+
+    if not predictions:
+        raise Exception(f"No predictions returned from HF API. Raw response: {result}")
+
+    return predictions
 
 @app.route("/")
 def welcome():
