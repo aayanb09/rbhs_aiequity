@@ -45,14 +45,35 @@ def clean_ingredient_name(name):
 
 def predict_ingredients_gradio(base64_image):
     """Predict ingredients from base64 image using Gradio model"""
-    temp_file = None
+    temp_file_path = None
     try:
         print("=" * 50)
         print("CALLING GRADIO MODEL API")
         print(f"Image data length: {len(base64_image)} chars")
+        print(f"Image starts with: {base64_image[:50]}")
+        
+        # FIXED: Remove data URL prefix if present
+        if ',' in base64_image and base64_image.startswith('data:'):
+            print("Removing data URL prefix...")
+            base64_image = base64_image.split(',', 1)[1]
+        
+        # Additional check for any remaining prefix
+        if base64_image.startswith('data:'):
+            print("WARNING: Image still has data URL prefix after split!")
+            # Force remove everything before comma
+            if ',' in base64_image:
+                base64_image = base64_image.split(',')[-1]
+        
+        print(f"Cleaned image data length: {len(base64_image)} chars")
+        print(f"Cleaned image starts with: {base64_image[:30]}")
         
         # Decode base64 image and save to temporary file
-        image_data = base64.b64decode(base64_image)
+        try:
+            image_data = base64.b64decode(base64_image)
+            print(f"Successfully decoded base64 data: {len(image_data)} bytes")
+        except Exception as decode_error:
+            print(f"Base64 decode error: {decode_error}")
+            raise Exception(f"Failed to decode base64 image: {str(decode_error)}")
         
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
@@ -60,6 +81,16 @@ def predict_ingredients_gradio(base64_image):
             temp_file_path = temp_file.name
         
         print(f"Temporary file created: {temp_file_path}")
+        
+        # Verify file was created and has content
+        if not os.path.exists(temp_file_path):
+            raise Exception("Temporary file was not created")
+        
+        file_size = os.path.getsize(temp_file_path)
+        print(f"Temporary file size: {file_size} bytes")
+        
+        if file_size == 0:
+            raise Exception("Temporary file is empty")
         
         # Get Gradio client
         client = get_gradio_client()
@@ -173,7 +204,13 @@ def identify_food():
             
             print("=" * 50)
             print("PROCESSING IMAGE WITH GRADIO MODEL API")
-            print(f"Image data length: {len(base64_image)} chars")
+            print(f"Received image data length: {len(base64_image)} chars")
+            
+            # DEBUG: Check if image has data URL prefix
+            if base64_image.startswith('data:'):
+                print("WARNING: Image includes data URL prefix in request!")
+                print(f"Prefix: {base64_image[:50]}")
+            
             print("=" * 50)
             
             # Get predictions from Gradio API
