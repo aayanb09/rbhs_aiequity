@@ -1,0 +1,881 @@
+{% extends "base.html" %}
+{% block title %}Treatment Information{% endblock %}
+{% block content %}
+
+<style>
+.treatment-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  padding: 48px;
+  position: relative;
+}
+
+.treatment-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(147, 51, 234, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.page-header {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #0f172a;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInDown 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 36px;
+  height: 36px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.back-btn {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.intro-section {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 36px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.5s ease 0.1s backwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.intro-text {
+  font-size: 1.0625rem;
+  color: #475569;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.intro-text:last-child {
+  margin-bottom: 0;
+}
+
+.warning-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 24px;
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+
+.warning-icon {
+  width: 24px;
+  height: 24px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warning-text {
+  color: #92400e;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.warning-text strong {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 28px;
+  margin-bottom: 32px;
+}
+
+.category-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.category-card:nth-child(1) { animation-delay: 0.1s; }
+.category-card:nth-child(2) { animation-delay: 0.2s; }
+.category-card:nth-child(3) { animation-delay: 0.3s; }
+.category-card:nth-child(4) { animation-delay: 0.4s; }
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.category-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.category-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #1e40af;
+  stroke-width: 2.5;
+}
+
+.category-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.category-description {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.treatment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.treatment-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px;
+  border-radius: 14px;
+  border-left: 4px solid #3b82f6;
+  transition: all 0.25s ease;
+}
+
+.treatment-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.treatment-name {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.treatment-name .badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-left: 8px;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+}
+
+.treatment-how {
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.treatment-how strong {
+  color: #1e40af;
+}
+
+.treatment-details {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.treatment-details ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+
+.treatment-details li {
+  margin-bottom: 4px;
+}
+
+.lifestyle-section {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease 0.5s backwards;
+}
+
+.lifestyle-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.section-icon {
+  width: 26px;
+  height: 26px;
+  color: #059669;
+  stroke-width: 2.5;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.lifestyle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.lifestyle-item {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  padding: 20px;
+  border-radius: 14px;
+  border-left: 4px solid #10b981;
+}
+
+.lifestyle-item h4 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #064e3b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lifestyle-item h4 svg {
+  width: 20px;
+  height: 20px;
+  color: #059669;
+}
+
+.lifestyle-item p {
+  font-size: 0.9375rem;
+  color: #065f46;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.resources-section {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #93c5fd;
+  border-radius: 20px;
+  padding: 32px 36px;
+  margin-top: 32px;
+  animation: fadeInUp 0.5s ease 0.6s backwards;
+}
+
+.resources-section h3 {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resources-section h3 svg {
+  width: 24px;
+  height: 24px;
+}
+
+.resources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resource-link {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #1e40af;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+}
+
+.resource-link:hover {
+  border-color: #3b82f6;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.resource-link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .treatment-container {
+    padding: 32px 24px;
+  }
+
+  .page-header {
+    padding: 28px 24px;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .intro-section,
+  .category-card,
+  .lifestyle-section,
+  .resources-section {
+    padding: 24px 20px;
+  }
+
+  .lifestyle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="treatment-container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <i data-lucide="pill" class="page-header-icon"></i>
+      <h1>Diabetes Treatment Information</h1>
+    </div>
+    <a href="/symptomTracker" class="back-btn">
+      <i data-lucide="arrow-left"></i>
+      <span>Back to Tracker</span>
+    </a>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Introduction Section -->
+    <div class="intro-section">
+      <p class="intro-text">
+        Understanding how diabetes treatments work can help you make informed decisions about your health. This guide explains the main categories of diabetes medications and lifestyle interventions, how they work in your body, and what to expect from each treatment approach.
+      </p>
+      <p class="intro-text">
+        Diabetes management typically involves a combination of medication, lifestyle changes, and regular monitoring. Your healthcare provider will work with you to find the best treatment plan based on your type of diabetes, overall health, and personal preferences.
+      </p>
+      
+      <div class="warning-banner">
+        <i data-lucide="alert-triangle" class="warning-icon"></i>
+        <div class="warning-text">
+          <strong>Important Medical Disclaimer</strong>
+          This information is for educational purposes only and should not replace professional medical advice. Always consult with your healthcare provider before starting, stopping, or changing any medication. Never adjust your diabetes treatment without medical supervision.
+        </div>
+      </div>
+    </div>
+
+    <!-- Treatment Categories -->
+    <div class="category-grid">
+      <!-- Insulin -->
+      <div class="category-card">
+        <div class="category-header">
+          <div class="category-icon">
+            <i data-lucide="syringe"></i>
+          </div>
+          <h2 class="category-title">Insulin Therapy</h2>
+        </div>
+        <p class="category-description">
+          Insulin is a hormone that helps glucose enter your cells for energy. It's essential for Type 1 diabetes and sometimes needed for Type 2 diabetes.
+        </p>
+        <div class="treatment-list">
+          <div class="treatment-item">
+            <h3 class="treatment-name">
+              Rapid-Acting Insulin
+              <span class="badge">Mealtime</span>
+            </h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Starts working within 15 minutes, peaks at 1 hour, and lasts 2-4 hours
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Taken just before or with meals to cover the rise in blood glucose</li>
+                <li>Examples: Humalog, NovoLog, Apidra</li>
+                <li>Helps prevent post-meal glucose spikes</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">
+              Long-Acting Insulin
+              <span class="badge">Basal</span>
+            </h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Provides steady glucose control throughout the day and night
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Taken once or twice daily, usually at the same time</li>
+                <li>Examples: Lantus, Levemir, Tresiba</li>
+                <li>Keeps baseline glucose levels stable between meals</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">Insulin Pumps</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Delivers small amounts of insulin continuously throughout the day
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Mimics natural insulin production more closely</li>
+                <li>Allows for precise dosing adjustments</li>
+                <li>Can improve glucose control and flexibility</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oral Medications -->
+      <div class="category-card">
+        <div class="category-header">
+          <div class="category-icon">
+            <i data-lucide="pill"></i>
+          </div>
+          <h2 class="category-title">Oral Medications</h2>
+        </div>
+        <p class="category-description">
+          Pills that help manage Type 2 diabetes by improving how your body uses insulin or produces glucose.
+        </p>
+        <div class="treatment-list">
+          <div class="treatment-item">
+            <h3 class="treatment-name">
+              Metformin
+              <span class="badge">First-Line</span>
+            </h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Reduces glucose production in the liver and improves insulin sensitivity
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Usually the first medication prescribed for Type 2 diabetes</li>
+                <li>Doesn't cause weight gain or low blood sugar when used alone</li>
+                <li>May cause mild digestive side effects initially</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">Sulfonylureas</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Stimulates the pancreas to release more insulin
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Examples: Glipizide, Glyburide, Glimepiride</li>
+                <li>Effective at lowering blood glucose quickly</li>
+                <li>Risk of hypoglycemia and weight gain</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">DPP-4 Inhibitors</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Helps your body produce more insulin when needed and reduces glucose production
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Examples: Januvia, Onglyza, Tradjenta</li>
+                <li>Low risk of hypoglycemia</li>
+                <li>Weight neutral</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">SGLT2 Inhibitors</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Helps kidneys remove glucose through urine
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Examples: Jardiance, Farxiga, Invokana</li>
+                <li>May help with weight loss and blood pressure</li>
+                <li>Protective benefits for heart and kidneys</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Injectable Non-Insulin -->
+      <div class="category-card">
+        <div class="category-header">
+          <div class="category-icon">
+            <i data-lucide="activity"></i>
+          </div>
+          <h2 class="category-title">Injectable Non-Insulin</h2>
+        </div>
+        <p class="category-description">
+          Injectable medications that help control blood glucose through different mechanisms than insulin.
+        </p>
+        <div class="treatment-list">
+          <div class="treatment-item">
+            <h3 class="treatment-name">
+              GLP-1 Receptor Agonists
+              <span class="badge">Popular</span>
+            </h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Mimics a natural hormone that increases insulin release, slows digestion, and reduces appetite
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Examples: Ozempic, Trulicity, Victoza, Mounjaro</li>
+                <li>Often promotes weight loss</li>
+                <li>Cardiovascular benefits in many patients</li>
+                <li>Low risk of hypoglycemia when used alone</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">Amylin Analogs</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Slows stomach emptying and reduces glucagon secretion
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Example: Symlin (Pramlintide)</li>
+                <li>Used alongside mealtime insulin</li>
+                <li>Helps control post-meal glucose spikes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Combination Therapies -->
+      <div class="category-card">
+        <div class="category-header">
+          <div class="category-icon">
+            <i data-lucide="layers"></i>
+          </div>
+          <h2 class="category-title">Combination Therapies</h2>
+        </div>
+        <p class="category-description">
+          Medications that combine two different drugs in one pill or injection for convenience and enhanced effectiveness.
+        </p>
+        <div class="treatment-list">
+          <div class="treatment-item">
+            <h3 class="treatment-name">Fixed-Dose Combinations</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Combines two medications with complementary mechanisms
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>Examples: Metformin + DPP-4 inhibitor, Metformin + SGLT2 inhibitor</li>
+                <li>Simplifies medication regimen</li>
+                <li>Attacks high blood glucose through multiple pathways</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="treatment-item">
+            <h3 class="treatment-name">Why Combine Treatments?</h3>
+            <p class="treatment-how">
+              <strong>How it works:</strong> Different mechanisms work together for better control
+            </p>
+            <div class="treatment-details">
+              <ul>
+                <li>One medication alone may not achieve target glucose levels</li>
+                <li>Multiple pathways can provide more comprehensive control</li>
+                <li>May reduce side effects by using lower doses of each drug</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lifestyle Interventions -->
+    <div class="lifestyle-section">
+      <div class="section-header">
+        <i data-lucide="heart" class="section-icon"></i>
+        <h2 class="section-title">Lifestyle Interventions</h2>
+      </div>
+      <p class="category-description" style="margin-bottom: 24px;">
+        Lifestyle changes are the foundation of diabetes management and can be as powerful as medication in controlling blood glucose levels.
+      </p>
+      <div class="lifestyle-grid">
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="utensils"></i>
+            Nutrition & Diet
+          </h4>
+          <p>
+            Carbohydrate counting, portion control, and choosing low glycemic index foods help maintain stable blood glucose. A balanced diet rich in vegetables, lean proteins, and whole grains supports overall health.
+          </p>
+        </div>
+
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="trending-up"></i>
+            Physical Activity
+          </h4>
+          <p>
+            Regular exercise improves insulin sensitivity and helps muscles use glucose for energy. Aim for 150 minutes of moderate activity per week, including both aerobic exercise and strength training.
+          </p>
+        </div>
+
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="scale"></i>
+            Weight Management
+          </h4>
+          <p>
+            Losing even 5-10% of body weight can significantly improve blood glucose control, reduce medication needs, and lower risk of complications. Sustainable, gradual weight loss is most effective.
+          </p>
+        </div>
+
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="moon"></i>
+            Sleep & Stress
+          </h4>
+          <p>
+            Quality sleep (7-9 hours) and stress management are crucial. Poor sleep and chronic stress can raise cortisol levels, leading to insulin resistance and elevated blood glucose.
+          </p>
+        </div>
+
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="droplet"></i>
+            Blood Glucose Monitoring
+          </h4>
+          <p>
+            Regular monitoring helps you understand how food, activity, stress, and medications affect your levels. This data guides treatment adjustments and empowers informed decisions.
+          </p>
+        </div>
+
+        <div class="lifestyle-item">
+          <h4>
+            <i data-lucide="shield"></i>
+            Preventive Care
+          </h4>
+          <p>
+            Regular check-ups, eye exams, foot care, and dental visits help catch and prevent complications early. Annual A1C tests, cholesterol checks, and kidney function tests are essential.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources Section -->
+    <div class="resources-section">
+      <h3>
+        <i data-lucide="book-open"></i>
+        Learn More
+      </h3>
+      <div class="resources-list">
+        <a href="https://www.diabetes.org/diabetes" target="_blank" class="resource-link">
+          <i data-lucide="external-link"></i>
+          <span>American Diabetes Association - Comprehensive Diabetes Information</span>
+        </a>
+        <a href="https://www.cdc.gov/diabetes/index.html" target="_blank" class="resource-link">
+          <i data-lucide="external-link"></i>
+          <span>CDC Diabetes Resources - Prevention & Management</span>
+        </a>
+        <a href="https://www.niddk.nih.gov/health-information/diabetes" target="_blank" class="resource-link">
+          <i data-lucide="external-link"></i>
+          <span>National Institute of Diabetes - Research & Education</span>
+        </a>
+        <a href="https://diabetesjournals.org/care" target="_blank" class="resource-link">
+          <i data-lucide="external-link"></i>
+          <span>Diabetes Care Journal - Latest Clinical Research</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+</script>
+
+{% endblock %}
