@@ -52,24 +52,37 @@ def predict_ingredients_gradio(base64_image):
         print(f"Image data length: {len(base64_image)} chars")
         print(f"Image starts with: {base64_image[:50]}")
         
-        # FIXED: Remove data URL prefix if present
-        if ',' in base64_image and base64_image.startswith('data:'):
-            print("Removing data URL prefix...")
-            base64_image = base64_image.split(',', 1)[1]
-        
-        # Additional check for any remaining prefix
+        # Clean the base64 string thoroughly
+        # Remove data URL prefix if present
         if base64_image.startswith('data:'):
-            print("WARNING: Image still has data URL prefix after split!")
-            # Force remove everything before comma
+            print("Removing data URL prefix...")
             if ',' in base64_image:
-                base64_image = base64_image.split(',')[-1]
+                base64_image = base64_image.split(',', 1)[1]
+            else:
+                # Malformed data URL, try to extract just the base64 part
+                base64_image = base64_image.replace('data:', '')
+                base64_image = base64_image.split(';')[-1]
+                if base64_image.startswith('base64,'):
+                    base64_image = base64_image[7:]
+        
+        # Remove any whitespace, newlines, or invalid characters
+        base64_image = base64_image.strip()
+        base64_image = base64_image.replace('\n', '').replace('\r', '').replace(' ', '')
+        
+        # Ensure the string only contains valid base64 characters
+        # Valid base64 characters: A-Z, a-z, 0-9, +, /, =
+        import re
+        if not re.match(r'^[A-Za-z0-9+/=]+$', base64_image):
+            print("WARNING: Base64 string contains invalid characters!")
+            # Try to clean it
+            base64_image = re.sub(r'[^A-Za-z0-9+/=]', '', base64_image)
         
         print(f"Cleaned image data length: {len(base64_image)} chars")
         print(f"Cleaned image starts with: {base64_image[:30]}")
         
         # Decode base64 image and save to temporary file
         try:
-            image_data = base64.b64decode(base64_image)
+            image_data = base64.b64decode(base64_image, validate=True)
             print(f"Successfully decoded base64 data: {len(image_data)} bytes")
         except Exception as decode_error:
             print(f"Base64 decode error: {decode_error}")
