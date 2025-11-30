@@ -725,6 +725,10 @@
        <span class="nav-icon"><i data-lucide="upload"></i></span>
        <span>Food Analyzer</span>
      </a>
+     <a href="/treatment_info" class="{% if request.endpoint == 'treatment' %}active{% endif %}">
+       <span class="nav-icon"><i data-lucide="upload"></i></span>
+       <span>Treatment Info</span>
+     </a>
      <a href="/settings" class="{% if request.endpoint == 'settings' %}active{% endif %}">
        <span class="nav-icon"><i data-lucide="settings"></i></span>
        <span>Settings</span>
