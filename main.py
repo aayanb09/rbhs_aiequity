@@ -190,7 +190,10 @@ def home():
 @app.route("/reminders")
 def reminder():
     return render_template("reminders.html")
-    
+
+@app.route("/treatment_info")
+def treatment_info():
+    return render_template("treatment_info.html")    
     
 @app.route('/upload', methods=['GET', 'POST'])
 def identify_food():
