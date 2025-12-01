@@ -339,7 +339,7 @@ def identify_food():
                             f"• [Suggestion 2]\n"
                             f"• [Suggestion 3]\n"
                             f"• [Suggestion 4]"
-                        )                        )
+                        )                        
                 else:
                     print("No nutrition data - using food name only for Gemini prompt")
                     if nutritional_needs and len(nutritional_needs) > 0:
