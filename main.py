@@ -26,8 +26,8 @@ def get_gradio_client():
     global GRADIO_CLIENT
     if GRADIO_CLIENT is None:
         try:
-            print("Initializing Gradio client for rbhsaiep/ingredientsmodel...")
-            GRADIO_CLIENT = Client("rbhsaiep/ingredientsmodel")
+            print("Initializing Gradio client for fredsok/ingredientsmodel...")
+            GRADIO_CLIENT = Client("fredsok/ingredientsmodel")
             print("✓ Gradio client initialized successfully")
         except Exception as e:
             print(f"Error initializing Gradio client: {e}")
@@ -494,7 +494,7 @@ def test_gradio():
         return jsonify({
             'success': True,
             'message': 'Gradio client initialized successfully',
-            'model': 'rbhsaiep/ingredientsmodel'
+            'model': 'fredsok/ingredientsmodel'
         })
     except Exception as e:
         return jsonify({
