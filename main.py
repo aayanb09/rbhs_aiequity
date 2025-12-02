@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import os
-import base64
-import io
+import json
 import requests
 import google.generativeai as genai
 from PIL import Image
 from gradio_client import Client, handle_file
 import tempfile
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "password" 
@@ -43,62 +43,30 @@ def clean_ingredient_name(name):
     name = name.replace('_', ' ')
     return name.title()
 
-def predict_ingredients_gradio(base64_image):
-    """Predict ingredients from base64 image using Gradio model"""
-    temp_file_path = None
+def predict_ingredients_gradio(file_path):
+    """Predict ingredients from image file using Gradio model"""
     try:
         print("=" * 50)
         print("CALLING GRADIO MODEL API")
-        print(f"Image data length: {len(base64_image)} chars")
-        print(f"Image starts with: {base64_image[:50]}")
+        print(f"Image file path: {file_path}")
         
-        # FIXED: Remove data URL prefix if present
-        if ',' in base64_image and base64_image.startswith('data:'):
-            print("Removing data URL prefix...")
-            base64_image = base64_image.split(',', 1)[1]
+        # Verify file exists and has content
+        if not os.path.exists(file_path):
+            raise Exception("Image file does not exist")
         
-        # Additional check for any remaining prefix
-        if base64_image.startswith('data:'):
-            print("WARNING: Image still has data URL prefix after split!")
-            # Force remove everything before comma
-            if ',' in base64_image:
-                base64_image = base64_image.split(',')[-1]
-        
-        print(f"Cleaned image data length: {len(base64_image)} chars")
-        print(f"Cleaned image starts with: {base64_image[:30]}")
-        
-        # Decode base64 image and save to temporary file
-        try:
-            image_data = base64.b64decode(base64_image)
-            print(f"Successfully decoded base64 data: {len(image_data)} bytes")
-        except Exception as decode_error:
-            print(f"Base64 decode error: {decode_error}")
-            raise Exception(f"Failed to decode base64 image: {str(decode_error)}")
-        
-        # Create a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-            temp_file.write(image_data)
-            temp_file_path = temp_file.name
-        
-        print(f"Temporary file created: {temp_file_path}")
-        
-        # Verify file was created and has content
-        if not os.path.exists(temp_file_path):
-            raise Exception("Temporary file was not created")
-        
-        file_size = os.path.getsize(temp_file_path)
-        print(f"Temporary file size: {file_size} bytes")
+        file_size = os.path.getsize(file_path)
+        print(f"Image file size: {file_size} bytes")
         
         if file_size == 0:
-            raise Exception("Temporary file is empty")
+            raise Exception("Image file is empty")
         
         # Get Gradio client
         client = get_gradio_client()
         
-        # Call the prediction API
+        # Call the prediction API with the file path directly
         print("Calling Gradio predict API...")
         result = client.predict(
-            image=handle_file(temp_file_path),
+            image=handle_file(file_path),
             api_name="/predict"
         )
         
@@ -170,14 +138,6 @@ def predict_ingredients_gradio(base64_image):
         import traceback
         traceback.print_exc()
         raise
-    finally:
-        # Clean up temporary file
-        if temp_file_path and os.path.exists(temp_file_path):
-            try:
-                os.unlink(temp_file_path)
-                print(f"Temporary file deleted: {temp_file_path}")
-            except Exception as e:
-                print(f"Error deleting temporary file: {e}")
 
 @app.route("/")
 def welcome():
@@ -190,62 +150,71 @@ def home():
 @app.route("/reminders")
 def reminder():
     return render_template("reminders.html")
-    
+
+@app.route("/treatment_info")
+def treatment_info():
+    return render_template("treatment_info.html")    
     
 @app.route('/upload', methods=['GET', 'POST'])
 def identify_food():
     if request.method == "POST":
+        temp_file_path = None
         try:
-            data = request.json
-            base64_image = data.get('image')
+            # ================== ACCEPT multipart/form-data ==================
+            if "image" not in request.files:
+                return jsonify({'error': 'No image file uploaded'}), 400
+
+            file = request.files["image"]
             
-            if not base64_image:
-                return jsonify({'error': 'No image provided'}), 400
+            if file.filename == '':
+                return jsonify({'error': 'No selected file'}), 400
+
+            # Optional: nutritional needs
+            raw_needs = request.form.get("nutritional_needs", "[]")
+            try:
+                nutritional_needs = json.loads(raw_needs)
+            except:
+                nutritional_needs = []
+
+            # Save uploaded file to temporary location
+            filename = secure_filename(file.filename)
+            # Get file extension
+            _, ext = os.path.splitext(filename)
+            if not ext:
+                ext = '.jpg'
             
-            print("=" * 50)
-            print("PROCESSING IMAGE WITH GRADIO MODEL API")
-            print(f"Received image data length: {len(base64_image)} chars")
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+                file.save(temp_file.name)
+                temp_file_path = temp_file.name
             
-            # DEBUG: Check if image has data URL prefix
-            if base64_image.startswith('data:'):
-                print("WARNING: Image includes data URL prefix in request!")
-                print(f"Prefix: {base64_image[:50]}")
-            
-            print("=" * 50)
-            
-            # Get predictions from Gradio API
-            predictions = predict_ingredients_gradio(base64_image)
-            
-            if not predictions or len(predictions) == 0:
-                return jsonify({'error': 'No ingredients detected in the image'}), 400
-            
-            # Get the top prediction
+            print(f"Image saved to temporary file: {temp_file_path}")
+            print(f"File size: {os.path.getsize(temp_file_path)} bytes")
+
+            # ================== RUN GRADIO PREDICTOR ==================
+            predictions = predict_ingredients_gradio(temp_file_path)
+
+            if not predictions:
+                return jsonify({'error': 'No ingredients detected'}), 400
+
+            # Top prediction
             top_prediction = predictions[0]
             top_food = top_prediction['name']
             max_confidence = top_prediction['value']
-            
-            print(f"Top prediction: {top_food} ({max_confidence*100:.2f}%)")
-            
-            # Try to get nutrition from CalorieNinja API
+
+            # ================== CALORIE NINJA NUTRITION ==================
             nutrition_data = None
             try:
                 if CALORIENINJA_API_KEY:
-                    print(f"Fetching nutrition data from CalorieNinja for: {top_food}")
-                    
-                    calorieninja_response = requests.get(
+                    resp = requests.get(
                         f'https://api.calorieninjas.com/v1/nutrition?query={top_food}',
                         headers={'X-Api-Key': CALORIENINJA_API_KEY},
-                        timeout=5
+                        timeout=6
                     )
-                    
-                    print(f"CalorieNinja Response Status: {calorieninja_response.status_code}")
-                    
-                    if calorieninja_response.status_code == 200:
-                        ninja_data = calorieninja_response.json()
-                        print(f"CalorieNinja JSON: {ninja_data}")
-                        
-                        if ninja_data and ninja_data.get('items') and len(ninja_data['items']) > 0:
-                            item = ninja_data['items'][0]
+                    if resp.status_code == 200:
+                        items = resp.json().get('items', [])
+                        if items:
+                            item = items[0]
                             nutrition_data = {
                                 'calories': item.get('calories', 0),
                                 'protein_g': item.get('protein_g', 0),
@@ -256,76 +225,42 @@ def identify_food():
                                 'sodium_mg': item.get('sodium_mg', 0),
                                 'serving_size_g': item.get('serving_size_g', 100)
                             }
-                            print(f"✓ CalorieNinja data retrieved: {nutrition_data}")
-                        else:
-                            print("CalorieNinja returned empty or invalid data")
-                    else:
-                        print(f"CalorieNinja API error: {calorieninja_response.status_code}")
-                else:
-                    print("CalorieNinja API key not set")
-            except Exception as ninja_error:
-                print(f"CalorieNinja error: {ninja_error}")
-                import traceback
-                traceback.print_exc()
-            
-            # Generate Gemini advice
+            except Exception as e:
+                print("CalorieNinja error:", e)
+
+            # ================== GEMINI ADVICE (simple prompt) ==================
             gemini_advice = None
             try:
-                print("=" * 50)
-                print("ATTEMPTING GEMINI API CALL")
-                print(f"Food name: {top_food}")
-                print(f"Google API Key exists: {bool(GOOGLE_API_KEY)}")
-                
-                if not GOOGLE_API_KEY:
-                    print("ERROR: GOOGLE_API_KEY is not set!")
-                    raise Exception("Missing Google API Key")
-                
-                # Get nutritional needs from request data
-                nutritional_needs = data.get('nutritional_needs', [])
-                print(f"Nutritional needs: {nutritional_needs}")
-                
-                # Build prompt based on nutritional needs and available data
-                if nutrition_data and isinstance(nutrition_data, dict):
-                    print("Using nutrition data for Gemini prompt")
-                    calories = nutrition_data.get('calories', 'unknown')
-                    protein = nutrition_data.get('protein_g', 'unknown')
-                    fat = nutrition_data.get('fat_total_g', 'unknown')
-                    sugar = nutrition_data.get('sugar_g', 'unknown')
-                    fiber = nutrition_data.get('fiber_g', 'unknown')
-                    sodium = nutrition_data.get('sodium_mg', 'unknown')
-                    carbs = nutrition_data.get('carbohydrates_total_g', 'unknown')
-            
-                    if nutritional_needs and len(nutritional_needs) > 0:
-                        needs_str = ", ".join(nutritional_needs)
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"The person has the following nutritional needs/preferences: {needs_str}. "
-                            f"In 2-3 sentences, provide practical, actionable advice about whether this food is a good choice for their needs. "
-                            f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
-                            f"Keep it conversational and supportive."
-                        )
-                    else:
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"In 2-3 sentences, provide practical, actionable health advice about this food. "
-                            f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
-                            f"Keep it conversational and supportive."
-                        )
-                else:
-                    print("No nutrition data - using food name only for Gemini prompt")
-                    if nutritional_needs and len(nutritional_needs) > 0:
-                        needs_str = ", ".join(nutritional_needs)
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"The person has the following nutritional needs/preferences: {needs_str}. "
-                            f"In 2-3 sentences, provide practical advice about whether this food is generally a good choice for their needs. "
-                            f"Focus on general nutritional characteristics of {top_food}. "
-                            f"Keep it conversational and supportive."
-                        )
+                if GOOGLE_API_KEY:
+                    if nutrition_data:
+                        calories = nutrition_data['calories']
+                        protein = nutrition_data['protein_g']
+                        carbs = nutrition_data['carbohydrates_total_g']
+                        fat = nutrition_data['fat_total_g']
+                        fiber = nutrition_data['fiber_g']
+                        sugar = nutrition_data['sugar_g']
+                        sodium = nutrition_data['sodium_mg']
+
+                        if nutritional_needs:
+                            needs_str = ", ".join(nutritional_needs)
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"Nutritional information: {calories} calories, {protein}g protein, "
+                                f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                                f"The person has the following nutritional needs/preferences: {needs_str}. "
+                                f"In 2-3 sentences, provide practical, actionable advice about whether this food is a good choice for their needs. "
+                                f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
+                                f"Keep it conversational and supportive."
+                            )
+                        else:
+                            prompt = (
+                                f"You are a nutrition expert. The food identified is {top_food}. "
+                                f"Nutritional information: {calories} calories, {protein}g protein, "
+                                f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                                f"In 2-3 sentences, provide practical, actionable health advice about this food. "
+                                f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
+                                f"Keep it conversational and supportive."
+                            )
                     else:
                         prompt = (
                             f"You are a nutrition expert. The food identified is {top_food}. "
@@ -373,29 +308,31 @@ def identify_food():
             
             # Add all predictions as concepts
             for pred in predictions:
-                concept = {
+                response_data['outputs'][0]['data']['concepts'].append({
                     'name': pred['name'],
                     'value': pred['value'],
                     'nutrition': nutrition_data if pred == predictions[0] else None,
                     'gemini_advice': gemini_advice if pred == predictions[0] else None
-                }
-                response_data['outputs'][0]['data']['concepts'].append(concept)
-            
-            print("=" * 50)
-            print("RESPONSE DATA STRUCTURE:")
-            print(f"Number of concepts: {len(response_data['outputs'][0]['data']['concepts'])}")
-            print(f"Top concept has gemini_advice: {bool(response_data['outputs'][0]['data']['concepts'][0].get('gemini_advice'))}")
-            print("=" * 50)
-            
+                })
+
             return jsonify(response_data), 200
-            
+
         except Exception as e:
-            print(f"ERROR: {str(e)}")
+            print("UPLOAD ERROR:", e)
             import traceback
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
-            
+        finally:
+            # Clean up temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                    print(f"Temporary file deleted: {temp_file_path}")
+                except Exception as e:
+                    print(f"Error deleting temporary file: {e}")
+
     return render_template("upload.html")
+
 
 
 @app.route("/symptomTracker")
