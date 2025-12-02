@@ -199,7 +199,7 @@ def treatment_info():
 def identify_food():
     if request.method == "POST":
         try:
-            # ========== READ multipart/form-data ==========
+            # ================== ACCEPT multipart/form-data ==================
             if "image" not in request.files:
                 return jsonify({'error': 'No image file uploaded'}), 400
 
@@ -212,16 +212,13 @@ def identify_food():
             except:
                 nutritional_needs = []
 
-            # Convert uploaded image → base64 so your existing code works
+            # Convert uploaded image → base64 (so your original pipeline still works)
             img_bytes = file.read()
             base64_image = base64.b64encode(img_bytes).decode("utf-8")
 
-            print("=" * 50)
-            print("Image successfully received via multipart/form-data")
-            print(f"Image size: {len(img_bytes)} bytes")
-            print("=" * 50)
+            print("Image received successfully via multipart/form-data")
 
-            # ========== RUN YOUR EXISTING ML PIPELINE ==========
+            # ================== RUN GRADIO PREDICTOR ==================
             predictions = predict_ingredients_gradio(base64_image)
 
             if not predictions:
@@ -232,43 +229,123 @@ def identify_food():
             top_food = top_prediction['name']
             max_confidence = top_prediction['value']
 
-            # ========== GET CALORIE NINJA NUTRITION ==========
+
+            # ================== CALORIE NINJA NUTRITION ==================
             nutrition_data = None
             try:
                 if CALORIENINJA_API_KEY:
                     resp = requests.get(
                         f'https://api.calorieninjas.com/v1/nutrition?query={top_food}',
                         headers={'X-Api-Key': CALORIENINJA_API_KEY},
-                        timeout=5
+                        timeout=6
                     )
+
                     if resp.status_code == 200:
                         items = resp.json().get('items', [])
                         if items:
                             nutrition_data = items[0]
             except Exception as e:
-                print("CalorieNinja Error:", e)
+                print("CalorieNinja error:", e)
 
-            # ========== GENERATE GEMINI ADVICE ==========
+
+            # ================== ORIGINAL GEMINI PROMPT RESTORED ==================
             gemini_advice = None
             diet_suggestions = None
+
             try:
-                prompt = f"Give nutrition advice for {top_food}."
+                print("Calling Gemini with ORIGINAL PROMPT...")
+
+                # ---- Build your original prompt EXACTLY how you had it ----
+                if nutrition_data:
+                    calories = nutrition_data.get('calories', 'unknown')
+                    protein = nutrition_data.get('protein_g', 'unknown')
+                    carbs = nutrition_data.get('carbohydrates_total_g', 'unknown')
+                    fat = nutrition_data.get('fat_total_g', 'unknown')
+                    fiber = nutrition_data.get('fiber_g', 'unknown')
+                    sugar = nutrition_data.get('sugar_g', 'unknown')
+                    sodium = nutrition_data.get('sodium_mg', 'unknown')
+
+                    if nutritional_needs:
+                        needs_str = ", ".join(nutritional_needs)
+                        prompt = (
+                            f"You are a nutrition expert. The food identified is {top_food}. "
+                            f"Nutritional information: {calories} calories, {protein}g protein, "
+                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                            f"The person has the following nutritional needs/preferences: {needs_str}. "
+                            f"\n\nProvide TWO sections:\n"
+                            f"1. HEALTH ADVICE (2-3 sentences): Provide practical, actionable advice about whether this food is a good choice for their needs. "
+                            f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
+                            f"Keep it conversational and supportive.\n\n"
+                            f"2. DIET SUGGESTIONS (3-4 bullet points): Provide specific, healthy meal ideas. "
+                            f"Format each suggestion as a brief, practical meal idea.\n\n"
+                            f"Format your response EXACTLY like this:\n"
+                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
+                            f"SUGGESTIONS:\n"
+                            f"• [Suggestion 1]\n"
+                            f"• [Suggestion 2]\n"
+                            f"• [Suggestion 3]\n"
+                            f"• [Suggestion 4]"
+                        )
+                    else:
+                        prompt = (
+                            f"You are a nutrition expert. The food identified is {top_food}. "
+                            f"Nutritional information: {calories} calories, {protein}g protein, {carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium.\n\n"
+                            f"Provide TWO sections:\n"
+                            f"1. HEALTH ADVICE (2-3 sentences): Provide practical, actionable health advice about this food.\n\n"
+                            f"2. DIET SUGGESTIONS (3-4 bullet points): Provide healthy meal ideas.\n\n"
+                            f"Format your response EXACTLY like this:\n"
+                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
+                            f"SUGGESTIONS:\n"
+                            f"• [Suggestion 1]\n"
+                            f"• [Suggestion 2]\n"
+                            f"• [Suggestion 3]\n"
+                            f"• [Suggestion 4]"
+                        )
+                else:
+                    # No nutrition data → fallback to name-only prompt
+                    if nutritional_needs:
+                        needs_str = ", ".join(nutritional_needs)
+                        prompt = (
+                            f"You are a nutrition expert. The food identified is {top_food}. "
+                            f"The person has the following nutritional needs/preferences: {needs_str}.\n\n"
+                            f"Provide TWO sections:\n"
+                            f"1. HEALTH ADVICE (2-3 sentences)\n"
+                            f"2. DIET SUGGESTIONS (3-4 bullet points)\n\n"
+                            f"Format EXACTLY:\n"
+                            f"ADVICE: ...\n\n"
+                            f"SUGGESTIONS:\n"
+                            f"• ...\n• ...\n• ...\n• ..."
+                        )
+                    else:
+                        prompt = (
+                            f"You are a nutrition expert. The food identified is {top_food}.\n\n"
+                            f"Provide TWO sections:\n"
+                            f"1. HEALTH ADVICE (2-3 sentences)\n"
+                            f"2. DIET SUGGESTIONS (3-4 bullet points)\n\n"
+                            f"Format EXACTLY:\n"
+                            f"ADVICE: ...\n\n"
+                            f"SUGGESTIONS:\n"
+                            f"• ...\n• ...\n• ...\n• ..."
+                        )
 
                 model = genai.GenerativeModel("gemini-2.5-flash")
                 g_response = model.generate_content(prompt)
                 full_response = g_response.text.strip()
 
-                # Try to parse:
+                # Parse EXACTLY how your original code did:
                 if "ADVICE:" in full_response and "SUGGESTIONS:" in full_response:
                     parts = full_response.split("SUGGESTIONS:")
                     gemini_advice = parts[0].replace("ADVICE:", "").strip()
                     diet_suggestions = parts[1].strip()
                 else:
                     gemini_advice = full_response
-            except Exception as e:
-                print("Gemini error:", e)
+                    diet_suggestions = None
 
-            # ========== BUILD FRONTEND RESPONSE ==========
+            except Exception as e:
+                print("Gemini Error:", e)
+
+
+            # ================== BUILD RESPONSE ==================
             response_data = {
                 'outputs': [
                     {
