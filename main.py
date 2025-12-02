@@ -262,32 +262,51 @@ def identify_food():
                                 f"Keep it conversational and supportive."
                             )
                     else:
-                        if nutritional_needs:
-                            needs_str = ", ".join(nutritional_needs)
-                            prompt = (
-                                f"You are a nutrition expert. The food identified is {top_food}. "
-                                f"The person has the following nutritional needs/preferences: {needs_str}. "
-                                f"In 2-3 sentences, provide practical advice about whether this food is generally a good choice for their needs. "
-                                f"Focus on general nutritional characteristics of {top_food}. "
-                                f"Keep it conversational and supportive."
-                            )
-                        else:
-                            prompt = (
-                                f"You are a nutrition expert. The food identified is {top_food}. "
-                                f"In 2-3 sentences, provide practical health advice about this food. "
-                                f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
-                                f"Keep it conversational and supportive."
-                            )
+                        prompt = (
+                            f"You are a nutrition expert. The food identified is {top_food}. "
+                            f"In 2-3 sentences, provide practical health advice about this food. "
+                            f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
+                            f"Keep it conversational and supportive."
+                        )
+                
+                print(f"Prompt (first 100 chars): {prompt[:100]}...")
+                print("Calling Gemini API NOW...")
+                
+                model = genai.GenerativeModel(
+                    "gemini-2.5-flash",
+                    generation_config={
+                        "response_mime_type": "text/plain"
+                    }
+                )
 
-                    model = genai.GenerativeModel("gemini-2.5-flash", generation_config={"response_mime_type": "text/plain"})
-                    response = model.generate_content(prompt)
-                    gemini_advice = response.text.strip()
+                gemini_response = model.generate_content(prompt)
 
-            except Exception as e:
-                print("Gemini Error:", e)
-
-            # ================== BUILD RESPONSE ==================
-            response_data = {'outputs': [{'data': {'concepts': []}}]}
+                
+                gemini_advice = gemini_response.text.strip()
+                print(f"SUCCESS! Gemini advice received ({len(gemini_advice)} characters)")
+                print(f"Advice preview: {gemini_advice[:100]}...")
+                print("=" * 50)
+                
+            except Exception as gemini_error:
+                print("=" * 50)
+                print(f"GEMINI ERROR: {str(gemini_error)}")
+                print("Error type:", type(gemini_error).__name__)
+                import traceback
+                traceback.print_exc()
+                print("=" * 50)
+            
+            # Build response in Clarifai format for compatibility with frontend
+            response_data = {
+                'outputs': [
+                    {
+                        'data': {
+                            'concepts': []
+                        }
+                    }
+                ]
+            }
+            
+            # Add all predictions as concepts
             for pred in predictions:
                 response_data['outputs'][0]['data']['concepts'].append({
                     'name': pred['name'],

@@ -598,10 +598,30 @@ let currentImageData = null;
 uploadBtn.addEventListener("click", () => {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.tif,.tiff,.heic,.heif,image/*";
+  // EXPLICITLY ADD .jfif
+  input.accept = ".jpg,.jpeg,.jfif,.jpe,.png,.gif,.bmp,.webp,.svg,.tif,.tiff,.heic,.heif,image/*";
+  
   input.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    
+    // HANDLE JFIF EXPLICITLY
+    if (fileName.endsWith('.jfif')) {
+      console.log('JFIF file detected, forcing JPEG conversion...');
+      // Force treat as JPEG
+      const jpegBlob = new Blob([file], { type: 'image/jpeg' });
+      const reader = new FileReader();
+      reader.onload = ev => {
+        showUploadedImage(ev.target.result);
+        identifyFood(ev.target.result);
+      };
+      reader.readAsDataURL(jpegBlob);
+      return;
+    }
+
+    // Rest of your existing code for HEIC and other formats...
 
     if (file.type === "image/heic" || file.name.endsWith(".heic") || file.name.endsWith(".heif")) {
       try {
