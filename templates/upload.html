@@ -610,23 +610,32 @@ uploadBtn.addEventListener("click", () => {
           toType: "image/jpeg",
           quality: 0.9
         });
+        // Convert blob to file
+        const convertedFile = new File([converted], "converted.jpg", { type: "image/jpeg" });
+        
+        // Show preview
         const reader = new FileReader();
         reader.onload = ev => {
           showUploadedImage(ev.target.result);
-          identifyFood(ev.target.result);
         };
-        reader.readAsDataURL(converted);
+        reader.readAsDataURL(convertedFile);
+        
+        // Send file directly
+        identifyFood(convertedFile);
       } catch (err) {
         console.error(err);
         showError('Could not convert HEIC image. Try exporting it as JPEG or PNG.');
       }
     } else {
+      // Show preview
       const reader = new FileReader();
       reader.onload = ev => {
         showUploadedImage(ev.target.result);
-        identifyFood(ev.target.result);
       };
       reader.readAsDataURL(file);
+      
+      // Send file directly
+      identifyFood(file);
     }
   };
   input.click();
@@ -675,9 +684,11 @@ captureBtn.addEventListener("click", async () => {
     lucide.createIcons();
     capturing = false;
     
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-    currentImageData = imageData;
-    identifyFood(imageData);
+    // Convert canvas to blob and then to file
+    canvas.toBlob((blob) => {
+      const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+      identifyFood(file);
+    }, 'image/jpeg', 0.9);
   }
 });
 
@@ -693,18 +704,6 @@ function showLoading() {
     </div>
   `;
 }
-function dataURLtoFile(dataurl, filename) {
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
-}
-
 
 function showError(message, debugInfo = null) {
   let html = `
@@ -722,22 +721,21 @@ function showError(message, debugInfo = null) {
   lucide.createIcons();
 }
 
-async function identifyFood(imageDataUrl) {
+async function identifyFood(imageFile) {
   showLoading();
   
   try {
-    const base64Image = imageDataUrl.split(',')[1];
-    
     // Get selected nutritional needs
     const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
       .map(cb => cb.value);
     
     console.log('Sending request to Flask backend...');
     console.log('Selected nutritional needs:', selectedNeeds);
+    console.log('Image file:', imageFile.name, 'Size:', imageFile.size, 'Type:', imageFile.type);
     
     const formData = new FormData();
-      formData.append("image", dataURLtoFile(imageDataUrl, "upload.jpg"));
-      formData.append("nutritional_needs", JSON.stringify(selectedNeeds));
+    formData.append("image", imageFile);
+    formData.append("nutritional_needs", JSON.stringify(selectedNeeds));
 
     const response = await fetch('/upload', {
         method: 'POST',
