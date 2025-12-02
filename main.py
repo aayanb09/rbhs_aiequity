@@ -27,7 +27,7 @@ def get_gradio_client():
     if GRADIO_CLIENT is None:
         try:
             print("Initializing Gradio client for fredsok/ingredientsmodel...")
-            GRADIO_CLIENT = Client("calcupalate/ingredientClassificationModel")
+            GRADIO_CLIENT = Client("calcuplate/ingredientClassificationModel")
             print("✓ Gradio client initialized successfully")
         except Exception as e:
             print(f"Error initializing Gradio client: {e}")
