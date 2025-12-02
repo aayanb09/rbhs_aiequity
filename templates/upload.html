@@ -693,6 +693,18 @@ function showLoading() {
     </div>
   `;
 }
+function dataURLtoFile(dataurl, filename) {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+}
+
 
 function showError(message, debugInfo = null) {
   let html = `
@@ -723,16 +735,15 @@ async function identifyFood(imageDataUrl) {
     console.log('Sending request to Flask backend...');
     console.log('Selected nutritional needs:', selectedNeeds);
     
+    const formData = new FormData();
+      formData.append("image", dataURLtoFile(imageDataUrl, "upload.jpg"));
+      formData.append("nutritional_needs", JSON.stringify(selectedNeeds));
+
     const response = await fetch('/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        image: base64Image,
-        nutritional_needs: selectedNeeds
-      })
+        method: 'POST',
+        body: formData
     });
+
     
     console.log('Response status:', response.status);
     

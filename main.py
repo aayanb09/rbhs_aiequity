@@ -199,220 +199,76 @@ def treatment_info():
 def identify_food():
     if request.method == "POST":
         try:
-            data = request.json
-            base64_image = data.get('image')
-            
-            if not base64_image:
-                return jsonify({'error': 'No image provided'}), 400
-            
+            # ========== READ multipart/form-data ==========
+            if "image" not in request.files:
+                return jsonify({'error': 'No image file uploaded'}), 400
+
+            file = request.files["image"]
+
+            # Optional: nutritional needs
+            raw_needs = request.form.get("nutritional_needs", "[]")
+            try:
+                nutritional_needs = json.loads(raw_needs)
+            except:
+                nutritional_needs = []
+
+            # Convert uploaded image → base64 so your existing code works
+            img_bytes = file.read()
+            base64_image = base64.b64encode(img_bytes).decode("utf-8")
+
             print("=" * 50)
-            print("PROCESSING IMAGE WITH GRADIO MODEL API")
-            print(f"Received image data length: {len(base64_image)} chars")
-            
-            # DEBUG: Check if image has data URL prefix
-            if base64_image.startswith('data:'):
-                print("WARNING: Image includes data URL prefix in request!")
-                print(f"Prefix: {base64_image[:50]}")
-            
+            print("Image successfully received via multipart/form-data")
+            print(f"Image size: {len(img_bytes)} bytes")
             print("=" * 50)
-            
-            # Get predictions from Gradio API
+
+            # ========== RUN YOUR EXISTING ML PIPELINE ==========
             predictions = predict_ingredients_gradio(base64_image)
-            
-            if not predictions or len(predictions) == 0:
-                return jsonify({'error': 'No ingredients detected in the image'}), 400
-            
-            # Get the top prediction
+
+            if not predictions:
+                return jsonify({'error': 'No ingredients detected'}), 400
+
+            # Top prediction
             top_prediction = predictions[0]
             top_food = top_prediction['name']
             max_confidence = top_prediction['value']
-            
-            print(f"Top prediction: {top_food} ({max_confidence*100:.2f}%)")
-            
-            # Try to get nutrition from CalorieNinja API
+
+            # ========== GET CALORIE NINJA NUTRITION ==========
             nutrition_data = None
             try:
                 if CALORIENINJA_API_KEY:
-                    print(f"Fetching nutrition data from CalorieNinja for: {top_food}")
-                    
-                    calorieninja_response = requests.get(
+                    resp = requests.get(
                         f'https://api.calorieninjas.com/v1/nutrition?query={top_food}',
                         headers={'X-Api-Key': CALORIENINJA_API_KEY},
                         timeout=5
                     )
-                    
-                    print(f"CalorieNinja Response Status: {calorieninja_response.status_code}")
-                    
-                    if calorieninja_response.status_code == 200:
-                        ninja_data = calorieninja_response.json()
-                        print(f"CalorieNinja JSON: {ninja_data}")
-                        
-                        if ninja_data and ninja_data.get('items') and len(ninja_data['items']) > 0:
-                            item = ninja_data['items'][0]
-                            nutrition_data = {
-                                'calories': item.get('calories', 0),
-                                'protein_g': item.get('protein_g', 0),
-                                'carbohydrates_total_g': item.get('carbohydrates_total_g', 0),
-                                'fat_total_g': item.get('fat_total_g', 0),
-                                'fiber_g': item.get('fiber_g', 0),
-                                'sugar_g': item.get('sugar_g', 0),
-                                'sodium_mg': item.get('sodium_mg', 0),
-                                'serving_size_g': item.get('serving_size_g', 100)
-                            }
-                            print(f"✓ CalorieNinja data retrieved: {nutrition_data}")
-                        else:
-                            print("CalorieNinja returned empty or invalid data")
-                    else:
-                        print(f"CalorieNinja API error: {calorieninja_response.status_code}")
-                else:
-                    print("CalorieNinja API key not set")
-            except Exception as ninja_error:
-                print(f"CalorieNinja error: {ninja_error}")
-                import traceback
-                traceback.print_exc()
-            
-            # Generate Gemini advice
+                    if resp.status_code == 200:
+                        items = resp.json().get('items', [])
+                        if items:
+                            nutrition_data = items[0]
+            except Exception as e:
+                print("CalorieNinja Error:", e)
+
+            # ========== GENERATE GEMINI ADVICE ==========
             gemini_advice = None
             diet_suggestions = None
             try:
-                print("=" * 50)
-                print("ATTEMPTING GEMINI API CALL")
-                print(f"Food name: {top_food}")
-                print(f"Google API Key exists: {bool(GOOGLE_API_KEY)}")
-                
-                if not GOOGLE_API_KEY:
-                    print("ERROR: GOOGLE_API_KEY is not set!")
-                    raise Exception("Missing Google API Key")
-                
-                # Get nutritional needs from request data
-                nutritional_needs = data.get('nutritional_needs', [])
-                print(f"Nutritional needs: {nutritional_needs}")
-                
-                # Build prompt based on nutritional needs and available data
-                if nutrition_data and isinstance(nutrition_data, dict):
-                    print("Using nutrition data for Gemini prompt")
-                    calories = nutrition_data.get('calories', 'unknown')
-                    protein = nutrition_data.get('protein_g', 'unknown')
-                    fat = nutrition_data.get('fat_total_g', 'unknown')
-                    sugar = nutrition_data.get('sugar_g', 'unknown')
-                    fiber = nutrition_data.get('fiber_g', 'unknown')
-                    sodium = nutrition_data.get('sodium_mg', 'unknown')
-                    carbs = nutrition_data.get('carbohydrates_total_g', 'unknown')
-            
-                    if nutritional_needs and len(nutritional_needs) > 0:
-                        needs_str = ", ".join(nutritional_needs)
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"The person has the following nutritional needs/preferences: {needs_str}. "
-                            f"\n\nProvide TWO sections:\n"
-                            f"1. HEALTH ADVICE (2-3 sentences): Provide practical, actionable advice about whether this food is a good choice for their needs. "
-                            f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
-                            f"Keep it conversational and supportive\n\n."
-                            f"2.DIET SUGGESTIONS (3-4 bullet points): Provide specific, healthy meal ideas "
-                            f"Format each suggestion as a brief, practical meal idea. \n"
-                            f"Format your response EXACTLY like this:\n"
-                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
-                            f"SUGGESTIONS:\n"
-                            f"• [Suggestion 1]\n"
-                            f"• [Suggestion 2]\n"
-                            f"• [Suggestion 3]\n"
-                            f"• [Suggestion 4]"
-                        )
-                    else:
-                        prompt = (
-                            f"You are a nutrition expert. The food identified is {top_food}. "
-                            f"Nutritional information: {calories} calories, {protein}g protein, "
-                            f"\n\nProvide TWO sections:\n"
-                            f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
-                            f"1. HEALTH ADVICE (2-3 sentences): provide practical, actionable health advice about this food. "
-                            f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
-                            f"Keep it conversational and supportive.\n\n"
-                            f"2. DIET SUGGESTIONS (3-4 bullet points): Provide specific, healthy meal ideas or recipes "
-                            f"that incorporate {top_food}. Include cooking methods, portion sizes, and complementary foods. "
-                            f"Format each suggestion as a brief, practical meal idea.\n\n"
-                            f"Format your response EXACTLY like this:\n"
-                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
-                            f"SUGGESTIONS:\n"
-                            f"• [Suggestion 1]\n"
-                            f"• [Suggestion 2]\n"
-                            f"• [Suggestion 3]\n"
-                            f"• [Suggestion 4]"
-                        )                        
-                else:
-                    print("No nutrition data - using food name only for Gemini prompt")
-                    if nutritional_needs and len(nutritional_needs) > 0:
-                        needs_str = ", ".join(nutritional_needs)
-                        prompt = (
-                            f"You are a nutrition expert and diet coach. The food identified is {top_food}. "
-                            f"The person has the following nutritional needs/preferences: {needs_str}. "
-                            f"\n\nProvide TWO sections:\n"
-                            f"1. HEALTH ADVICE (2-3 sentences): Practical advice about whether this food is generally a good choice for their needs. "
-                            f"Focus on general nutritional characteristics of {top_food}. "
-                            f"Keep it conversational and supportive.\n\n"
-                            f"2. DIET SUGGESTIONS (3-4 bullet points): Provide specific meal ideas that incorporate {top_food} "
-                            f"in a healthy way aligned with their needs ({needs_str}). "
-                            f"Include cooking methods and complementary foods.\n\n"
-                            f"Format your response EXACTLY like this:\n"
-                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
-                            f"SUGGESTIONS:\n"
-                            f"• [Suggestion 1]\n"
-                            f"• [Suggestion 2]\n"
-                            f"• [Suggestion 3]\n"
-                            f"• [Suggestion 4]"
-                        )
-                    else:
-                        prompt = (
-                            f"You are a nutrition expert and diet coach. The food identified is {top_food}. "
-                            f"\n\nProvide TWO sections:\n"
-                            f"1. HEALTH ADVICE (2-3 sentences): Practical health advice about this food. "
-                            f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
-                            f"Keep it conversational and supportive.\n\n"
-                            f"2. DIET SUGGESTIONS (3-4 bullet points): Provide specific, healthy meal ideas "
-                            f"that incorporate {top_food}. Include cooking methods and complementary foods.\n\n"
-                            f"Format your response EXACTLY like this:\n"
-                            f"ADVICE: [your 2-3 sentence advice here]\n\n"
-                            f"SUGGESTIONS:\n"
-                            f"• [Suggestion 1]\n"
-                            f"• [Suggestion 2]\n"
-                            f"• [Suggestion 3]\n"
-                            f"• [Suggestion 4]"
-                        )
-                
-                print(f"Prompt (first 100 chars): {prompt[:200]}...")
-                print("Calling Gemini API NOW...")
-                
+                prompt = f"Give nutrition advice for {top_food}."
+
                 model = genai.GenerativeModel("gemini-2.5-flash")
-                gemini_response = model.generate_content(prompt)
-                
-                full_response = gemini_response.text.strip()
-                print(f"SUCCESS! Gemini advice received ({len(full_response)} characters)")
-                print(f"Response preview: {full_response[:200]}...")
-                
+                g_response = model.generate_content(prompt)
+                full_response = g_response.text.strip()
+
+                # Try to parse:
                 if "ADVICE:" in full_response and "SUGGESTIONS:" in full_response:
                     parts = full_response.split("SUGGESTIONS:")
-                    gemini_advice = parts[0].replace("ADVICE:","").strip()
+                    gemini_advice = parts[0].replace("ADVICE:", "").strip()
                     diet_suggestions = parts[1].strip()
-                    print(f"Parsed advice:{gemini_advice[:100]}...")
-                    print(f"Parsed suggestions: {diet_suggestions[100:200]}...")
                 else:
                     gemini_advice = full_response
-                    die_suggestions=None
-                    print("Wrong format")
-                
-                
-                print("=" * 50)
-                
-            except Exception as gemini_error:
-                print("=" * 50)
-                print(f"GEMINI ERROR: {str(gemini_error)}")
-                print("Error type:", type(gemini_error).__name__)
-                import traceback
-                traceback.print_exc()
-                print("=" * 50)
-            
-            # Build response in Clarifai format for compatibility with frontend
+            except Exception as e:
+                print("Gemini error:", e)
+
+            # ========== BUILD FRONTEND RESPONSE ==========
             response_data = {
                 'outputs': [
                     {
@@ -422,34 +278,26 @@ def identify_food():
                     }
                 ]
             }
-            
-            # Add all predictions as concepts
+
             for pred in predictions:
-                concept = {
+                response_data['outputs'][0]['data']['concepts'].append({
                     'name': pred['name'],
                     'value': pred['value'],
                     'nutrition': nutrition_data if pred == predictions[0] else None,
                     'gemini_advice': gemini_advice if pred == predictions[0] else None,
                     'diet_suggestions': diet_suggestions if pred == predictions[0] else None
-                }
-                response_data['outputs'][0]['data']['concepts'].append(concept)
-            
-            print("=" * 50)
-            print("RESPONSE DATA STRUCTURE:")
-            print(f"Number of concepts: {len(response_data['outputs'][0]['data']['concepts'])}")
-            print(f"Top concept has gemini_advice: {bool(response_data['outputs'][0]['data']['concepts'][0].get('gemini_advice'))}")
-            print(f"Top concept has diet_suggestions: {bool(response_data['outputs'][0]['data']['concepts'][0].get('diet_suggestions'))}")
-            print("=" * 50)
-            
+                })
+
             return jsonify(response_data), 200
-            
+
         except Exception as e:
-            print(f"ERROR: {str(e)}")
+            print("UPLOAD ERROR:", e)
             import traceback
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
-            
+
     return render_template("upload.html")
+
 
 
 @app.route("/symptomTracker")
