@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import os
-import base64
-import io
+import json
 import requests
 import google.generativeai as genai
 from PIL import Image
 from gradio_client import Client, handle_file
 import tempfile
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "password" 
@@ -43,62 +43,30 @@ def clean_ingredient_name(name):
     name = name.replace('_', ' ')
     return name.title()
 
-def predict_ingredients_gradio(base64_image):
-    """Predict ingredients from base64 image using Gradio model"""
-    temp_file_path = None
+def predict_ingredients_gradio(file_path):
+    """Predict ingredients from image file using Gradio model"""
     try:
         print("=" * 50)
         print("CALLING GRADIO MODEL API")
-        print(f"Image data length: {len(base64_image)} chars")
-        print(f"Image starts with: {base64_image[:50]}")
+        print(f"Image file path: {file_path}")
         
-        # FIXED: Remove data URL prefix if present
-        if ',' in base64_image and base64_image.startswith('data:'):
-            print("Removing data URL prefix...")
-            base64_image = base64_image.split(',', 1)[1]
+        # Verify file exists and has content
+        if not os.path.exists(file_path):
+            raise Exception("Image file does not exist")
         
-        # Additional check for any remaining prefix
-        if base64_image.startswith('data:'):
-            print("WARNING: Image still has data URL prefix after split!")
-            # Force remove everything before comma
-            if ',' in base64_image:
-                base64_image = base64_image.split(',')[-1]
-        
-        print(f"Cleaned image data length: {len(base64_image)} chars")
-        print(f"Cleaned image starts with: {base64_image[:30]}")
-        
-        # Decode base64 image and save to temporary file
-        try:
-            image_data = base64.b64decode(base64_image)
-            print(f"Successfully decoded base64 data: {len(image_data)} bytes")
-        except Exception as decode_error:
-            print(f"Base64 decode error: {decode_error}")
-            raise Exception(f"Failed to decode base64 image: {str(decode_error)}")
-        
-        # Create a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-            temp_file.write(image_data)
-            temp_file_path = temp_file.name
-        
-        print(f"Temporary file created: {temp_file_path}")
-        
-        # Verify file was created and has content
-        if not os.path.exists(temp_file_path):
-            raise Exception("Temporary file was not created")
-        
-        file_size = os.path.getsize(temp_file_path)
-        print(f"Temporary file size: {file_size} bytes")
+        file_size = os.path.getsize(file_path)
+        print(f"Image file size: {file_size} bytes")
         
         if file_size == 0:
-            raise Exception("Temporary file is empty")
+            raise Exception("Image file is empty")
         
         # Get Gradio client
         client = get_gradio_client()
         
-        # Call the prediction API
+        # Call the prediction API with the file path directly
         print("Calling Gradio predict API...")
         result = client.predict(
-            image=handle_file(temp_file_path),
+            image=handle_file(file_path),
             api_name="/predict"
         )
         
@@ -170,14 +138,6 @@ def predict_ingredients_gradio(base64_image):
         import traceback
         traceback.print_exc()
         raise
-    finally:
-        # Clean up temporary file
-        if temp_file_path and os.path.exists(temp_file_path):
-            try:
-                os.unlink(temp_file_path)
-                print(f"Temporary file deleted: {temp_file_path}")
-            except Exception as e:
-                print(f"Error deleting temporary file: {e}")
 
 @app.route("/")
 def welcome():
@@ -198,12 +158,16 @@ def treatment_info():
 @app.route('/upload', methods=['GET', 'POST'])
 def identify_food():
     if request.method == "POST":
+        temp_file_path = None
         try:
             # ================== ACCEPT multipart/form-data ==================
             if "image" not in request.files:
                 return jsonify({'error': 'No image file uploaded'}), 400
 
             file = request.files["image"]
+            
+            if file.filename == '':
+                return jsonify({'error': 'No selected file'}), 400
 
             # Optional: nutritional needs
             raw_needs = request.form.get("nutritional_needs", "[]")
@@ -212,13 +176,23 @@ def identify_food():
             except:
                 nutritional_needs = []
 
-            # Convert uploaded image → base64
-            img_bytes = file.read()
-            base64_image = base64.b64encode(img_bytes).decode("utf-8")
-            print("Image received successfully via multipart/form-data")
+            # Save uploaded file to temporary location
+            filename = secure_filename(file.filename)
+            # Get file extension
+            _, ext = os.path.splitext(filename)
+            if not ext:
+                ext = '.jpg'
+            
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+                file.save(temp_file.name)
+                temp_file_path = temp_file.name
+            
+            print(f"Image saved to temporary file: {temp_file_path}")
+            print(f"File size: {os.path.getsize(temp_file_path)} bytes")
 
             # ================== RUN GRADIO PREDICTOR ==================
-            predictions = predict_ingredients_gradio(base64_image)
+            predictions = predict_ingredients_gradio(temp_file_path)
 
             if not predictions:
                 return jsonify({'error': 'No ingredients detected'}), 400
@@ -329,6 +303,14 @@ def identify_food():
             import traceback
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
+        finally:
+            # Clean up temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                    print(f"Temporary file deleted: {temp_file_path}")
+                except Exception as e:
+                    print(f"Error deleting temporary file: {e}")
 
     return render_template("upload.html")
 
