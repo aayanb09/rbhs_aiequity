@@ -337,8 +337,15 @@ def identify_food():
                 print(f"Prompt (first 100 chars): {prompt[:100]}...")
                 print("Calling Gemini API NOW...")
                 
-                model = genai.GenerativeModel("gemini-2.5-flash")
+                model = genai.GenerativeModel(
+                    "gemini-2.5-flash",
+                    generation_config={
+                        "response_mime_type": "text/plain"
+                    }
+                )
+
                 gemini_response = model.generate_content(prompt)
+
                 
                 gemini_advice = gemini_response.text.strip()
                 print(f"SUCCESS! Gemini advice received ({len(gemini_advice)} characters)")
