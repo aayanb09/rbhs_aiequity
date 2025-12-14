@@ -944,11 +944,33 @@ function displayFoodResult(food) {
           <strong>Tags:</strong> ${food.tags.join(', ')}
         </div>
       ` : ''}
+      
+      <button id="override-btn" class="override-btn" style="margin-top: 16px; width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s ease;">
+        <i data-lucide="edit-3" style="width: 18px; height: 18px;"></i>
+        <span>Override Detection</span>
+      </button>
+      
+      <div id="override-section" style="display: none; margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 10px; border: 2px solid #e2e8f0;">
+        <div style="margin-bottom: 12px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="search" style="width: 18px; height: 18px; color: #8b5cf6;"></i>
+          <span>Select Different Food</span>
+        </div>
+        <input type="text" id="food-search" placeholder="Search for a food..." style="width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; margin-bottom: 8px; font-family: inherit;">
+        <div id="food-dropdown" style="max-height: 200px; overflow-y: auto; background: white; border: 2px solid #e2e8f0; border-radius: 8px; display: none;">
+          <!-- Dropdown items will be inserted here -->
+        </div>
+        <button id="cancel-override-btn" style="margin-top: 8px; width: 100%; padding: 8px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+          Cancel
+        </button>
+      </div>
     </div>
   `;
   
   resultsContent.innerHTML = html;
   lucide.createIcons();
+  
+  // Initialize override functionality
+  initializeOverride();
   
   // Update banner with AI advice
   updateInfoBanner(food);
@@ -1093,6 +1115,178 @@ function updateInfoBanner(food) {
 
 // Initialize
 showPlaceholder();
+
+// ============== OVERRIDE FUNCTIONALITY ==============
+
+let availableFoods = [];
+let currentFoodData = null;
+
+// Fetch available foods when page loads
+async function loadFoodList() {
+  try {
+    const response = await fetch('/api/food-list');
+    const data = await response.json();
+    if (data.success) {
+      availableFoods = data.foods;
+      console.log(`Loaded ${availableFoods.length} food items`);
+    }
+  } catch (error) {
+    console.error('Error loading food list:', error);
+  }
+}
+
+// Setup override button event listener
+function setupOverrideButton() {
+  const overrideBtn = document.getElementById('override-btn');
+  const overrideSection = document.getElementById('override-section');
+  const cancelBtn = document.getElementById('cancel-override-btn');
+  const foodSearch = document.getElementById('food-search');
+  const foodDropdown = document.getElementById('food-dropdown');
+  
+  if (!overrideBtn) return;
+  
+  overrideBtn.addEventListener('click', () => {
+    overrideSection.style.display = 'block';
+    overrideBtn.style.display = 'none';
+    foodSearch.focus();
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+    overrideSection.style.display = 'none';
+    overrideBtn.style.display = 'flex';
+    foodSearch.value = '';
+    foodDropdown.style.display = 'none';
+    foodDropdown.innerHTML = '';
+  });
+  
+  // Search functionality
+  foodSearch.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    
+    if (searchTerm.length === 0) {
+      foodDropdown.style.display = 'none';
+      foodDropdown.innerHTML = '';
+      return;
+    }
+    
+    const filtered = availableFoods.filter(food => 
+      food.toLowerCase().includes(searchTerm)
+    ).slice(0, 20); // Limit to 20 results
+    
+    if (filtered.length === 0) {
+      foodDropdown.innerHTML = '<div style="padding: 12px; color: #94a3b8; text-align: center;">No matching foods found</div>';
+      foodDropdown.style.display = 'block';
+      return;
+    }
+    
+    foodDropdown.innerHTML = filtered.map(food => `
+      <div class="food-dropdown-item" data-food="${food}" style="padding: 10px 12px; cursor: pointer; transition: all 0.2s ease; border-bottom: 1px solid #f1f5f9;">
+        ${food.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+      </div>
+    `).join('');
+    
+    foodDropdown.style.display = 'block';
+    
+    // Add hover effects
+    const items = foodDropdown.querySelectorAll('.food-dropdown-item');
+    items.forEach(item => {
+      item.addEventListener('mouseenter', function() {
+        this.style.background = '#f8fafc';
+        this.style.color = '#8b5cf6';
+        this.style.fontWeight = '700';
+      });
+      
+      item.addEventListener('mouseleave', function() {
+        this.style.background = 'white';
+        this.style.color = '#0f172a';
+        this.style.fontWeight = '600';
+      });
+      
+      item.addEventListener('click', function() {
+        const selectedFood = this.dataset.food;
+        overrideWithFood(selectedFood);
+      });
+    });
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!foodSearch.contains(e.target) && !foodDropdown.contains(e.target)) {
+      foodDropdown.style.display = 'none';
+    }
+  });
+}
+
+async function overrideWithFood(foodName) {
+  console.log(`Overriding with: ${foodName}`);
+  
+  // Show loading state
+  showLoading();
+  
+  try {
+    // Get selected nutritional needs
+    const selectedNeeds = Array.from(document.querySelectorAll('input[name="need"]:checked'))
+      .map(cb => cb.value);
+    
+    const response = await fetch('/api/override-food', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        food_name: foodName,
+        nutritional_needs: selectedNeeds
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to override food');
+    }
+    
+    if (!data.success || !data.food) {
+      throw new Error('Invalid response from server');
+    }
+    
+    // Extract nutrition data
+    const foodData = data.food;
+    const nutrition = foodData.nutrition;
+    
+    const food = {
+      name: foodData.name,
+      confidence: 100, // Manual override is 100% confidence
+      category: 'Food',
+      geminiAdvice: foodData.gemini_advice || null,
+      calories: Math.round(nutrition.calories || 0),
+      protein: `${Math.round(nutrition.protein_g || 0)}g`,
+      carbs: `${Math.round(nutrition.carbohydrates_total_g || 0)}g`,
+      fat: `${Math.round(nutrition.fat_total_g || 0)}g`,
+      fiber: `${Math.round(nutrition.fiber_g || 0)}g`,
+      sodium: `${Math.round(nutrition.sodium_mg || 0)}mg`,
+      sugar: `${Math.round(nutrition.sugar_g || 0)}g`,
+      servingSize: `${Math.round(nutrition.serving_size_g || 100)}g`,
+      tags: generateTags(nutrition),
+      hasRealData: true
+    };
+    
+    console.log('Override successful, displaying result:', food);
+    
+    displayFoodResult(food);
+    
+  } catch (error) {
+    console.error('Override error:', error);
+    showError(`Failed to override: ${error.message}`);
+  }
+}
+
+// Call after displaying food results
+function initializeOverride() {
+  setupOverrideButton();
+}
+
+// Load food list on page load
+loadFoodList();
 </script>
 
 {% endblock %}

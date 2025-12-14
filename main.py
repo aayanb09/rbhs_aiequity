@@ -8,6 +8,30 @@ from gradio_client import Client, handle_file
 import tempfile
 from werkzeug.utils import secure_filename
 
+# Common food items that work well with Calorie Ninja API
+CALORIE_NINJA_FOODS = [
+    "apple", "banana", "orange", "strawberry", "blueberry", "raspberry", "blackberry",
+    "grape", "watermelon", "mango", "pineapple", "peach", "pear", "plum", "cherry",
+    "avocado", "tomato", "cucumber", "carrot", "broccoli", "spinach", "lettuce",
+    "kale", "cabbage", "cauliflower", "bell pepper", "onion", "garlic", "potato",
+    "sweet potato", "corn", "peas", "green beans", "asparagus", "celery", "mushroom",
+    "chicken breast", "chicken thigh", "turkey", "beef", "pork", "lamb", "bacon",
+    "sausage", "ham", "salmon", "tuna", "cod", "shrimp", "crab", "lobster",
+    "egg", "milk", "cheese", "yogurt", "butter", "cream", "ice cream",
+    "rice", "pasta", "bread", "oatmeal", "quinoa", "couscous", "noodles",
+    "pizza", "burger", "hot dog", "sandwich", "taco", "burrito", "sushi",
+    "salad", "soup", "steak", "chicken wings", "french fries", "onion rings",
+    "cookie", "cake", "brownie", "donut", "muffin", "pancake", "waffle",
+    "almond", "cashew", "peanut", "walnut", "pistachio", "peanut butter",
+    "honey", "maple syrup", "sugar", "chocolate", "coffee", "tea", "juice",
+    "beans", "lentils", "chickpeas", "tofu", "tempeh", "hummus",
+    "olive oil", "coconut oil", "vinegar", "soy sauce", "ketchup", "mayonnaise",
+    "apple pie", "cheesecake", "tiramisu", "pudding", "jello",
+    "bagel", "croissant", "biscuit", "tortilla", "pita bread",
+    "beef stew", "chicken soup", "chili", "curry", "stir fry",
+    "smoothie", "protein shake", "energy bar", "granola", "cereal"
+]
+
 app = Flask(__name__)
 app.secret_key = "password" 
 
@@ -384,6 +408,125 @@ def test_gradio():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route("/api/food-list")
+def get_food_list():
+    """Return list of supported food items"""
+    return jsonify({
+        'success': True,
+        'foods': sorted(CALORIE_NINJA_FOODS)
+    })
+
+@app.route("/api/override-food", methods=['POST'])
+def override_food():
+    """Override detected food with user-selected food"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'food_name' not in data:
+            return jsonify({'error': 'Food name is required'}), 400
+        
+        food_name = data['food_name'].strip().lower()
+        nutritional_needs = data.get('nutritional_needs', [])
+        
+        print(f"Override request for food: {food_name}")
+        
+        # Get nutrition data from Calorie Ninja
+        nutrition_data = None
+        try:
+            if CALORIENINJA_API_KEY:
+                resp = requests.get(
+                    f'https://api.calorieninjas.com/v1/nutrition?query={food_name}',
+                    headers={'X-Api-Key': CALORIENINJA_API_KEY},
+                    timeout=6
+                )
+                if resp.status_code == 200:
+                    items = resp.json().get('items', [])
+                    if items:
+                        item = items[0]
+                        nutrition_data = {
+                            'calories': item.get('calories', 0),
+                            'protein_g': item.get('protein_g', 0),
+                            'carbohydrates_total_g': item.get('carbohydrates_total_g', 0),
+                            'fat_total_g': item.get('fat_total_g', 0),
+                            'fiber_g': item.get('fiber_g', 0),
+                            'sugar_g': item.get('sugar_g', 0),
+                            'sodium_mg': item.get('sodium_mg', 0),
+                            'serving_size_g': item.get('serving_size_g', 100)
+                        }
+        except Exception as e:
+            print(f"CalorieNinja error: {e}")
+        
+        if not nutrition_data:
+            return jsonify({'error': 'Could not fetch nutrition data for this food'}), 400
+        
+        # Generate Gemini advice
+        gemini_advice = None
+        try:
+            if GOOGLE_API_KEY:
+                calories = nutrition_data['calories']
+                protein = nutrition_data['protein_g']
+                carbs = nutrition_data['carbohydrates_total_g']
+                fat = nutrition_data['fat_total_g']
+                fiber = nutrition_data['fiber_g']
+                sugar = nutrition_data['sugar_g']
+                sodium = nutrition_data['sodium_mg']
+
+                if nutritional_needs:
+                    needs_str = ", ".join(nutritional_needs)
+                    prompt = (
+                        f"You are a nutrition expert. The food identified is {food_name}. "
+                        f"Nutritional information: {calories} calories, {protein}g protein, "
+                        f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                        f"The person has the following nutritional needs/preferences: {needs_str}. "
+                        f"In 2-3 sentences, provide practical, actionable advice about whether this food is a good choice for their needs. "
+                        f"Be specific about how the nutritional content aligns (or doesn't align) with their requirements. "
+                        f"Keep it conversational and supportive."
+                    )
+                else:
+                    prompt = (
+                        f"You are a nutrition expert. The food identified is {food_name}. "
+                        f"Nutritional information: {calories} calories, {protein}g protein, "
+                        f"{carbs}g carbohydrates, {fat}g fat, {fiber}g fiber, {sugar}g sugar, {sodium}mg sodium. "
+                        f"In 2-3 sentences, provide practical, actionable health advice about this food. "
+                        f"Is this generally a good nutritional choice? What are the key benefits or concerns? "
+                        f"Keep it conversational and supportive."
+                    )
+            
+                print(f"Calling Gemini for override advice...")
+                
+                model = genai.GenerativeModel(
+                    "gemini-2.5-flash",
+                    generation_config={
+                        "response_mime_type": "text/plain"
+                    }
+                )
+
+                gemini_response = model.generate_content(prompt)
+                gemini_advice = gemini_response.text.strip()
+                
+                print(f"Gemini advice received: {gemini_advice[:100]}...")
+                
+        except Exception as gemini_error:
+            print(f"Gemini error: {str(gemini_error)}")
+        
+        # Build response
+        response_data = {
+            'success': True,
+            'food': {
+                'name': food_name.title(),
+                'nutrition': nutrition_data,
+                'gemini_advice': gemini_advice
+            }
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        print(f"Override error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
