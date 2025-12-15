@@ -65,11 +65,12 @@
 <style>
   /* Chatbot Widget Styles */
   #chatbot-widget {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 999;
-  }
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}
+
 
   .chatbot-toggle {
     width: 60px;
@@ -103,7 +104,7 @@
   .chatbot-window {
     position: fixed;
     bottom: 100px;
-    left: 24px;
+    right: 24px;
     width: 400px;
     max-width: calc(100vw - 48px);
     height: 600px;
@@ -442,7 +443,7 @@
   @media (max-width: 768px) {
     #chatbot-widget {
       bottom: 20px;
-      left: 20px;
+      right: 20px;
     }
 
     .chatbot-toggle {
