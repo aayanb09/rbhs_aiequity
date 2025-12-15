@@ -528,5 +528,103 @@ def override_food():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route("/api/chatbot", methods=['POST'])
+def chatbot():
+    """Diabetes assistant chatbot endpoint"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'message' not in data:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        user_message = data['message'].strip()
+        conversation_history = data.get('history', [])
+        
+        if not user_message:
+            return jsonify({'error': 'Message cannot be empty'}), 400
+        
+        print(f"Chatbot request: {user_message}")
+        
+        # System prompt to keep conversation on-topic
+        system_prompt = """You are a helpful diabetes assistant specialized in helping diabetic patients. 
+You can answer questions about:
+- Glucose monitoring and blood sugar management
+- Nutrition, diet planning, and food choices for diabetics
+- Diabetes medications and treatments
+- Symptoms, complications, and general diabetes care
+- Lifestyle modifications for diabetes management
+
+IMPORTANT GUIDELINES:
+1. Stay focused on diabetes-related topics
+2. If asked about non-diabetes topics, politely redirect the conversation back to diabetes care
+3. Provide accurate, helpful, and supportive information
+4. Be concise but thorough in your responses
+5. Always recommend consulting healthcare professionals for medical decisions
+6. Use a friendly, encouraging tone
+
+If the user asks about something unrelated to diabetes, politely say: "I'm specialized in diabetes care and can help with questions about glucose monitoring, nutrition, medications, and diabetes management. Is there anything diabetes-related I can help you with?"
+"""
+        
+        # Build conversation context
+        messages = []
+        
+        # Add recent history (last 5 exchanges to keep context manageable)
+        recent_history = conversation_history[-10:] if len(conversation_history) > 10 else conversation_history
+        for msg in recent_history:
+            messages.append({
+                'role': msg['role'],
+                'parts': [msg['content']]
+            })
+        
+        # Check if the question is diabetes-related
+        relevance_check = genai.GenerativeModel("gemini-2.5-flash")
+        check_prompt = f"""Is this question related to diabetes, glucose, nutrition for diabetics, diabetes medications, or diabetes care?
+Question: "{user_message}"
+
+Answer with just "YES" or "NO"."""
+        
+        relevance_response = relevance_check.generate_content(check_prompt)
+        is_relevant = "YES" in relevance_response.text.upper()
+        
+        if not is_relevant:
+            response_text = "I'm specialized in diabetes care and can help with questions about glucose monitoring, nutrition, medications, and diabetes management. Is there anything diabetes-related I can help you with?"
+            return jsonify({
+                'success': True,
+                'response': response_text
+            }), 200
+        
+        # Generate response using Gemini
+        model = genai.GenerativeModel(
+            "gemini-2.5-flash",
+            generation_config={
+                "response_mime_type": "text/plain",
+                "temperature": 0.7,
+            },
+            system_instruction=system_prompt
+        )
+        
+        # Create chat session with history
+        chat = model.start_chat(history=messages)
+        
+        # Send the user's message
+        response = chat.send_message(user_message)
+        response_text = response.text.strip()
+        
+        print(f"Chatbot response: {response_text[:100]}...")
+        
+        return jsonify({
+            'success': True,
+            'response': response_text
+        }), 200
+        
+    except Exception as e:
+        print(f"Chatbot error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'An error occurred while processing your request'
+        }), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
